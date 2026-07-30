@@ -6,12 +6,19 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
 namespace SmartLampApp.Services
 {
     public static class InstallationService
     {
+        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+
+        private const uint SHCNE_ALLEVENTS = 0x7FFFFFFF;
+        private const uint SHCNF_FLUSH = 0x1000;
+
         private const string RegistryRunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
         private const string AppRegistryName = "SmartLampStudio";
         private const string UninstallRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\SmartLampStudio";
@@ -89,10 +96,18 @@ namespace SmartLampApp.Services
                     File.Copy(currentExe, targetExe, true);
                 }
 
-                // 1. Create Start Menu Shortcut
+                // 1. Create Start Menu Shortcuts (both root Programs & subfolder)
                 string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
-                string shortcutPath = Path.Combine(startMenuPath, "SmartLamp Studio.lnk");
-                CreateShortcut(shortcutPath, targetExe, "", "SmartLamp Studio Application", targetExe);
+                
+                // Direct shortcut in Start Menu Programs
+                string rootShortcutPath = Path.Combine(startMenuPath, "SmartLamp Studio.lnk");
+                CreateShortcut(rootShortcutPath, targetExe, "", "SmartLamp Studio Application", targetExe);
+
+                // Subfolder shortcut in Start Menu Programs\SmartLamp Studio
+                string startMenuFolder = Path.Combine(startMenuPath, "SmartLamp Studio");
+                Directory.CreateDirectory(startMenuFolder);
+                string folderShortcutPath = Path.Combine(startMenuFolder, "SmartLamp Studio.lnk");
+                CreateShortcut(folderShortcutPath, targetExe, "", "SmartLamp Studio Application", targetExe);
 
                 // 2. Create Desktop Shortcut
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
@@ -111,7 +126,10 @@ namespace SmartLampApp.Services
                     key.SetValue("HelpLink", AppVersion.GitHubUrl);
                 }
 
-                message = $"SmartLamp Studio successfully installed to:\n{installDir}\n\nStart Menu shortcut & Desktop shortcut created!";
+                // 4. Force Windows Shell & Start Menu Indexer to refresh
+                try { SHChangeNotify(SHCNE_ALLEVENTS, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero); } catch { }
+
+                message = $"SmartLamp Studio successfully installed to:\n{installDir}\n\nStart Menu & Desktop shortcuts created!";
                 return true;
             }
             catch (Exception ex)
@@ -126,10 +144,13 @@ namespace SmartLampApp.Services
             message = "";
             try
             {
-                // Remove Start Menu shortcut
+                // Remove Start Menu shortcuts
                 string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
-                string shortcutPath = Path.Combine(startMenuPath, "SmartLamp Studio.lnk");
-                if (File.Exists(shortcutPath)) File.Delete(shortcutPath);
+                string rootShortcutPath = Path.Combine(startMenuPath, "SmartLamp Studio.lnk");
+                if (File.Exists(rootShortcutPath)) File.Delete(rootShortcutPath);
+
+                string startMenuFolder = Path.Combine(startMenuPath, "SmartLamp Studio");
+                if (Directory.Exists(startMenuFolder)) Directory.Delete(startMenuFolder, true);
 
                 // Remove Desktop shortcuts
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
@@ -144,6 +165,9 @@ namespace SmartLampApp.Services
                 // Remove Registry entry
                 Registry.CurrentUser.DeleteSubKeyTree(UninstallRegistryKey, false);
 
+                // Force Windows Shell Refresh
+                try { SHChangeNotify(SHCNE_ALLEVENTS, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero); } catch { }
+
                 message = "SmartLamp Studio shortcuts and registration cleanly removed.";
                 return true;
             }
@@ -154,20 +178,30 @@ namespace SmartLampApp.Services
             }
         }
 
-        private static void CreateShortcut(string shortcutPath, string targetPath, string arguments, string description, string iconPath)
+        public static void CreateShortcut(string shortcutPath, string targetPath, string arguments, string description, string iconPath)
         {
-            Type? shellType = Type.GetTypeFromProgID("WScript.Shell");
-            if (shellType != null)
+            try
             {
-                dynamic shell = Activator.CreateInstance(shellType)!;
-                var shortcut = shell.CreateShortcut(shortcutPath);
-                shortcut.TargetPath = targetPath;
-                shortcut.Arguments = arguments;
-                shortcut.WorkingDirectory = Path.GetDirectoryName(targetPath);
-                shortcut.Description = description;
-                shortcut.IconLocation = iconPath;
-                shortcut.Save();
+                string workDir = Path.GetDirectoryName(targetPath) ?? "";
+                string script = $"$s=(New-Object -COM WScript.Shell).CreateShortcut('{shortcutPath.Replace("'", "''")}'); " +
+                               $"$s.TargetPath='{targetPath.Replace("'", "''")}'; " +
+                               $"$s.Arguments='{arguments.Replace("'", "''")}'; " +
+                               $"$s.WorkingDirectory='{workDir.Replace("'", "''")}'; " +
+                               $"$s.Description='{description.Replace("'", "''")}'; " +
+                               $"$s.IconLocation='{iconPath.Replace("'", "''")}'; " +
+                               $"$s.Save()";
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -NonInteractive -WindowStyle Hidden -Command \"{script}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                using var proc = Process.Start(psi);
+                proc?.WaitForExit(4000);
             }
+            catch { }
         }
     }
 }
