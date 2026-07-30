@@ -608,6 +608,76 @@
                     <Button x:Name="BtnAuthor" Content="© 2026 Murr (https://github.com/vtstv)" HorizontalAlignment="Right" Background="Transparent" Foreground="#777799" BorderThickness="0" Cursor="Hand" Click="BtnAuthor_Click"/>
                 </Grid>
             </Border>
+
+            <!-- 6. Custom Dark Glassmorphic Modal Overlay: Tuya Cloud Guide -->
+            <Grid x:Name="OverlayTuyaGuide" Grid.RowSpan="5" Visibility="Collapsed" Background="#E50A0A14">
+                <Border Width="560" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#161626" BorderBrush="#00F0FF" BorderThickness="1" CornerRadius="16" Padding="20">
+                    <StackPanel>
+                        <!-- Header -->
+                        <Grid Margin="0,0,0,14">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="🔑" FontSize="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="How to Get Access ID &amp; Key in Tuya Cloud" FontSize="15" FontWeight="Bold" Foreground="#00F0FF"/>
+                            </StackPanel>
+                            <Button Content="✕" Width="26" Height="26" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#AAAAAA" Click="BtnCloseTuyaGuide_Click"/>
+                        </Grid>
+
+                        <!-- Step-by-Step Instructions in English -->
+                        <ScrollViewer MaxHeight="380" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
+                            <StackPanel TextElement.Foreground="#DDDDDD" TextElement.FontSize="12">
+                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run FontWeight="Bold" Foreground="#00F0FF">1️⃣ Register on Tuya IoT Portal:</Run>
+                                        <LineBreak/>
+                                        Go to <Run Foreground="#FFEA00">https://iot.tuya.com</Run> and create a free developer account.
+                                    </TextBlock>
+                                </Border>
+
+                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run FontWeight="Bold" Foreground="#00F0FF">2️⃣ Create a Cloud Project:</Run>
+                                        <LineBreak/>
+                                        Navigate to <Run Foreground="#10B981">Cloud -&gt; Development -&gt; Create Cloud Project</Run>. Choose your data center region (e.g. Europe).
+                                    </TextBlock>
+                                </Border>
+
+                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run FontWeight="Bold" Foreground="#00F0FF">3️⃣ Authorize IoT Core API:</Run>
+                                        <LineBreak/>
+                                        In your Cloud Project, go to <Run Foreground="#10B981">Service API</Run> tab, click <Run Foreground="#FFEA00">Go to Authorize</Run> and subscribe to the <Run Foreground="#00F0FF">IoT Core API</Run>.
+                                    </TextBlock>
+                                </Border>
+
+                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run FontWeight="Bold" Foreground="#00F0FF">4️⃣ Link Your Smart Life App Account:</Run>
+                                        <LineBreak/>
+                                        Go to <Run Foreground="#10B981">Devices -&gt; Link Tuya App Account -&gt; Add App Account</Run>. Scan the displayed QR code using your <Run Foreground="#FFEA00">Smart Life / Tuya Smart</Run> mobile app (Profile -&gt; QR Scanner).
+                                    </TextBlock>
+                                </Border>
+
+                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,0">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run FontWeight="Bold" Foreground="#00F0FF">5️⃣ Copy Your Credentials:</Run>
+                                        <LineBreak/>
+                                        Go back to your Project <Run Foreground="#10B981">Overview</Run> page and copy:
+                                        <LineBreak/>
+                                        • <Run FontWeight="Bold" Foreground="#FFEA00">Client ID</Run> (Access ID)
+                                        <LineBreak/>
+                                        • <Run FontWeight="Bold" Foreground="#FFEA00">Client Secret</Run> (Access Key)
+                                        <LineBreak/><LineBreak/>
+                                        Paste them into the fields and click <Run Foreground="#0066CC">Fetch Key from Cloud</Run>!
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Close Button -->
+                        <Button Content="Got it!" Height="32" Style="{StaticResource GlassBtn}" Background="#0066CC" FontWeight="Bold" Click="BtnCloseTuyaGuide_Click"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
     </Border>
 </Window>
