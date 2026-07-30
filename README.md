@@ -20,6 +20,7 @@ SmartLamp Studio is a high-performance Windows desktop application for managing 
 - **Home Assistant & MQTT Bridge**: Embedded MQTT bridge (port 1883) for automated Home Assistant discovery and bidirectional control.
 - **Headless CLI Execution**: Full command-line interface supporting silent execution (`--toggle`, `--on`, `--off`, `--brightness`, `--temp`, `--color`) without bringing up the GUI.
 - **Wi-Fi Auto-Discovery**: Subnet UDP broadcast scanner for local Tuya device detection and multi-device management.
+- **Custom User Presets**: Save, name, apply, and manage custom brightness, color temperature, and RGB color configurations with one-click chips.
 - **System Integration**: One-click installation to `%LocalAppData%`, Start Menu integration, Windows Autostart (system tray launch), and DPAPI credential encryption.
 
 ---
