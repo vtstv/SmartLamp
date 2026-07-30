@@ -144,8 +144,8 @@ namespace SmartLampApp.Services
                 {
                     identifiers = new[] { active.DevId },
                     name = active.Name,
-                    model = "SmartLamp Studio V2",
-                    manufacturer = "Murr Smart Home"
+                    model = AppVersion.FullTitle,
+                    manufacturer = $"{AppVersion.Author} Smart Home"
                 }
             };
             return JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });

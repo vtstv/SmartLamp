@@ -61,6 +61,10 @@ namespace SmartLampApp
         public MainWindow()
         {
             InitializeComponent();
+            this.Title = AppVersion.FullTitle;
+            TxtAppTitle.Text = AppVersion.DisplayTitle;
+            BtnAuthor.Content = AppVersion.CopyrightNotice;
+
             _config = ConfigManager.Load();
             _protocol = new TuyaProtocol(_config);
 
@@ -226,7 +230,7 @@ namespace SmartLampApp
                 _notifyIcon = new System.Windows.Forms.NotifyIcon
                 {
                     Icon = trayIcon,
-                    Text = "SmartLamp Studio by Murr",
+                    Text = AppVersion.SystemTrayToolTip,
                     Visible = true
                 };
 
