@@ -1,6 +1,13 @@
+// ============================================================================
+// Copyright (c) 2026 Murr (https://github.com/vtstv). All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root.
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace SmartLampApp.Models
@@ -57,6 +64,38 @@ namespace SmartLampApp.Models
     public static class ConfigManager
     {
         private static readonly string ConfigFileName = "smartlamp_config.json";
+        private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("SmartLampStudioSecuredKey_DPAPI");
+
+        public static string EncryptSecret(string plainText)
+        {
+            if (string.IsNullOrWhiteSpace(plainText) || plainText.StartsWith("enc:")) return plainText;
+            try
+            {
+                byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+                byte[] cipherBytes = ProtectedData.Protect(plainBytes, Entropy, DataProtectionScope.CurrentUser);
+                return "enc:" + Convert.ToBase64String(cipherBytes);
+            }
+            catch
+            {
+                return plainText;
+            }
+        }
+
+        public static string DecryptSecret(string cipherText)
+        {
+            if (string.IsNullOrWhiteSpace(cipherText) || !cipherText.StartsWith("enc:")) return cipherText;
+            try
+            {
+                string rawBase64 = cipherText.Substring(4);
+                byte[] cipherBytes = Convert.FromBase64String(rawBase64);
+                byte[] plainBytes = ProtectedData.Unprotect(cipherBytes, Entropy, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(plainBytes);
+            }
+            catch
+            {
+                return cipherText;
+            }
+        }
 
         public static string GetConfigPath()
         {
@@ -79,7 +118,21 @@ namespace SmartLampApp.Models
                 {
                     string json = File.ReadAllText(path);
                     var cfg = JsonSerializer.Deserialize<LampConfig>(json);
-                    if (cfg != null) return cfg;
+                    if (cfg != null)
+                    {
+                        // Decrypt secrets upon loading
+                        cfg.access_key = DecryptSecret(cfg.access_key);
+                        cfg.local_key = DecryptSecret(cfg.local_key);
+
+                        if (cfg.devices != null)
+                        {
+                            foreach (var dev in cfg.devices)
+                            {
+                                dev.LocalKey = DecryptSecret(dev.LocalKey);
+                            }
+                        }
+                        return cfg;
+                    }
                 }
             }
             catch { }
@@ -91,9 +144,28 @@ namespace SmartLampApp.Models
             try
             {
                 string path = GetConfigPath();
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string json = JsonSerializer.Serialize(config, options);
-                File.WriteAllText(path, json);
+
+                // Create a clone for saving so in-memory values remain decrypted in UI
+                string inMemoryJson = JsonSerializer.Serialize(config);
+                var copy = JsonSerializer.Deserialize<LampConfig>(inMemoryJson);
+
+                if (copy != null)
+                {
+                    copy.access_key = EncryptSecret(copy.access_key);
+                    copy.local_key = EncryptSecret(copy.local_key);
+
+                    if (copy.devices != null)
+                    {
+                        foreach (var dev in copy.devices)
+                        {
+                            dev.LocalKey = EncryptSecret(dev.LocalKey);
+                        }
+                    }
+
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    string encryptedJson = JsonSerializer.Serialize(copy, options);
+                    File.WriteAllText(path, encryptedJson);
+                }
             }
             catch { }
         }

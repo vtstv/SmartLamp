@@ -1,9 +1,13 @@
 # .NET & C# Build Artifacts
-bin/
-obj/
-src/bin/
-src/obj/
+[Bb]in/
+[Oo]bj/
 dist/
+
+# PyInstaller & Python Artifacts
+build/
+__pycache__/
+*.spec
+*.pyc
 
 # Visual Studio & IDE Settings
 .vs/
@@ -12,9 +16,14 @@ dist/
 *.suo
 *.userosscache
 *.sln.docstates
+.vscode/
 
-# Executables & Logs
-dist/*.pdb
-crash.log
+# Sensitive Configuration & Personal Credentials
 smartlamp_config.json
+devices.json
+
+# Temporary Files & Logs
 *.tmp
+*.log
+crash.log
+ipc.log
