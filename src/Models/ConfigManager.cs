@@ -40,7 +40,8 @@ namespace SmartLampApp.Models
         public bool hotkey_mod_shift { get; set; } = false;
         public string hotkey_key { get; set; } = "L";
 
-        // Application Window Exit Behavior
+        // Application Window Exit & Startup Behavior
+        public bool autostart { get; set; } = false;
         public bool close_to_tray { get; set; } = true;
 
         // Integration Toggles

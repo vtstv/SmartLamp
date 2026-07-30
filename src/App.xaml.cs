@@ -131,9 +131,30 @@ namespace SmartLampApp
             catch { }
         }
 
+        public static bool IsAutostartLaunch { get; set; } = false;
+
         private bool HandleCommandLineArgs(string[] args)
         {
             string argStr = string.Join(" ", args).ToLowerInvariant();
+
+            if (argStr.Contains("--install"))
+            {
+                SmartLampApp.Services.InstallationService.InstallToSystem(out var msg);
+                System.Windows.MessageBox.Show(msg, "SmartLamp Studio Installer", MessageBoxButton.OK, MessageBoxImage.Information);
+                return true;
+            }
+            if (argStr.Contains("--uninstall"))
+            {
+                SmartLampApp.Services.InstallationService.UninstallFromSystem(out var msg);
+                System.Windows.MessageBox.Show(msg, "SmartLamp Studio Uninstaller", MessageBoxButton.OK, MessageBoxImage.Information);
+                return true;
+            }
+            if (argStr.Contains("--autostart"))
+            {
+                IsAutostartLaunch = true;
+                return false; // Proceed to run normal WPF app, but minimized to tray
+            }
+
             if (!argStr.Contains("--toggle") && !argStr.Contains("-t") &&
                 !argStr.Contains("--on") && !argStr.Contains("--off") &&
                 !argStr.Contains("--brightness") && !argStr.Contains("--temp") &&

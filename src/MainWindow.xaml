@@ -420,6 +420,9 @@
                         <Border Background="#161626" CornerRadius="12" Padding="12">
                             <StackPanel>
                                 <TextBlock Text="⚙️ App Behavior &amp; Integrations" FontSize="13" FontWeight="Bold" Foreground="#FF9100" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="ChkAutostart" Content="Launch automatically on Windows Startup"
+                                          Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
+                                          Click="ChkAutostart_Click" Margin="0,0,0,6"/>
                                 <CheckBox x:Name="ChkCloseToTray" Content="Minimize to System Tray on window close (✕)"
                                           Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"
                                           Click="ChkConfigToggle_Click" Margin="0,0,0,6"/>
@@ -428,9 +431,16 @@
                                           Click="ChkConfigToggle_Click" Margin="0,0,0,6"/>
                                 <CheckBox x:Name="ChkEnableMqtt" Content="Enable Home Assistant &amp; MQTT Bridge"
                                           Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
-                                          Click="ChkConfigToggle_Click" Margin="0,0,0,8"/>
+                                          Click="ChkConfigToggle_Click" Margin="0,0,0,10"/>
 
-                                <Button x:Name="BtnCreateShortcut" Content="⚡ Create Desktop Shortcut (Toggle Power)" Height="28" Style="{StaticResource GlassBtn}" Background="#651FFF" Click="BtnCreateShortcut_Click"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnInstallApp" Grid.Column="0" Content="📦 Install App to System" Height="28" Margin="0,0,3,0" Style="{StaticResource GlassBtn}" Background="#10B981" Click="BtnInstallApp_Click"/>
+                                    <Button x:Name="BtnCreateShortcut" Grid.Column="1" Content="⚡ Desktop Shortcut" Height="28" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#651FFF" Click="BtnCreateShortcut_Click"/>
+                                </Grid>
                             </StackPanel>
                         </Border>
                     </StackPanel>
