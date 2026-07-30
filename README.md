@@ -1,9 +1,10 @@
-# 💡 SmartLamp Studio
-Desktop Application for controlling Tuya smart lamps with **Google Smart Home / Google Assistant Integration**, **MQTT Bridge** and **Wi-Fi Auto-Discovery**.
+# SmartLamp Studio
+
+SmartLamp Studio is a high-performance Windows desktop application for managing Tuya smart lighting devices with native **Google Home**, **MQTT**, and **Command-Line Interface (CLI)** integration.
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)]()
-[![C# WPF](https://img.shields.io/badge/Framework-.NET%209%20WPF-512BD4.svg)]()
-[![Google Home](https://img.shields.io/badge/Integration-Google%20Smart%20Home-4285F4.svg)]()
+[![Framework](https://img.shields.io/badge/Framework-.NET%209%20WPF-512BD4.svg)]()
+[![Protocol](https://img.shields.io/badge/Protocol-Tuya%20v3.5-4285F4.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
@@ -12,61 +13,80 @@ Desktop Application for controlling Tuya smart lamps with **Google Smart Home / 
 
 ---
 
-## ✨ Features & Architecture
+## Features
 
-- **⚡ High Performance Tuya 3.5 Protocol Engine:**
-  - Uses an internal daemon HTTP server for persistent TCP socket connections to Tuya devices, dropping latency to **~10ms** and eliminating dropped commands.
-  - Bundled as a single embedded executable resource inside `SmartLampApp.exe`.
-- **🚀 System Installation & Windows Autostart:**
-  - **1-Click System Installation:** Installs app to `%LocalAppData%\SmartLampStudio`, registers in Windows Start Menu & **Installed Apps (Settings -> Apps)**.
-  - **Windows Autostart:** Optionally launch at Windows boot directly into System Tray.
-- **💻 Headless CLI Mode & Desktop Shortcut:**
-  - Control your smart lamp silently via Command Line without opening the GUI!
-  - Generate a 1-click **Desktop Shortcut (`Toggle Smart Lamp.lnk`)** directly from the UI to toggle power on double click.
-- **🌐 Google Smart Home & Assistant Integration:**
-  - Includes a built-in **Google Smart Home Local Bridge HTTP/Webhook Server** (`http://localhost:8088/google-smart-home/`) supporting Google Smart Home intents (`SYNC`, `QUERY`, `EXECUTE`).
-  - Includes a **Google Assistant Voice Command Simulator** directly inside the app!
-- **📡 Home Assistant & MQTT Bridge:**
-  - Built-in MQTT bridge (`port 1883`) for easy integration with Home Assistant.
-- **🔍 Wi-Fi Auto-Discovery & Multi-Device Selector:**
-  - Subnet UDP Broadcast Scanner to auto-discover Tuya devices on Wi-Fi.
-  - Multi-device switcher & Group Control.
-- **🎨 Modern Glassmorphic UI & Interactive Color Picker:**
-  - Ambient Light Indicator, zero scrollbars, custom title bar, and 18-color RGB palette.
-- **🔒 DPAPI Secret Encryption:**
-  - Automatically encrypts sensitive credentials using Windows Data Protection API (DPAPI).
+- **Persistent Protocol Engine**: Uses an embedded daemon for persistent TCP connections to Tuya 3.5 devices, achieving low-latency control (~10ms) and reliable command dispatching.
+- **Google Home & Assistant Integration**: Built-in HTTP webhook endpoint supporting Google Smart Home intents (`SYNC`, `QUERY`, `EXECUTE`) and local voice command simulation.
+- **Home Assistant & MQTT Bridge**: Embedded MQTT bridge (port 1883) for automated Home Assistant discovery and bidirectional control.
+- **Headless CLI Execution**: Full command-line interface supporting silent execution (`--toggle`, `--on`, `--off`, `--brightness`, `--temp`, `--color`) without bringing up the GUI.
+- **Wi-Fi Auto-Discovery**: Subnet UDP broadcast scanner for local Tuya device detection and multi-device management.
+- **System Integration**: One-click installation to `%LocalAppData%`, Start Menu integration, Windows Autostart (system tray launch), and DPAPI credential encryption.
 
 ---
 
-## 💻 CLI Commands & System Installation
+## Command Line Interface (CLI)
 
-You can trigger headless commands or installation directly via `SmartLampApp.exe` (or via UI buttons):
+The application supports direct command-line arguments for scripts, shortcuts, and automation workflows:
 
 | Command | Description |
 | :--- | :--- |
-| `SmartLampApp.exe --install` | Installs app into `%LocalAppData%`, registers Start Menu & Uninstall entry |
-| `SmartLampApp.exe --uninstall` | Cleanly removes all shortcuts, autostart, and system registration entries |
-| `SmartLampApp.exe --autostart` | Launched automatically at Windows boot (runs minimized in tray) |
-| `SmartLampApp.exe --toggle` | Smartly toggles lamp power (ON if OFF, OFF if ON) based on live status |
-| `SmartLampApp.exe --on` | Turns the lamp ON |
-| `SmartLampApp.exe --off` | Turns the lamp OFF |
-| `SmartLampApp.exe --brightness 75` | Sets brightness level (1-100%) |
-| `SmartLampApp.exe --temp 4000` | Sets color temperature (2700K - 6500K) |
-| `SmartLampApp.exe --color #FF5252` | Sets RGB color hex |
+| `SmartLampApp.exe --toggle` | Toggles lamp power state based on real-time device status |
+| `SmartLampApp.exe --on` | Powers the lamp ON |
+| `SmartLampApp.exe --off` | Powers the lamp OFF |
+| `SmartLampApp.exe --brightness <1-100>` | Adjusts brightness percentage |
+| `SmartLampApp.exe --temp <2700-6500>` | Adjusts color temperature in Kelvin |
+| `SmartLampApp.exe --color <#HEX>` | Sets RGB color by hex string |
+| `SmartLampApp.exe --install` | Installs application to system and registers Start Menu shortcuts |
+| `SmartLampApp.exe --uninstall` | Removes system shortcuts and registration entries |
+| `SmartLampApp.exe --autostart` | Background launch mode for Windows startup |
 
 ---
 
-## 🛠️ Building from Source
+## Building from Source
 
+### Prerequisites
+- Windows 10/11 x64
+- .NET 9.0 SDK
+- Python 3.10+ (with `tinytuya` and `PyInstaller`)
+
+### Build Command
+Execute the build script in the repository root:
 ```cmd
 build.bat
 ```
-*(Requires .NET 9 SDK)*.
+The compiled single-file executable will be generated at `dist/SmartLampApp.exe`.
 
 ---
 
-## 📄 License
+## Architecture Overview
 
-Licensed under the [MIT License](LICENSE).
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SmartLamp Studio UI                      │
+└──────┬──────────────────────┬───────────────────────┬───────┘
+       │                      │                       │
+       ▼                      ▼                       ▼
+┌──────────────┐      ┌──────────────┐      ┌─────────────────┐
+│ MQTT Bridge  │      │ Google Home  │      │  Tuya Protocol  │
+│  (Port 1883) │      │  (Port 8088) │      │  Daemon Engine  │
+└──────────────┘      └──────────────┘      └────────┬────────┘
+                                                     │ Local TCP
+                                                     ▼
+                                            ┌─────────────────┐
+                                            │ Tuya Smart Lamp │
+                                            └─────────────────┘
+```
 
-Copyright (c) 2026 **[Murr](https://github.com/vtstv)**.
+---
+
+## Security
+
+Sensitively stored access keys and device credentials are encrypted locally using the Windows Data Protection API (DPAPI).
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Copyright (c) 2026 [Murr](https://github.com/vtstv).
