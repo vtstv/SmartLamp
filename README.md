@@ -47,7 +47,8 @@ The application supports direct command-line arguments for scripts, shortcuts, a
 ### Prerequisites
 - Windows 10/11 x64
 - .NET 9.0 SDK
-- Python 3.10+ (with `tinytuya` and `PyInstaller`)
+
+*(Note: The Tuya protocol daemon `tuya_bridge.exe` is pre-compiled and embedded directly into the application resources. Python is **not required** to build or run the application. Python 3.10+ with `tinytuya` and `PyInstaller` is only needed if you modify `src/TuyaBridge/tuya_bridge.py` source code).*
 
 ### Build Command
 Execute the build script in the repository root:
