@@ -8,6 +8,10 @@ Desktop Application for controlling Tuya smart lamps with **Google Smart Home / 
 
 ---
 
+![SmartLamp Studio Interface](src/Assets/Screenshot.png)
+
+---
+
 ## ✨ Features & Architecture
 
 - **⚡ High Performance Tuya 3.5 Protocol Engine:**
@@ -22,8 +26,8 @@ Desktop Application for controlling Tuya smart lamps with **Google Smart Home / 
   - Subnet UDP Broadcast Scanner to auto-discover Tuya devices on Wi-Fi.
   - Multi-device switcher & Group Control.
 - **🎨 Modern Glassmorphic UI & Interactive Color Picker:**
-  - Ambient Light Indicator, zero scrollbars, custom title bar, and full RGB Color Picker.
- **🔒 DPAPI Secret Encryption:**
+  - Ambient Light Indicator, zero scrollbars, custom title bar, and 18-color RGB palette.
+- **🔒 DPAPI Secret Encryption:**
   - Automatically encrypts sensitive credentials using Windows Data Protection API (DPAPI).
 
 ---
