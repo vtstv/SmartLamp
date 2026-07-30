@@ -1,8 +1,6 @@
 # 💡 SmartLamp Studio (Windows 11 C# WPF Edition)
 
-Professional Windows 11 Desktop Application for controlling Tuya smart lamps with **Google Smart Home / Google Assistant Integration**, **100% Self-Contained Binary**, and **Wi-Fi Auto-Discovery**.
-
-Created by **[Murr](https://github.com/vtstv)**.
+Desktop Application for controlling Tuya smart lamps with **Google Smart Home / Google Assistant Integration**, **MQTT Bridge**, **DPAPI Secret Encryption**, and **Wi-Fi Auto-Discovery**.
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)]()
 [![C# WPF](https://img.shields.io/badge/Framework-.NET%209%20WPF-512BD4.svg)]()
@@ -13,26 +11,21 @@ Created by **[Murr](https://github.com/vtstv)**.
 
 ## ✨ Features & Architecture
 
-- **📁 Clean Project Structure in Root:**
-  - All C# WPF source files (`SmartLampApp.csproj`, `MainWindow.xaml`, `MainWindow.xaml.cs`, `GoogleHomeService.cs`, `TuyaProtocol.cs`, `ConfigManager.cs`, `App.xaml`) are located directly in the project root!
+- **⚡ High Performance Tuya 3.5 Protocol Engine:**
+  - Uses an internal daemon HTTP server for persistent TCP socket connections to Tuya devices, dropping latency to **~10ms** and eliminating dropped commands.
+  - Bundled as a single embedded executable resource inside `SmartLampApp.exe`.
 - **🌐 Google Smart Home & Assistant Integration:**
   - Includes a built-in **Google Smart Home Local Bridge HTTP/Webhook Server** (`http://localhost:8088/google-smart-home/`) supporting Google Smart Home intents (`SYNC`, `QUERY`, `EXECUTE`).
   - Includes a **Google Assistant Voice Command Simulator** directly inside the app!
-- **🛡️ 100% Self-Contained Binary (Fixed Windows Launching):**
-  - Compiled with `<SelfContained>true</SelfContained>`. Runs out-of-the-box on ANY Windows 10/11 system without requiring pre-installed .NET runtimes!
-  - Includes global crash logging (`AppDomain.UnhandledException` & `DispatcherUnhandledException` log to `crash.log`).
+- **📡 Home Assistant & MQTT Bridge:**
+  - Built-in MQTT bridge (`port 1883`) for easy integration with Home Assistant.
 - **🔍 Wi-Fi Auto-Discovery & Multi-Device Selector:**
   - Subnet UDP Broadcast Scanner to auto-discover Tuya devices on Wi-Fi.
   - Multi-device switcher & Group Control.
 - **🎨 Modern Glassmorphic UI & Interactive Color Picker:**
   - Ambient Light Indicator, zero scrollbars, custom title bar, and full RGB Color Picker.
-
----
-
-## 🚀 Executable Location
-
-Run the standalone executable:
-**[dist/SmartLampApp.exe](file:///d:/Dev/SmartLampTest/dist/SmartLampApp.exe)** *(Self-Contained Portable Binary)*
+ **🔒 DPAPI Secret Encryption:**
+  - Automatically encrypts sensitive credentials using Windows Data Protection API (DPAPI).
 
 ---
 
@@ -49,4 +42,4 @@ build.bat
 
 Licensed under the [MIT License](LICENSE).
 
-Created with ❤️ by **[Murr](https://github.com/vtstv)**.
+Copyright (c) 2026 **[Murr](https://github.com/vtstv)**.

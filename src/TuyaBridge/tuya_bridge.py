@@ -1,3 +1,8 @@
+# ============================================================================
+# Copyright (c) 2026 Murr (https://github.com/vtstv). All rights reserved.
+# Licensed under the MIT License. See LICENSE file in the project root.
+# ============================================================================
+
 import sys
 import json
 import tinytuya
