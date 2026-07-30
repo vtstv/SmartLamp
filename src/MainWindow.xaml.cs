@@ -795,20 +795,12 @@ namespace SmartLampApp
 
         private void BtnTuyaGuide_Click(object sender, RoutedEventArgs e)
         {
-            string helpMessage =
-                "🔑 КАК ПОЛУЧИТЬ ACCESS ID И ACCESS KEY В TUYA CLOUD:\n\n" +
-                "1️⃣ Зарегистрируйтесь на портале разработчиков: https://iot.tuya.com\n" +
-                "2️⃣ Перейдите в раздел: Cloud -> Development -> Create Cloud Project\n" +
-                "3️⃣ Создайте проект (выберите регион Europe или подходящий вам)\n" +
-                "4️⃣ В созданном проекте откройте вкладку Service API -> нажмите 'Go to Authorize' и подключите API 'IoT Core'\n" +
-                "5️⃣ Перейдите во вкладку Devices -> Link Tuya App Account -> нажмите 'Add App Account'\n" +
-                "6️⃣ Отсканируйте появившийся QR-код через приложение Smart Life / Tuya Smart на вашем телефоне (Профиль -> Сканер QR)\n" +
-                "7️⃣ Перейдите на главную страницу проекта (Overview) и скопируйте:\n" +
-                "    • Access ID / Client ID\n" +
-                "    • Access Secret / Client Secret (Access Key)\n\n" +
-                "Вставьте эти ключи в поля выше и нажмите 'Fetch Key from Cloud' — приложение автоматически загрузит Local Key вашей лампы!";
+            OverlayTuyaGuide.Visibility = Visibility.Visible;
+        }
 
-            System.Windows.MessageBox.Show(helpMessage, "Инструкция: Tuya Cloud Keys", MessageBoxButton.OK, MessageBoxImage.Information);
+        private void BtnCloseTuyaGuide_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayTuyaGuide.Visibility = Visibility.Collapsed;
         }
 
         private async void BtnColor_Click(object sender, RoutedEventArgs e)
