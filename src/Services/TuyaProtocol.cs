@@ -63,10 +63,32 @@ namespace SmartLampApp.Services
         {
             if (_config.devices != null && _config.devices.Count > 0)
             {
-                var dev = _config.devices.Find(d => d.DevId == _config.selected_dev_id);
-                if (dev != null) return dev;
-                return _config.devices[0];
+                var dev = _config.devices.Find(d => d.DevId == _config.selected_dev_id || d.Ip == _config.selected_dev_id);
+                if (dev == null) dev = _config.devices[0];
+
+                if ((string.IsNullOrWhiteSpace(dev.DevId) || dev.DevId.Contains(".") || dev.DevId == dev.Ip) && !string.IsNullOrWhiteSpace(_config.dev_id) && !_config.dev_id.Contains("."))
+                {
+                    dev.DevId = _config.dev_id;
+                }
+                if (string.IsNullOrWhiteSpace(dev.LocalKey) && !string.IsNullOrWhiteSpace(_config.local_key))
+                {
+                    dev.LocalKey = _config.local_key;
+                }
+                return dev;
             }
+
+            if (!string.IsNullOrWhiteSpace(_config.local_key))
+            {
+                return new DeviceInfo
+                {
+                    Name = "Smart Lamp 1",
+                    Ip = string.IsNullOrWhiteSpace(_config.ip) ? "192.168.0.68" : _config.ip,
+                    DevId = string.IsNullOrWhiteSpace(_config.dev_id) ? "bf5844a34bb0422e67tmbi" : _config.dev_id,
+                    LocalKey = _config.local_key,
+                    Version = string.IsNullOrWhiteSpace(_config.version) ? "3.5" : _config.version
+                };
+            }
+
             return new DeviceInfo();
         }
 
@@ -231,6 +253,8 @@ namespace SmartLampApp.Services
             if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey))
             {
                 status.ErrorMessage = "Local Key not configured";
+                status.IsOnline = false;
+                status.IsPowerOn = false;
                 return status;
             }
 
@@ -246,9 +270,17 @@ namespace SmartLampApp.Services
             string pythonFallback = $"import tinytuya, json; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); print(json.dumps(b.status()))";
             string output = await SendBridgeRequestAsync(payload, pythonFallback);
 
-            if (string.IsNullOrWhiteSpace(output) || (output.Contains("\"success\": false") && output.Contains("error")))
+            string lowerOutput = output != null ? output.ToLowerInvariant() : "";
+
+            if (string.IsNullOrWhiteSpace(output) ||
+                lowerOutput.Contains("\"error\"") ||
+                lowerOutput.Contains("\"err\"") ||
+                lowerOutput.Contains("\"success\": false") ||
+                lowerOutput.Contains("\"success\":false"))
             {
-                status.ErrorMessage = "Device offline or busy";
+                status.ErrorMessage = "Device offline or key error";
+                status.IsOnline = false;
+                status.IsPowerOn = false;
                 return status;
             }
 
@@ -321,11 +353,10 @@ namespace SmartLampApp.Services
             catch
             {
                 // Fallback string matching if JSON structure was unexpected
-                string lower = output.ToLowerInvariant();
-                status.IsPowerOn = lower.Contains("\"20\":true") || lower.Contains("\"20\": true") ||
-                                   lower.Contains("\"1\":true") || lower.Contains("\"1\": true") ||
-                                   lower.Contains("\"101\":true") || lower.Contains("\"101\": true") ||
-                                   lower.Contains("\"20\":1") || lower.Contains("\"20\": 1");
+                status.IsPowerOn = lowerOutput.Contains("\"20\":true") || lowerOutput.Contains("\"20\": true") ||
+                                   lowerOutput.Contains("\"1\":true") || lowerOutput.Contains("\"1\": true") ||
+                                   lowerOutput.Contains("\"101\":true") || lowerOutput.Contains("\"101\": true") ||
+                                   lowerOutput.Contains("\"20\":1") || lowerOutput.Contains("\"20\": 1");
             }
 
             return status;

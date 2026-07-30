@@ -145,7 +145,7 @@ namespace SmartLampApp.Models
                                 {
                                     dev.LocalKey = cfg.local_key;
                                 }
-                                if (string.IsNullOrWhiteSpace(dev.DevId) && !string.IsNullOrWhiteSpace(cfg.dev_id))
+                                if ((string.IsNullOrWhiteSpace(dev.DevId) || dev.DevId.Contains(".") || dev.DevId == dev.Ip) && !string.IsNullOrWhiteSpace(cfg.dev_id) && !cfg.dev_id.Contains("."))
                                 {
                                     dev.DevId = cfg.dev_id;
                                 }
@@ -181,6 +181,10 @@ namespace SmartLampApp.Models
                             if (string.IsNullOrWhiteSpace(dev.LocalKey) && !string.IsNullOrWhiteSpace(copy.local_key))
                             {
                                 dev.LocalKey = copy.local_key;
+                            }
+                            if ((string.IsNullOrWhiteSpace(dev.DevId) || dev.DevId.Contains(".") || dev.DevId == dev.Ip) && !string.IsNullOrWhiteSpace(copy.dev_id) && !copy.dev_id.Contains("."))
+                            {
+                                dev.DevId = copy.dev_id;
                             }
                             dev.LocalKey = EncryptSecret(dev.LocalKey);
                         }
