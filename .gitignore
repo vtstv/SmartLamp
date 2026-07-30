@@ -1,0 +1,20 @@
+# .NET & C# Build Artifacts
+bin/
+obj/
+src/bin/
+src/obj/
+dist/
+
+# Visual Studio & IDE Settings
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Executables & Logs
+dist/*.pdb
+crash.log
+smartlamp_config.json
+*.tmp
