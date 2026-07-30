@@ -23,6 +23,14 @@ def get_device(dev_id, ip, local_key, version):
     return devices[key]
 
 class BridgeHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
+            return
+
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
@@ -33,6 +41,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
         ip = req.get('ip')
         local_key = req.get('local_key')
         version = req.get('version', '3.5')
+
+        if action == 'health':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
+            return
 
         res = {"success": False}
         try:
@@ -85,7 +100,11 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
 def run_server(port=18889):
     server_address = ('127.0.0.1', port)
-    httpd = HTTPServer(server_address, BridgeHandler)
+    try:
+        httpd = HTTPServer(server_address, BridgeHandler)
+    except OSError:
+        # Address already in use! Exit immediately so duplicate processes never linger!
+        sys.exit(0)
     print(f"TuyaBridge Server running on http://127.0.0.1:{port}")
     httpd.serve_forever()
 

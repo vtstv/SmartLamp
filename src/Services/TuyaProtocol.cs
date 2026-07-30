@@ -107,7 +107,15 @@ namespace SmartLampApp.Services
 
         private static void EnsureBridgeDaemonRunning()
         {
-            Task.Run(async () =>
+            _ = EnsureBridgeDaemonRunningAsync();
+        }
+
+        private static readonly SemaphoreSlim _daemonLock = new SemaphoreSlim(1, 1);
+
+        private static async Task EnsureBridgeDaemonRunningAsync()
+        {
+            await _daemonLock.WaitAsync().ConfigureAwait(false);
+            try
             {
                 try
                 {
@@ -116,31 +124,43 @@ namespace SmartLampApp.Services
                 }
                 catch { }
 
-                try
+                if (_bridgeDaemon != null && !_bridgeDaemon.HasExited)
                 {
-                    string exePath = GetBridgeExecutablePath();
-                    if (exePath == "python" || !File.Exists(exePath)) return;
-
-                    if (_bridgeDaemon == null || _bridgeDaemon.HasExited)
+                    for (int i = 0; i < 5; i++)
                     {
-                        var psi = new ProcessStartInfo
+                        await Task.Delay(300).ConfigureAwait(false);
+                        try
                         {
-                            FileName = exePath,
-                            Arguments = $"--server {ServerPort}",
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true
-                        };
-                        _bridgeDaemon = Process.Start(psi);
-                        if (_bridgeDaemon != null)
-                        {
-                            ChildProcessTracker.AddProcess(_bridgeDaemon);
+                            var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health").ConfigureAwait(false);
+                            if (res.IsSuccessStatusCode) return;
                         }
+                        catch { }
                     }
                 }
-                catch { }
-            });
+
+                string exePath = GetBridgeExecutablePath();
+                if (exePath == "python" || !File.Exists(exePath)) return;
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = exePath,
+                    Arguments = $"--server {ServerPort}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                _bridgeDaemon = Process.Start(psi);
+                if (_bridgeDaemon != null)
+                {
+                    ChildProcessTracker.AddProcess(_bridgeDaemon);
+                }
+            }
+            catch { }
+            finally
+            {
+                _daemonLock.Release();
+            }
         }
 
         public static void StopDaemon()
