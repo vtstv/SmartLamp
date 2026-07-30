@@ -27,3 +27,10 @@ devices.json
 *.log
 crash.log
 ipc.log
+
+# Release Artifacts & Local Release Builders (Excluded from Git)
+make_release.bat
+make_release.ps1
+release_builder.*
+releases/
+release/
