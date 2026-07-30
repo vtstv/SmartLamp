@@ -1263,27 +1263,29 @@ namespace SmartLampApp
         {
             if (_isUpdatingUi) return;
 
+            _isUpdatingUi = true;
             SliderBright.Value = preset.Brightness;
             TxtBrightVal.Text = $"{preset.Brightness}%";
             SliderTemp.Value = preset.ColorTempK;
             TxtTempVal.Text = $"{preset.ColorTempK}K";
             TxtHexCode.Text = preset.ColorHex;
+            _isUpdatingUi = false;
 
             _isPowerOn = true;
             UpdatePowerButtonUi();
-            await _protocol.SetPowerAsync(true);
 
             if (preset.Mode == "colour")
             {
-                await _protocol.SetBrightnessAsync(preset.Brightness);
                 await _protocol.SetColorHexAsync(preset.ColorHex);
+                await _protocol.SetBrightnessAsync(preset.Brightness);
             }
             else
             {
-                await _protocol.SetBrightnessAsync(preset.Brightness);
                 await _protocol.SetColorTempAsync(preset.ColorTempK);
+                await _protocol.SetBrightnessAsync(preset.Brightness);
             }
 
+            await Task.Delay(250);
             _ = RefreshStatusAsync();
         }
 

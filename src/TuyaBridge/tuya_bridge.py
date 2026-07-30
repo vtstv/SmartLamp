@@ -63,7 +63,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             elif action == 'set_brightness':
                 b = get_device(dev_id, ip, local_key, version)
                 pct = req.get('brightness', 100)
-                b.set_brightness_percentage(pct)
+                b.set_multiple_values({20: True, 22: int(pct * 10)})
                 res["success"] = True
             elif action == 'set_temp':
                 b = get_device(dev_id, ip, local_key, version)
