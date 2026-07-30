@@ -86,6 +86,12 @@ namespace SmartLampApp
             InitializeSleepTimer();
             PopulateHotkeySelector();
 
+            ChkAutostart.IsChecked = Services.InstallationService.IsAutostartEnabled() || _config.autostart;
+            ChkCloseToTray.IsChecked = _config.close_to_tray;
+            ChkEnableGoogle.IsChecked = _config.enable_google_home;
+            ChkEnableMqtt.IsChecked = _config.enable_mqtt;
+            UpdateInstallButtonState();
+
             PopulateDeviceSelector();
             _ = RefreshStatusAsync();
         }
@@ -103,6 +109,12 @@ namespace SmartLampApp
         {
             base.OnSourceInitialized(e);
             RegisterGlobalHotkey();
+
+            if (App.IsAutostartLaunch)
+            {
+                this.WindowState = WindowState.Minimized;
+                this.Hide();
+            }
         }
 
         private void PopulateHotkeySelector()
@@ -834,6 +846,48 @@ namespace SmartLampApp
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"Failed to create shortcut: {ex.Message}", "Shortcut Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ChkAutostart_Click(object sender, RoutedEventArgs e)
+        {
+            bool enable = ChkAutostart.IsChecked == true;
+            _config.autostart = enable;
+            ConfigManager.Save(_config);
+            Services.InstallationService.SetAutostart(enable);
+        }
+
+        private void BtnInstallApp_Click(object sender, RoutedEventArgs e)
+        {
+            if (Services.InstallationService.IsInstalledInSystem())
+            {
+                var result = System.Windows.MessageBox.Show("Uninstall SmartLamp Studio shortcuts and registration?", "Uninstall App", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    Services.InstallationService.UninstallFromSystem(out string msg);
+                    System.Windows.MessageBox.Show(msg, "Uninstalled", MessageBoxButton.OK, MessageBoxImage.Information);
+                    UpdateInstallButtonState();
+                }
+            }
+            else
+            {
+                Services.InstallationService.InstallToSystem(out string msg);
+                System.Windows.MessageBox.Show(msg, "App Installed", MessageBoxButton.OK, MessageBoxImage.Information);
+                UpdateInstallButtonState();
+            }
+        }
+
+        private void UpdateInstallButtonState()
+        {
+            if (Services.InstallationService.IsInstalledInSystem())
+            {
+                BtnInstallApp.Content = "🗑️ Uninstall App";
+                BtnInstallApp.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#DC3545"));
+            }
+            else
+            {
+                BtnInstallApp.Content = "📦 Install App";
+                BtnInstallApp.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#10B981"));
             }
         }
 
