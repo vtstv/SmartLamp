@@ -23,10 +23,29 @@ namespace SmartLampApp
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            // Check for CLI Headless Arguments FIRST (e.g. --toggle, --on, --off, --brightness, etc.)
-            if (e.Args != null && e.Args.Length > 0)
+            base.OnStartup(e);
+
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            DispatcherUnhandledException += App_DispatcherUnhandledException;
+
+            string[] args = e.Args;
+            if (args == null || args.Length == 0)
             {
-                bool handled = HandleCommandLineArgs(e.Args);
+                var sysArgs = Environment.GetCommandLineArgs();
+                if (sysArgs.Length > 1)
+                {
+                    args = new string[sysArgs.Length - 1];
+                    Array.Copy(sysArgs, 1, args, 0, args.Length);
+                }
+                else
+                {
+                    args = Array.Empty<string>();
+                }
+            }
+
+            if (args.Length > 0)
+            {
+                bool handled = HandleCommandLineArgs(args);
                 if (handled)
                 {
                     Environment.Exit(0);
@@ -58,10 +77,7 @@ namespace SmartLampApp
                     var existingEvent = EventWaitHandle.OpenExisting(eventName);
                     existingEvent.Set();
                 }
-                catch (Exception ex)
-                {
-                    System.Windows.MessageBox.Show($"Could not signal existing instance: {ex.Message}", "Single Instance Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                catch { }
                 
                 Environment.Exit(0);
                 return;
@@ -100,10 +116,11 @@ namespace SmartLampApp
             waitThread.IsBackground = true;
             waitThread.Start();
 
-            base.OnStartup(e);
-
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            DispatcherUnhandledException += App_DispatcherUnhandledException;
+            var mainWindow = new MainWindow();
+            if (!IsAutostartLaunch)
+            {
+                mainWindow.Show();
+            }
         }
 
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -136,17 +153,18 @@ namespace SmartLampApp
         private bool HandleCommandLineArgs(string[] args)
         {
             string argStr = string.Join(" ", args).ToLowerInvariant();
+            try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Args: '{argStr}'\n"); } catch { }
 
             if (argStr.Contains("--install"))
             {
                 SmartLampApp.Services.InstallationService.InstallToSystem(out var msg);
-                System.Windows.MessageBox.Show(msg, "SmartLamp Studio Installer", MessageBoxButton.OK, MessageBoxImage.Information);
+                Console.WriteLine(msg);
                 return true;
             }
             if (argStr.Contains("--uninstall"))
             {
                 SmartLampApp.Services.InstallationService.UninstallFromSystem(out var msg);
-                System.Windows.MessageBox.Show(msg, "SmartLamp Studio Uninstaller", MessageBoxButton.OK, MessageBoxImage.Information);
+                Console.WriteLine(msg);
                 return true;
             }
             if (argStr.Contains("--autostart"))
