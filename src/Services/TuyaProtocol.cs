@@ -124,11 +124,11 @@ namespace SmartLampApp.Services
                 }
                 catch { }
 
-                if (_bridgeDaemon != null && !_bridgeDaemon.HasExited)
+                if ((_bridgeDaemon != null && !_bridgeDaemon.HasExited) || Process.GetProcessesByName("tuya_bridge").Length > 0)
                 {
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < 8; i++)
                     {
-                        await Task.Delay(300).ConfigureAwait(false);
+                        await Task.Delay(250).ConfigureAwait(false);
                         try
                         {
                             var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health").ConfigureAwait(false);
