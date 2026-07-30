@@ -133,10 +133,28 @@ namespace SmartLampApp.Services
                             RedirectStandardError = true
                         };
                         _bridgeDaemon = Process.Start(psi);
+                        if (_bridgeDaemon != null)
+                        {
+                            ChildProcessTracker.AddProcess(_bridgeDaemon);
+                        }
                     }
                 }
                 catch { }
             });
+        }
+
+        public static void StopDaemon()
+        {
+            try
+            {
+                if (_bridgeDaemon != null && !_bridgeDaemon.HasExited)
+                {
+                    _bridgeDaemon.Kill(true);
+                    _bridgeDaemon.Dispose();
+                    _bridgeDaemon = null;
+                }
+            }
+            catch { }
         }
 
         private async Task<string> SendBridgeRequestAsync(object payload, string rawPythonFallback)

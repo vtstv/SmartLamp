@@ -123,6 +123,12 @@ namespace SmartLampApp
             }
         }
 
+        protected override void OnExit(ExitEventArgs e)
+        {
+            SmartLampApp.Services.TuyaProtocol.StopDaemon();
+            base.OnExit(e);
+        }
+
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             LogCrash(e.Exception);
