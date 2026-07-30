@@ -246,14 +246,13 @@ namespace SmartLampApp.Services
             string pythonFallback = $"import tinytuya, json; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); print(json.dumps(b.status()))";
             string output = await SendBridgeRequestAsync(payload, pythonFallback);
 
-            if (string.IsNullOrWhiteSpace(output) || output.Contains("\"success\": false") && output.Contains("error"))
+            if (string.IsNullOrWhiteSpace(output) || (output.Contains("\"success\": false") && output.Contains("error")))
             {
                 status.ErrorMessage = "Device offline or busy";
                 return status;
             }
 
             status.IsOnline = true;
-            status.IsPowerOn = output.Contains("\"20\": true") || output.Contains("\"1\": true");
 
             try
             {
@@ -263,6 +262,36 @@ namespace SmartLampApp.Services
                 if (root.TryGetProperty("status", out var stElement) && stElement.TryGetProperty("dps", out dps) ||
                     root.TryGetProperty("dps", out dps))
                 {
+                    // 1. Check Power DataPoints (DP 20, 1, 101, switch_led, switch_1, switch)
+                    string[] powerDpKeys = new[] { "20", "1", "101", "switch_led", "switch_1", "switch" };
+                    foreach (var key in powerDpKeys)
+                    {
+                        if (dps.TryGetProperty(key, out var pVal))
+                        {
+                            if (pVal.ValueKind == JsonValueKind.True)
+                            {
+                                status.IsPowerOn = true;
+                                break;
+                            }
+                            if (pVal.ValueKind == JsonValueKind.Number && pVal.GetInt32() == 1)
+                            {
+                                status.IsPowerOn = true;
+                                break;
+                            }
+                            if (pVal.ValueKind == JsonValueKind.String && pVal.GetString()?.ToLowerInvariant() == "true")
+                            {
+                                status.IsPowerOn = true;
+                                break;
+                            }
+                            if (pVal.ValueKind == JsonValueKind.False)
+                            {
+                                status.IsPowerOn = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 2. Brightness (DP 22 or 3)
                     if (dps.TryGetProperty("22", out var b22))
                     {
                         int bRaw = b22.GetInt32();
@@ -274,6 +303,7 @@ namespace SmartLampApp.Services
                         status.Brightness = Math.Max(1, bRaw > 255 ? bRaw / 10 : (bRaw * 100 / 255));
                     }
 
+                    // 3. Color Temp (DP 23 or 4)
                     if (dps.TryGetProperty("23", out var t23))
                     {
                         int tRaw = t23.GetInt32();
@@ -288,7 +318,15 @@ namespace SmartLampApp.Services
                     }
                 }
             }
-            catch { }
+            catch
+            {
+                // Fallback string matching if JSON structure was unexpected
+                string lower = output.ToLowerInvariant();
+                status.IsPowerOn = lower.Contains("\"20\":true") || lower.Contains("\"20\": true") ||
+                                   lower.Contains("\"1\":true") || lower.Contains("\"1\": true") ||
+                                   lower.Contains("\"101\":true") || lower.Contains("\"101\": true") ||
+                                   lower.Contains("\"20\":1") || lower.Contains("\"20\": 1");
+            }
 
             return status;
         }
