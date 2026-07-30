@@ -17,6 +17,9 @@ Desktop Application for controlling Tuya smart lamps with **Google Smart Home / 
 - **⚡ High Performance Tuya 3.5 Protocol Engine:**
   - Uses an internal daemon HTTP server for persistent TCP socket connections to Tuya devices, dropping latency to **~10ms** and eliminating dropped commands.
   - Bundled as a single embedded executable resource inside `SmartLampApp.exe`.
+- **💻 Headless CLI Mode & One-Click Desktop Shortcut:**
+  - Control your smart lamp silently via Command Line without opening the GUI!
+  - Generate a 1-click **Desktop Shortcut (`Toggle Smart Lamp.lnk`)** directly from the UI to toggle power on double click.
 - **🌐 Google Smart Home & Assistant Integration:**
   - Includes a built-in **Google Smart Home Local Bridge HTTP/Webhook Server** (`http://localhost:8088/google-smart-home/`) supporting Google Smart Home intents (`SYNC`, `QUERY`, `EXECUTE`).
   - Includes a **Google Assistant Voice Command Simulator** directly inside the app!
@@ -29,6 +32,21 @@ Desktop Application for controlling Tuya smart lamps with **Google Smart Home / 
   - Ambient Light Indicator, zero scrollbars, custom title bar, and 18-color RGB palette.
 - **🔒 DPAPI Secret Encryption:**
   - Automatically encrypts sensitive credentials using Windows Data Protection API (DPAPI).
+
+---
+
+## 💻 CLI Commands & Desktop Shortcut
+
+You can trigger headless commands directly via `SmartLampApp.exe` (or create a Desktop Shortcut in settings):
+
+| Command | Description |
+| :--- | :--- |
+| `SmartLampApp.exe --toggle` | Smartly toggles lamp power (ON if OFF, OFF if ON) based on live status |
+| `SmartLampApp.exe --on` | Turns the lamp ON |
+| `SmartLampApp.exe --off` | Turns the lamp OFF |
+| `SmartLampApp.exe --brightness 75` | Sets brightness level (1-100%) |
+| `SmartLampApp.exe --temp 4000` | Sets color temperature (2700K - 6500K) |
+| `SmartLampApp.exe --color #FF5252` | Sets RGB color hex |
 
 ---
 
