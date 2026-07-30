@@ -1274,16 +1274,7 @@ namespace SmartLampApp
             _isPowerOn = true;
             UpdatePowerButtonUi();
 
-            if (preset.Mode == "colour")
-            {
-                await _protocol.SetColorHexAsync(preset.ColorHex);
-                await _protocol.SetBrightnessAsync(preset.Brightness);
-            }
-            else
-            {
-                await _protocol.SetColorTempAsync(preset.ColorTempK);
-                await _protocol.SetBrightnessAsync(preset.Brightness);
-            }
+            await _protocol.SetPresetAsync(preset.Mode, preset.Brightness, preset.ColorTempK, preset.ColorHex);
 
             await Task.Delay(250);
             _ = RefreshStatusAsync();
