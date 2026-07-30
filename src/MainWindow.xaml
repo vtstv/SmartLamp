@@ -428,7 +428,9 @@
                                           Click="ChkConfigToggle_Click" Margin="0,0,0,6"/>
                                 <CheckBox x:Name="ChkEnableMqtt" Content="Enable Home Assistant &amp; MQTT Bridge"
                                           Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
-                                          Click="ChkConfigToggle_Click"/>
+                                          Click="ChkConfigToggle_Click" Margin="0,0,0,8"/>
+
+                                <Button x:Name="BtnCreateShortcut" Content="⚡ Create Desktop Shortcut (Toggle Power)" Height="28" Style="{StaticResource GlassBtn}" Background="#651FFF" Click="BtnCreateShortcut_Click"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>

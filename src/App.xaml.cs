@@ -23,6 +23,17 @@ namespace SmartLampApp
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Check for CLI Headless Arguments FIRST (e.g. --toggle, --on, --off, --brightness, etc.)
+            if (e.Args != null && e.Args.Length > 0)
+            {
+                bool handled = HandleCommandLineArgs(e.Args);
+                if (handled)
+                {
+                    Environment.Exit(0);
+                    return;
+                }
+            }
+
             const string appName = "SmartLampApp_SingleInstanceMutex";
             const string eventName = "SmartLampApp_ShowEvent";
             bool createdNew;
@@ -118,6 +129,73 @@ namespace SmartLampApp
                 File.AppendAllText("crash.log", log);
             }
             catch { }
+        }
+
+        private bool HandleCommandLineArgs(string[] args)
+        {
+            string argStr = string.Join(" ", args).ToLowerInvariant();
+            if (!argStr.Contains("--toggle") && !argStr.Contains("-t") &&
+                !argStr.Contains("--on") && !argStr.Contains("--off") &&
+                !argStr.Contains("--brightness") && !argStr.Contains("--temp") &&
+                !argStr.Contains("--color"))
+            {
+                return false;
+            }
+
+            try
+            {
+                var config = SmartLampApp.Models.ConfigManager.Load();
+                var protocol = new SmartLampApp.Services.TuyaProtocol(config);
+                var active = protocol.GetActiveDevice();
+
+                if (active == null || string.IsNullOrWhiteSpace(active.LocalKey))
+                {
+                    return true;
+                }
+
+                System.Threading.Tasks.Task.Run(async () =>
+                {
+                    if (argStr.Contains("--on"))
+                    {
+                        await protocol.SetPowerAsync(true);
+                    }
+                    else if (argStr.Contains("--off"))
+                    {
+                        await protocol.SetPowerAsync(false);
+                    }
+                    else if (argStr.Contains("--toggle") || argStr.Contains("-t"))
+                    {
+                        var status = await protocol.GetStatusAsync();
+                        bool targetPower = !status.IsPowerOn;
+                        await protocol.SetPowerAsync(targetPower);
+                    }
+
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        if (args[i].Equals("--brightness", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+                        {
+                            if (int.TryParse(args[i + 1], out int bPct))
+                            {
+                                await protocol.SetBrightnessAsync(bPct);
+                            }
+                        }
+                        else if (args[i].Equals("--temp", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+                        {
+                            if (int.TryParse(args[i + 1], out int kVal))
+                            {
+                                await protocol.SetColorTempAsync(kVal);
+                            }
+                        }
+                        else if (args[i].Equals("--color", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+                        {
+                            await protocol.SetColorHexAsync(args[i + 1]);
+                        }
+                    }
+                }).GetAwaiter().GetResult();
+            }
+            catch { }
+
+            return true;
         }
     }
 }
