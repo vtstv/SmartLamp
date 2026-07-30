@@ -1150,17 +1150,24 @@ namespace SmartLampApp
         {
             PnlCustomPresets.Children.Clear();
 
-            if (_config.custom_presets == null || _config.custom_presets.Count == 0)
+            if (_config.custom_presets == null)
             {
-                _config.custom_presets = new List<UserPreset>
-                {
-                    new UserPreset { Name = "🌙 Night Light", Mode = "white", Brightness = 1, ColorTempK = 2700, ColorHex = "#FFE0B2" },
-                    new UserPreset { Name = "📖 Relax Reading", Mode = "white", Brightness = 50, ColorTempK = 3000, ColorHex = "#FFB347" },
-                    new UserPreset { Name = "💻 Focus Work", Mode = "white", Brightness = 100, ColorTempK = 5500, ColorHex = "#00F0FF" },
-                    new UserPreset { Name = "🌆 Warm Sunset", Mode = "colour", Brightness = 80, ColorTempK = 3000, ColorHex = "#FF5252" },
-                    new UserPreset { Name = "🌃 Cyber Cyan", Mode = "colour", Brightness = 100, ColorTempK = 4000, ColorHex = "#00E5FF" }
-                };
+                _config.custom_presets = new List<UserPreset>();
                 ConfigManager.Save(_config);
+            }
+
+            if (_config.custom_presets.Count == 0)
+            {
+                var txtPlaceholder = new TextBlock
+                {
+                    Text = "No custom presets saved yet. Click '+ Save Current' to add one!",
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#666688")),
+                    Margin = new Thickness(4, 6, 4, 6),
+                    FontStyle = FontStyles.Italic
+                };
+                PnlCustomPresets.Children.Add(txtPlaceholder);
+                return;
             }
 
             foreach (var preset in _config.custom_presets)
