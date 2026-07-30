@@ -75,6 +75,18 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 tuya_hex = req.get('hex', '000003e803e8')
                 b.set_multiple_values({20: True, 21: 'colour', 24: tuya_hex})
                 res["success"] = True
+            elif action == 'set_preset':
+                b = get_device(dev_id, ip, local_key, version)
+                mode = req.get('mode', 'white')
+                bright = req.get('brightness', 50)
+                bright_v2 = max(10, min(1000, int(bright * 10)))
+                if mode == 'colour':
+                    tuya_hex = req.get('hex', '000003e803e8')
+                    b.set_multiple_values({20: True, 21: 'colour', 22: bright_v2, 24: tuya_hex})
+                else:
+                    val_v2 = req.get('temp', 0)
+                    b.set_multiple_values({20: True, 21: 'white', 22: bright_v2, 23: val_v2})
+                res["success"] = True
             elif action == 'scan':
                 res["devices"] = tinytuya.deviceScan(verbose=False)
                 res["success"] = True

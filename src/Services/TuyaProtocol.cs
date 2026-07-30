@@ -450,6 +450,64 @@ namespace SmartLampApp.Services
             return output.Contains("\"success\": true") || !output.Contains("Error");
         }
 
+        public async Task<bool> SetPresetAsync(string mode, int brightness, int colorTempK, string hexCode, DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
+
+            brightness = Math.Clamp(brightness, 1, 100);
+            int brightV2 = brightness * 10;
+
+            if (mode == "colour")
+            {
+                string cleanHex = hexCode.TrimStart('#');
+                string tuyaHex = "000003e803e8";
+                if (cleanHex.Length == 6)
+                {
+                    int r = Convert.ToInt32(cleanHex.Substring(0, 2), 16);
+                    int g = Convert.ToInt32(cleanHex.Substring(2, 2), 16);
+                    int b = Convert.ToInt32(cleanHex.Substring(4, 2), 16);
+                    tuyaHex = RgbToTuyaV2Hex(r, g, b);
+                }
+
+                var payload = new
+                {
+                    action = "set_preset",
+                    dev_id = dev.DevId,
+                    ip = dev.Ip,
+                    local_key = dev.LocalKey,
+                    version = dev.Version,
+                    mode = "colour",
+                    brightness = brightness,
+                    hex = tuyaHex
+                };
+                string fallback = $"import tinytuya; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); b.set_multiple_values({{20: True, 21: 'colour', 22: {brightV2}, 24: '{tuyaHex}'}})";
+                string output = await SendBridgeRequestAsync(payload, fallback);
+                return output.Contains("\"success\": true") || !output.Contains("Error");
+            }
+            else
+            {
+                int pct = colorTempK >= 2700 ? (colorTempK - 2700) / 38 : colorTempK;
+                pct = Math.Clamp(pct, 0, 100);
+                int tempV2 = pct * 10;
+
+                var payload = new
+                {
+                    action = "set_preset",
+                    dev_id = dev.DevId,
+                    ip = dev.Ip,
+                    local_key = dev.LocalKey,
+                    version = dev.Version,
+                    mode = "white",
+                    brightness = brightness,
+                    temp = tempV2
+                };
+                string fallback = $"import tinytuya; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); b.set_multiple_values({{20: True, 21: 'white', 22: {brightV2}, 23: {tempV2}}})";
+                string output = await SendBridgeRequestAsync(payload, fallback);
+                return output.Contains("\"success\": true") || !output.Contains("Error");
+            }
+        }
+
         public async Task<bool> SetSceneAsync(string sceneName, DeviceInfo? target = null)
         {
             if (sceneName == "Night") return await SetColorTempAsync(2700, target);
