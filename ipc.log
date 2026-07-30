@@ -1,7 +1,0 @@
-[30/07/2026 02:18:21] First instance started. Creating wait handle.
-[30/07/2026 02:18:23] Second instance started. Attempting to signal.
-[30/07/2026 02:18:23] Signal sent successfully.
-[30/07/2026 02:18:23] Signal received in background thread.
-[30/07/2026 02:18:23] Dispatcher invoked.
-[30/07/2026 02:18:23] Restoring MainWindow.
-[30/07/2026 02:18:23] MainWindow restored.
