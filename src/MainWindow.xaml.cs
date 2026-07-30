@@ -57,6 +57,7 @@ namespace SmartLampApp
         private System.Windows.Forms.NotifyIcon? _notifyIcon;
 
         private List<DiscoveredDevice> _discoveredList = new List<DiscoveredDevice>();
+        private DateTime _lastUserCommandTime = DateTime.MinValue;
 
         public MainWindow()
         {
@@ -657,7 +658,10 @@ namespace SmartLampApp
             PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
             TxtStatus.Text = "🟢 ONLINE";
 
-            _isPowerOn = status.IsPowerOn;
+            if ((DateTime.UtcNow - _lastUserCommandTime).TotalSeconds >= 4.0)
+            {
+                _isPowerOn = status.IsPowerOn;
+            }
             UpdatePowerButtonUi();
 
             var active = _protocol.GetActiveDevice();
@@ -716,6 +720,7 @@ namespace SmartLampApp
         private async void BtnPower_Click(object sender, RoutedEventArgs e)
         {
             _isPowerOn = !_isPowerOn;
+            _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
 
             if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
@@ -1272,6 +1277,7 @@ namespace SmartLampApp
             _isUpdatingUi = false;
 
             _isPowerOn = true;
+            _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
 
             await _protocol.SetPresetAsync(preset.Mode, preset.Brightness, preset.ColorTempK, preset.ColorHex);
