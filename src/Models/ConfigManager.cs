@@ -141,6 +141,14 @@ namespace SmartLampApp.Models
                             foreach (var dev in cfg.devices)
                             {
                                 dev.LocalKey = DecryptSecret(dev.LocalKey);
+                                if (string.IsNullOrWhiteSpace(dev.LocalKey) && !string.IsNullOrWhiteSpace(cfg.local_key))
+                                {
+                                    dev.LocalKey = cfg.local_key;
+                                }
+                                if (string.IsNullOrWhiteSpace(dev.DevId) && !string.IsNullOrWhiteSpace(cfg.dev_id))
+                                {
+                                    dev.DevId = cfg.dev_id;
+                                }
                             }
                         }
                         return cfg;
@@ -170,6 +178,10 @@ namespace SmartLampApp.Models
                     {
                         foreach (var dev in copy.devices)
                         {
+                            if (string.IsNullOrWhiteSpace(dev.LocalKey) && !string.IsNullOrWhiteSpace(copy.local_key))
+                            {
+                                dev.LocalKey = copy.local_key;
+                            }
                             dev.LocalKey = EncryptSecret(dev.LocalKey);
                         }
                     }

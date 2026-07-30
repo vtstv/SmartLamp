@@ -1269,6 +1269,10 @@ namespace SmartLampApp
             TxtTempVal.Text = $"{preset.ColorTempK}K";
             TxtHexCode.Text = preset.ColorHex;
 
+            _isPowerOn = true;
+            UpdatePowerButtonUi();
+            await _protocol.SetPowerAsync(true);
+
             if (preset.Mode == "colour")
             {
                 await _protocol.SetBrightnessAsync(preset.Brightness);
