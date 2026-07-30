@@ -27,6 +27,16 @@ namespace SmartLampApp.Models
         public string last_color_hex { get; set; } = "#00E5FF";
     }
 
+    public class UserPreset
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = "Custom Preset";
+        public string Mode { get; set; } = "white"; // "white" or "colour"
+        public int Brightness { get; set; } = 50;
+        public int ColorTempK { get; set; } = 4000;
+        public string ColorHex { get; set; } = "#00E5FF";
+    }
+
     public class LampConfig
     {
         public string selected_dev_id { get; set; } = "";
@@ -54,6 +64,7 @@ namespace SmartLampApp.Models
         public string last_color_hex { get; set; } = "#00E5FF";
 
         public List<DeviceInfo> devices { get; set; } = new List<DeviceInfo>();
+        public List<UserPreset> custom_presets { get; set; } = new List<UserPreset>();
 
         // Legacy compatibility properties
         public string ip { get; set; } = "";

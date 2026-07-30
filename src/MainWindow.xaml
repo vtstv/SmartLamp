@@ -349,6 +349,20 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Custom User Presets Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="⭐ Custom User Presets" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <Button x:Name="BtnSavePreset" Content="➕ Save Current" Width="105" Height="24" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnSavePreset_Click" ToolTip="Save current brightness, temp &amp; color as a custom preset"/>
+                                </Grid>
+
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="90">
+                                    <WrapPanel x:Name="PnlCustomPresets" Orientation="Horizontal"/>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Lighting Scenes Card -->
                         <Border Background="#161626" CornerRadius="12" Padding="14">
                             <StackPanel>
@@ -687,6 +701,36 @@
 
                         <!-- Close Button -->
                         <Button Content="Got it!" Height="32" Style="{StaticResource GlassBtn}" Background="#0066CC" FontWeight="Bold" Click="BtnCloseTuyaGuide_Click"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 7. CUSTOM PRESET MODAL OVERLAY -->
+            <Grid x:Name="OverlaySavePreset" Visibility="Collapsed" Panel.ZIndex="100">
+                <Border Background="#E50A0A14" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
+                <Border Width="380" Background="#161626" BorderBrush="#00F0FF" BorderThickness="1" CornerRadius="16" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="⭐ Save Custom Preset" FontSize="16" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,12"/>
+                        
+                        <TextBlock Text="Preset Name:" FontSize="12" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+                        <TextBox x:Name="TxtPresetName" Text="My Preset" Height="30" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" FontWeight="Bold" BorderBrush="#222236" Padding="8,0" Margin="0,0,0,12"/>
+
+                        <!-- Current Settings Summary Box -->
+                        <Border Background="#0C0C14" CornerRadius="8" Padding="10" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Current Settings to Save:" FontSize="11" FontWeight="Bold" Foreground="#8888AA" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TxtPresetSummary" Text="Mode: White | Brightness: 50% | Temp: 4000K" FontSize="12" Foreground="#00E5FF"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Cancel" Height="34" Margin="0,0,4,0" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#AAAAAA" Click="BtnCancelSavePreset_Click"/>
+                            <Button Grid.Column="1" Content="💾 Save Preset" Height="34" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnConfirmSavePreset_Click"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
             </Grid>
