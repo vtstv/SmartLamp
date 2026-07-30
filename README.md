@@ -1,6 +1,5 @@
-# 💡 SmartLamp Studio (Windows 11 C# WPF Edition)
-
-Desktop Application for controlling Tuya smart lamps with **Google Smart Home / Google Assistant Integration**, **MQTT Bridge**, **DPAPI Secret Encryption**, and **Wi-Fi Auto-Discovery**.
+# 💡 SmartLamp Studio
+Desktop Application for controlling Tuya smart lamps with **Google Smart Home / Google Assistant Integration**, **MQTT Bridge** and **Wi-Fi Auto-Discovery**.
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2011-0078D4.svg)]()
 [![C# WPF](https://img.shields.io/badge/Framework-.NET%209%20WPF-512BD4.svg)]()
