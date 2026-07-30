@@ -158,7 +158,6 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="💡" FontSize="14" Margin="0,0,6,0"/>
                         <TextBlock Text="SmartLamp Studio v2.0" FontSize="12" FontWeight="Bold" Foreground="#8888AA"/>
-                        <TextBlock Text=" |  by Murr" FontSize="12" Foreground="#555577" Margin="4,0,0,0"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -269,16 +268,18 @@
                                 </Grid>
                                 <Slider x:Name="SliderBright" Minimum="1" Maximum="100" Value="50" Margin="0,6,0,6" ValueChanged="SliderBright_ValueChanged"/>
                                 <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Content="25%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB25_Click"/>
-                                    <Button Grid.Column="1" Content="50%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB50_Click"/>
-                                    <Button Grid.Column="2" Content="75%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB75_Click"/>
-                                    <Button Grid.Column="3" Content="100%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB100_Click"/>
+                                     <Grid.ColumnDefinitions>
+                                         <ColumnDefinition Width="*"/>
+                                         <ColumnDefinition Width="*"/>
+                                         <ColumnDefinition Width="*"/>
+                                         <ColumnDefinition Width="*"/>
+                                         <ColumnDefinition Width="*"/>
+                                     </Grid.ColumnDefinitions>
+                                     <Button Grid.Column="0" Content="1%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB1_Click"/>
+                                    <Button Grid.Column="1" Content="25%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB25_Click"/>
+                                    <Button Grid.Column="2" Content="50%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB50_Click"/>
+                                    <Button Grid.Column="3" Content="75%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB75_Click"/>
+                                    <Button Grid.Column="4" Content="100%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB100_Click"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -312,15 +313,27 @@
                             <StackPanel>
                                 <TextBlock Text="🎨 RGB Color Palette" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
                                 <WrapPanel HorizontalAlignment="Center">
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FF1744" Tag="#FF1744" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FF9100" Tag="#FF9100" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FFEA00" Tag="#FFEA00" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#10B981" Tag="#10B981" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#00E5FF" Tag="#00E5FF" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#2979FF" Tag="#2979FF" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#651FFF" Tag="#651FFF" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#F50057" Tag="#F50057" Click="BtnColor_Click"/>
-                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FFFFFF" Tag="#FFFFFF" Click="BtnColor_Click"/>
+                                    <!-- Row 1: Warm & Green Tones -->
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FF1744" Tag="#FF1744" Click="BtnColor_Click" ToolTip="Red"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FF5252" Tag="#FF5252" Click="BtnColor_Click" ToolTip="Coral"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FF9100" Tag="#FF9100" Click="BtnColor_Click" ToolTip="Orange"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FFC400" Tag="#FFC400" Click="BtnColor_Click" ToolTip="Amber"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FFEA00" Tag="#FFEA00" Click="BtnColor_Click" ToolTip="Yellow"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#76FF03" Tag="#76FF03" Click="BtnColor_Click" ToolTip="Lime"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#10B981" Tag="#10B981" Click="BtnColor_Click" ToolTip="Emerald"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#00E676" Tag="#00E676" Click="BtnColor_Click" ToolTip="Mint"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#1DE9B6" Tag="#1DE9B6" Click="BtnColor_Click" ToolTip="Teal"/>
+
+                                    <!-- Row 2: Cool & Purple Tones -->
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#00E5FF" Tag="#00E5FF" Click="BtnColor_Click" ToolTip="Cyan"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#00B0FF" Tag="#00B0FF" Click="BtnColor_Click" ToolTip="Sky Blue"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#2979FF" Tag="#2979FF" Click="BtnColor_Click" ToolTip="Royal Blue"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#3D5AFE" Tag="#3D5AFE" Click="BtnColor_Click" ToolTip="Indigo"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#651FFF" Tag="#651FFF" Click="BtnColor_Click" ToolTip="Deep Purple"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#D500F9" Tag="#D500F9" Click="BtnColor_Click" ToolTip="Magenta"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#F50057" Tag="#F50057" Click="BtnColor_Click" ToolTip="Hot Pink"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FFE0B2" Tag="#FFE0B2" Click="BtnColor_Click" ToolTip="Warm Soft White"/>
+                                    <Button Style="{StaticResource ColorSwatchBtn}" Background="#FFFFFF" Tag="#FFFFFF" Click="BtnColor_Click" ToolTip="Pure White"/>
                                 </WrapPanel>
 
                                 <Grid Margin="0,8,0,0">
@@ -477,7 +490,14 @@
                                     </StackPanel>
                                 </Grid>
 
-                                <Button x:Name="BtnCloudFetch" Content="⚡ Fetch Key from Cloud" Height="26" Margin="0,6,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnCloudFetch_Click"/>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnCloudFetch" Grid.Column="0" Content="⚡ Fetch Key from Cloud" Height="26" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnCloudFetch_Click"/>
+                                    <Button x:Name="BtnTuyaGuide" Grid.Column="1" Content="❓ Instructions" Width="95" Height="26" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnTuyaGuide_Click"/>
+                                </Grid>
                             </StackPanel>
                         </Border>
                     </StackPanel>
