@@ -96,23 +96,47 @@ namespace SmartLampApp.Services
                     File.Copy(currentExe, targetExe, true);
                 }
 
+                // Copy icon file for shortcuts
+                string iconPath = Path.Combine(installDir, "app_icon.ico");
+                try
+                {
+                    string sourceIcon = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "app_icon.ico");
+                    if (File.Exists(sourceIcon))
+                    {
+                        File.Copy(sourceIcon, iconPath, true);
+                    }
+                    else
+                    {
+                        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                        using var stream = assembly.GetManifestResourceStream("SmartLampApp.Assets.app_icon.ico");
+                        if (stream != null)
+                        {
+                            using var fs = File.Create(iconPath);
+                            stream.CopyTo(fs);
+                        }
+                    }
+                }
+                catch { }
+
+                string iconLocation = File.Exists(iconPath) ? iconPath : $"{targetExe},0";
+
                 // 1. Create Start Menu Shortcuts (both root Programs & subfolder)
                 string startMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
                 
                 // Direct shortcut in Start Menu Programs
                 string rootShortcutPath = Path.Combine(startMenuPath, "SmartLamp Studio.lnk");
-                CreateShortcut(rootShortcutPath, targetExe, "", "SmartLamp Studio Application", targetExe);
+                CreateShortcut(rootShortcutPath, targetExe, "", "SmartLamp Studio Application", iconLocation);
 
                 // Subfolder shortcut in Start Menu Programs\SmartLamp Studio
                 string startMenuFolder = Path.Combine(startMenuPath, "SmartLamp Studio");
                 Directory.CreateDirectory(startMenuFolder);
                 string folderShortcutPath = Path.Combine(startMenuFolder, "SmartLamp Studio.lnk");
-                CreateShortcut(folderShortcutPath, targetExe, "", "SmartLamp Studio Application", targetExe);
+                CreateShortcut(folderShortcutPath, targetExe, "", "SmartLamp Studio Application", iconLocation);
 
                 // 2. Create Desktop Shortcut
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                 string desktopShortcutPath = Path.Combine(desktopPath, "SmartLamp Studio.lnk");
-                CreateShortcut(desktopShortcutPath, targetExe, "", "SmartLamp Studio Application", targetExe);
+                CreateShortcut(desktopShortcutPath, targetExe, "", "SmartLamp Studio Application", iconLocation);
 
                 // 3. Register in Windows Add/Remove Programs (Installed Apps)
                 using (var key = Registry.CurrentUser.CreateSubKey(UninstallRegistryKey))
@@ -120,7 +144,7 @@ namespace SmartLampApp.Services
                     key.SetValue("DisplayName", AppVersion.FullTitle);
                     key.SetValue("DisplayVersion", AppVersion.Version);
                     key.SetValue("Publisher", AppVersion.Author);
-                    key.SetValue("DisplayIcon", targetExe);
+                    key.SetValue("DisplayIcon", iconLocation);
                     key.SetValue("InstallLocation", installDir);
                     key.SetValue("UninstallString", $"\"{targetExe}\" --uninstall");
                     key.SetValue("HelpLink", AppVersion.GitHubUrl);
