@@ -706,7 +706,7 @@
             </Grid>
 
             <!-- 7. CUSTOM PRESET MODAL OVERLAY -->
-            <Grid x:Name="OverlaySavePreset" Visibility="Collapsed" Panel.ZIndex="100">
+            <Grid x:Name="OverlaySavePreset" Grid.RowSpan="5" Visibility="Collapsed" Panel.ZIndex="100">
                 <Border Background="#E50A0A14" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
                 <Border Width="380" Background="#161626" BorderBrush="#00F0FF" BorderThickness="1" CornerRadius="16" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <StackPanel>
