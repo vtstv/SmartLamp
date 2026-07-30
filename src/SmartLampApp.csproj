@@ -15,6 +15,7 @@
   <ItemGroup>
     <Resource Include="Assets/app_icon.png" />
     <Resource Include="Assets/app_icon.ico" />
+    <EmbeddedResource Include="Assets/app_icon.ico" />
     <EmbeddedResource Include="TuyaBridge\tuya_bridge.exe" />
   </ItemGroup>
 

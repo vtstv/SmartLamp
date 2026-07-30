@@ -824,24 +824,12 @@ namespace SmartLampApp
                 string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName 
                                  ?? System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SmartLampApp.exe");
 
-                Type? shellType = Type.GetTypeFromProgID("WScript.Shell");
-                if (shellType != null)
-                {
-                    dynamic shell = Activator.CreateInstance(shellType)!;
-                    var shortcut = shell.CreateShortcut(shortcutPath);
-                    shortcut.TargetPath = exePath;
-                    shortcut.Arguments = "--toggle";
-                    shortcut.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                    shortcut.Description = "Toggle Smart Lamp Power";
-                    shortcut.IconLocation = exePath;
-                    shortcut.Save();
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "app_icon.ico");
+                string iconLocation = System.IO.File.Exists(iconPath) ? iconPath : $"{exePath},0";
 
-                    System.Windows.MessageBox.Show("Desktop shortcut 'Toggle Smart Lamp' successfully created!\n\nDouble-clicking it will instantly toggle your lamp ON/OFF.", "Desktop Shortcut Created", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    System.Windows.MessageBox.Show("Unable to access WScript.Shell COM object.", "Shortcut Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                Services.InstallationService.CreateShortcut(shortcutPath, exePath, "--toggle", "Toggle Smart Lamp Power", iconLocation);
+
+                System.Windows.MessageBox.Show("Desktop shortcut 'Toggle Smart Lamp' successfully created!\n\nDouble-clicking it will instantly toggle your lamp ON/OFF.", "Desktop Shortcut Created", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
