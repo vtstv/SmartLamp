@@ -9,7 +9,7 @@ SmartLamp Studio is a high-performance Windows desktop application for managing 
 
 ---
 
-![SmartLamp Studio Interface](src/Assets/Screenshot.png)
+![SmartLamp Studio Interface](src/Assets/Screenshot.png?v=2026)
 
 ---
 
