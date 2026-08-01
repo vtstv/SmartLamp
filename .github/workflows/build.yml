@@ -37,10 +37,11 @@ jobs:
           pip install pyinstaller tinytuya requests
 
       - name: Build PyInstaller Tuya Bridge Executable
+        shell: powershell
         run: |
-          cd src/TuyaBridge
+          Set-Location src/TuyaBridge
           python -m PyInstaller --onefile --console tuya_bridge.py
-          copy /Y dist\tuya_bridge.exe tuya_bridge.exe
+          Copy-Item -Path "dist/tuya_bridge.exe" -Destination "tuya_bridge.exe" -Force
 
       - name: Compile Lightweight WPF Application (.NET 9 win-x64)
         run: |
