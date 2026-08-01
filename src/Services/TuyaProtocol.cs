@@ -85,21 +85,21 @@ namespace SmartLampApp.Services
         private async Task<bool> DispatchCommandAsync(Func<Task<bool>> localAction, Func<Task<bool>> cloudAction)
         {
             string mode = _config.control_mode ?? "auto";
-            string priority = _config.auto_priority ?? "local_first";
+            string priority = _config.auto_priority ?? "cloud_first";
 
             if (mode == "local") return await localAction();
             if (mode == "cloud") return await cloudAction();
 
             bool hasCloud = !string.IsNullOrWhiteSpace(_config.access_id) && !string.IsNullOrWhiteSpace(_config.access_key);
 
-            if (priority == "cloud_first" && hasCloud)
+            if ((priority == "cloud_first" || string.IsNullOrEmpty(_config.auto_priority)) && hasCloud)
             {
                 bool cloudSuccess = await cloudAction();
                 if (cloudSuccess) return true;
                 return await localAction();
             }
 
-            // Priority is local_first or default:
+            // Priority is local_first:
             bool daemonRunning = await IsBridgeDaemonRunningAsync();
             if (daemonRunning)
             {
@@ -124,7 +124,7 @@ namespace SmartLampApp.Services
         public async Task<LampStatus> GetStatusAsync(DeviceInfo? target = null)
         {
             string mode = _config.control_mode ?? "auto";
-            string priority = _config.auto_priority ?? "local_first";
+            string priority = _config.auto_priority ?? "cloud_first";
 
             if (mode == "cloud") return await GetCloudStatusAsync(target);
             if (mode == "local") return await GetLocalStatusAsync(target);
