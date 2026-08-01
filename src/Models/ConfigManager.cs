@@ -57,6 +57,7 @@ namespace SmartLampApp.Models
         // Application Window Exit & Startup Behavior
         public bool autostart { get; set; } = false;
         public bool close_to_tray { get; set; } = true;
+        public bool enable_timer_notifications { get; set; } = true;
 
         // Integration Toggles
         public bool enable_google_home { get; set; } = false;
