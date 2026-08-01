@@ -1,0 +1,84 @@
+name: Build & Release SmartLamp Studio
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Windows App & Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9.0 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller tinytuya requests
+
+      - name: Build PyInstaller Tuya Bridge Executable
+        run: |
+          cd src/TuyaBridge
+          python -m PyInstaller --onefile --console tuya_bridge.py
+          copy /Y dist\tuya_bridge.exe tuya_bridge.exe
+
+      - name: Compile Lightweight WPF Application (.NET 9 win-x64)
+        run: |
+          dotnet publish src/SmartLampApp.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
+
+      - name: Create Release Package (Zip & Standalone Exe)
+        shell: powershell
+        run: |
+          $versionFile = "src/AppVersion.cs"
+          $appVersion = "2.0"
+          if (Test-Path $versionFile) {
+              $content = Get-Content $versionFile -Raw
+              if ($content -match 'Version = "([^"]+)"') {
+                  $appVersion = $matches[1]
+              }
+          }
+          New-Item -ItemType Directory -Path releases -Force
+          $zipPath = "releases/SmartLampStudio_v${appVersion}_win-x64.zip"
+          Compress-Archive -Path "dist/SmartLampApp.exe", "README.md", "LICENSE" -DestinationPath $zipPath -Force
+          Copy-Item -Path "dist/SmartLampApp.exe" -Destination "releases/SmartLampApp_v${appVersion}.exe" -Force
+
+      - name: Upload Build Artifacts to GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartLampStudio-win-x64
+          path: |
+            dist/SmartLampApp.exe
+            releases/*
+
+      - name: Create GitHub Release (On Tag Push)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            releases/*.zip
+            releases/*.exe
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
