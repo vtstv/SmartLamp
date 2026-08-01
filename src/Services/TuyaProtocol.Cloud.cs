@@ -182,7 +182,18 @@ namespace SmartLampApp.Services
             {
                 string hex = extra != null && extra.GetType().GetProperty("hex")?.GetValue(extra) is string s ? s : "000003e803e8";
                 tuyaCmds.Add(new { code = "work_mode", value = "colour" });
-                tuyaCmds.Add(new { code = "colour_data_v2", value = hex });
+                int hVal = 0, sVal = 1000, vVal = 1000;
+                if (hex.Length >= 12)
+                {
+                    try
+                    {
+                        hVal = Convert.ToInt32(hex.Substring(0, 4), 16);
+                        sVal = Convert.ToInt32(hex.Substring(4, 4), 16);
+                        vVal = Convert.ToInt32(hex.Substring(8, 4), 16);
+                    }
+                    catch { }
+                }
+                tuyaCmds.Add(new { code = "colour_data_v2", value = new { h = hVal, s = sVal, v = vVal } });
             }
 
             if (tuyaCmds.Count > 0)
