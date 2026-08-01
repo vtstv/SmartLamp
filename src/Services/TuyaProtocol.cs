@@ -262,6 +262,20 @@ namespace SmartLampApp.Services
             return output;
         }
 
+        private static async Task<bool> IsBridgeDaemonRunningAsync()
+        {
+            try
+            {
+                using var cts = new System.Threading.CancellationTokenSource(150);
+                var req = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health", cts.Token);
+                return req.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private async Task<bool> DispatchCommandAsync(Func<Task<bool>> localAction, Func<Task<bool>> cloudAction)
         {
             string mode = _config.control_mode ?? "auto";
@@ -270,18 +284,37 @@ namespace SmartLampApp.Services
             if (mode == "local") return await localAction();
             if (mode == "cloud") return await cloudAction();
 
-            if (priority == "cloud_first")
+            bool hasCloud = !string.IsNullOrWhiteSpace(_config.access_id) && !string.IsNullOrWhiteSpace(_config.access_key);
+
+            if (priority == "cloud_first" && hasCloud)
             {
+                bool cloudSuccess = await cloudAction();
+                if (cloudSuccess) return true;
+                return await localAction();
+            }
+
+            // Priority is local_first or default:
+            bool daemonRunning = await IsBridgeDaemonRunningAsync();
+            if (daemonRunning)
+            {
+                bool localSuccess = await localAction();
+                if (localSuccess) return true;
+                if (hasCloud) return await cloudAction();
+            }
+            else if (hasCloud)
+            {
+                // Cold start (daemon not running yet): Use Direct C# Cloud REST API first (80ms)
+                // avoiding the 4-5 second PyInstaller Python EXE unpacking delay!
                 bool cloudSuccess = await cloudAction();
                 if (cloudSuccess) return true;
                 return await localAction();
             }
             else
             {
-                bool localSuccess = await localAction();
-                if (localSuccess) return true;
-                return await cloudAction();
+                return await localAction();
             }
+
+            return false;
         }
 
         public async Task<LampStatus> GetStatusAsync(DeviceInfo? target = null)
@@ -289,16 +322,12 @@ namespace SmartLampApp.Services
             string mode = _config.control_mode ?? "auto";
             string priority = _config.auto_priority ?? "local_first";
 
-            if (mode == "cloud")
-            {
-                return await GetCloudStatusAsync(target);
-            }
-            if (mode == "local")
-            {
-                return await GetLocalStatusAsync(target);
-            }
+            if (mode == "cloud") return await GetCloudStatusAsync(target);
+            if (mode == "local") return await GetLocalStatusAsync(target);
 
-            if (priority == "cloud_first")
+            bool hasCloud = !string.IsNullOrWhiteSpace(_config.access_id) && !string.IsNullOrWhiteSpace(_config.access_key);
+
+            if (priority == "cloud_first" && hasCloud)
             {
                 var st = await GetCloudStatusAsync(target);
                 if (st.IsOnline) return st;
@@ -306,9 +335,24 @@ namespace SmartLampApp.Services
             }
             else
             {
-                var st = await GetLocalStatusAsync(target);
-                if (st.IsOnline) return st;
-                return await GetCloudStatusAsync(target);
+                bool daemonRunning = await IsBridgeDaemonRunningAsync();
+                if (daemonRunning)
+                {
+                    var st = await GetLocalStatusAsync(target);
+                    if (st.IsOnline) return st;
+                    if (hasCloud) return await GetCloudStatusAsync(target);
+                    return st;
+                }
+                else if (hasCloud)
+                {
+                    var st = await GetCloudStatusAsync(target);
+                    if (st.IsOnline) return st;
+                    return await GetLocalStatusAsync(target);
+                }
+                else
+                {
+                    return await GetLocalStatusAsync(target);
+                }
             }
         }
 
