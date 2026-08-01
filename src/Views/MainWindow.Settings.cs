@@ -159,6 +159,16 @@ namespace SmartLampApp
             OverlayTuyaGuide.Visibility = Visibility.Collapsed;
         }
 
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            }
+            catch { }
+            e.Handled = true;
+        }
+
         private void BtnCreateShortcut_Click(object sender, RoutedEventArgs e)
         {
             try

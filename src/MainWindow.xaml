@@ -556,8 +556,8 @@
                                     <StackPanel x:Name="PanelAutoPriority" Grid.Column="1" Margin="3,0,0,0">
                                         <TextBlock Text="Auto Priority Order:" FontSize="10" Foreground="#AAAAAA"/>
                                         <ComboBox x:Name="CmbAutoPriority" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbAutoPriority_SelectionChanged">
-                                            <ComboBoxItem Content="1️⃣ Local LAN ➔ Fallback: Cloud" Tag="local_first"/>
-                                            <ComboBoxItem Content="1️⃣ Tuya Cloud ➔ Fallback: Local" Tag="cloud_first"/>
+                                            <ComboBoxItem Content="⚡ Local LAN ➔ Fallback: Cloud" Tag="local_first"/>
+                                            <ComboBoxItem Content="☁️ Tuya Cloud ➔ Fallback: Local" Tag="cloud_first"/>
                                         </ComboBox>
                                     </StackPanel>
                                 </Grid>
@@ -691,7 +691,7 @@
                                 <TextBlock TextWrapping="Wrap">
                                     <Run FontWeight="Bold" Foreground="#00F0FF">1. Register on Tuya IoT Portal:</Run>
                                     <LineBreak/>
-                                    Go to <Run Foreground="#FFEA00">https://iot.tuya.com</Run> and create a free developer account.
+                                    Go to <Hyperlink NavigateUri="https://iot.tuya.com" RequestNavigate="Hyperlink_RequestNavigate" Foreground="#FFEA00">https://iot.tuya.com</Hyperlink> and create a free developer account.
                                 </TextBlock>
                             </Border>
 
