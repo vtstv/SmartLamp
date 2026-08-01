@@ -200,8 +200,11 @@ namespace SmartLampApp
 
                 System.Threading.Tasks.Task.Run(async () =>
                 {
-                    // Wait for the bridge daemon to be fully ready before sending commands
-                    await protocol.WaitForBridgeReadyAsync();
+                    string mode = config.control_mode ?? "auto";
+                    if (mode == "local")
+                    {
+                        await protocol.WaitForBridgeReadyAsync();
+                    }
 
                     if (argStr.Contains("--on"))
                     {
