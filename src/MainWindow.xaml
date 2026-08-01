@@ -263,9 +263,6 @@
                                     <TextBox x:Name="TxtCustomTimerMins" Grid.Column="0" Text="20" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#00F0FF" FontWeight="Bold" BorderBrush="#222236" Padding="6,0"/>
                                     <Button Grid.Column="1" Content="⚡ Set Custom Mins" Width="130" Height="24" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnSetCustomTimer_Click"/>
                                 </Grid>
-
-                                <!-- Timer Notification Toggle Option (Enabled by default) -->
-                                <CheckBox x:Name="ChkTimerNotifications" Content="🔔 Show notification when timer is set / finished" Foreground="#AAAAAA" FontSize="10" FontWeight="SemiBold" IsChecked="True" Click="ChkTimerNotifications_Click" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
 
@@ -450,6 +447,9 @@
                                 <CheckBox x:Name="ChkCloseToTray" Content="Minimize to System Tray on window close (✕)"
                                           Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"
                                           Click="ChkConfigToggle_Click" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="ChkTimerNotifications" Content="Show Windows notifications for Sleep Timer"
+                                          Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"
+                                          Click="ChkTimerNotifications_Click" Margin="0,0,0,6"/>
                                 <CheckBox x:Name="ChkEnableGoogle" Content="Enable Google Home Bridge Integration"
                                           Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
                                           Click="ChkConfigToggle_Click" Margin="0,0,0,6"/>
