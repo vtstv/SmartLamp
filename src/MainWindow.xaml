@@ -559,8 +559,8 @@
                                     <StackPanel x:Name="PanelAutoPriority" Grid.Column="1" Margin="3,0,0,0">
                                         <TextBlock Text="Auto Priority Order:" FontSize="10" Foreground="#AAAAAA"/>
                                         <ComboBox x:Name="CmbAutoPriority" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbAutoPriority_SelectionChanged">
-                                            <ComboBoxItem Content="⚡ Local LAN ➔ Fallback: Cloud" Tag="local_first"/>
                                             <ComboBoxItem Content="☁️ Tuya Cloud ➔ Fallback: Local" Tag="cloud_first"/>
+                                            <ComboBoxItem Content="⚡ Local LAN ➔ Fallback: Cloud" Tag="local_first"/>
                                         </ComboBox>
                                     </StackPanel>
                                 </Grid>
