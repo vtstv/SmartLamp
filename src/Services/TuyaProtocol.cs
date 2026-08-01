@@ -50,7 +50,6 @@ namespace SmartLampApp.Services
         {
             _config = config;
             _activeDevice = GetActiveDevice();
-            EnsureBridgeDaemonRunning();
         }
 
         public void UpdateConfig(LampConfig config)
