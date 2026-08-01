@@ -195,6 +195,38 @@ namespace SmartLampApp.Services
                 }
                 tuyaCmds.Add(new { code = "colour_data_v2", value = new { h = hVal, s = sVal, v = vVal } });
             }
+            else if (cmdType == "set_preset")
+            {
+                string mode = extra != null && extra.GetType().GetProperty("mode")?.GetValue(extra) is string m ? m : "white";
+                int brightness = extra != null && extra.GetType().GetProperty("brightness")?.GetValue(extra) is int b ? b : 50;
+                int temp = extra != null && extra.GetType().GetProperty("temp")?.GetValue(extra) is int t ? t : 500;
+                string hex = extra != null && extra.GetType().GetProperty("hex")?.GetValue(extra) is string s ? s : "000003e803e8";
+
+                tuyaCmds.Add(new { code = "switch_led", value = true });
+                tuyaCmds.Add(new { code = "bright_value_v2", value = brightness * 10 });
+
+                if (mode == "colour")
+                {
+                    tuyaCmds.Add(new { code = "work_mode", value = "colour" });
+                    int hVal = 0, sVal = 1000, vVal = 1000;
+                    if (hex.Length >= 12)
+                    {
+                        try
+                        {
+                            hVal = Convert.ToInt32(hex.Substring(0, 4), 16);
+                            sVal = Convert.ToInt32(hex.Substring(4, 4), 16);
+                            vVal = Convert.ToInt32(hex.Substring(8, 4), 16);
+                        }
+                        catch { }
+                    }
+                    tuyaCmds.Add(new { code = "colour_data_v2", value = new { h = hVal, s = sVal, v = vVal } });
+                }
+                else
+                {
+                    tuyaCmds.Add(new { code = "work_mode", value = "white" });
+                    tuyaCmds.Add(new { code = "temp_value_v2", value = temp });
+                }
+            }
 
             if (tuyaCmds.Count > 0)
             {
