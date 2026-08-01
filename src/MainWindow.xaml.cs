@@ -562,12 +562,63 @@ namespace SmartLampApp
             PassAccKey.Password = _config.access_key;
             TxtAccKeyVisible.Text = _config.access_key;
 
+            string mode = string.IsNullOrWhiteSpace(_config.control_mode) ? "auto" : _config.control_mode;
+            foreach (ComboBoxItem item in CmbControlMode.Items)
+            {
+                if ((string)item.Tag == mode)
+                {
+                    item.IsSelected = true;
+                    break;
+                }
+            }
+
+            string priority = string.IsNullOrWhiteSpace(_config.auto_priority) ? "local_first" : _config.auto_priority;
+            foreach (ComboBoxItem item in CmbAutoPriority.Items)
+            {
+                if ((string)item.Tag == priority)
+                {
+                    item.IsSelected = true;
+                    break;
+                }
+            }
+
+            if (PanelAutoPriority != null)
+            {
+                PanelAutoPriority.Visibility = mode == "auto" ? Visibility.Visible : Visibility.Collapsed;
+            }
+
             ChkCloseToTray.IsChecked = _config.close_to_tray;
             ChkEnableGoogle.IsChecked = _config.enable_google_home;
             ChkEnableMqtt.IsChecked = _config.enable_mqtt;
 
             NavGoogleHome.Visibility = _config.enable_google_home ? Visibility.Visible : Visibility.Collapsed;
             NavMqtt.Visibility = _config.enable_mqtt ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void CmbControlMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbControlMode?.SelectedItem is ComboBoxItem selected)
+            {
+                string tag = (string)selected.Tag;
+                _config.control_mode = tag;
+                if (PanelAutoPriority != null)
+                {
+                    PanelAutoPriority.Visibility = tag == "auto" ? Visibility.Visible : Visibility.Collapsed;
+                }
+                ConfigManager.Save(_config);
+                if (_protocol != null) _protocol.UpdateConfig(_config);
+            }
+        }
+
+        private void CmbAutoPriority_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbAutoPriority?.SelectedItem is ComboBoxItem selected)
+            {
+                string tag = (string)selected.Tag;
+                _config.auto_priority = tag;
+                ConfigManager.Save(_config);
+                if (_protocol != null) _protocol.UpdateConfig(_config);
+            }
         }
 
         private void BtnToggleKeyVisibility_Click(object sender, RoutedEventArgs e)

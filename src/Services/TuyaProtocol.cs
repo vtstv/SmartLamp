@@ -267,7 +267,118 @@ namespace SmartLampApp.Services
             return output;
         }
 
+        private async Task<bool> SendCloudCommandAsync(string cmdType, object? extra = null, DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev == null || string.IsNullOrWhiteSpace(_config.access_id) || string.IsNullOrWhiteSpace(_config.access_key)) return false;
+
+            string plainKey = ConfigManager.DecryptSecret(_config.access_key);
+            var payloadDict = new Dictionary<string, object>
+            {
+                ["action"] = "cloud_command",
+                ["cmd_type"] = cmdType,
+                ["dev_id"] = dev.DevId,
+                ["region"] = string.IsNullOrWhiteSpace(_config.region) ? "eu" : _config.region,
+                ["access_id"] = _config.access_id,
+                ["access_key"] = plainKey
+            };
+
+            if (extra != null)
+            {
+                foreach (var prop in extra.GetType().GetProperties())
+                {
+                    payloadDict[prop.Name] = prop.GetValue(extra) ?? "";
+                }
+            }
+
+            string output = await SendBridgeRequestAsync(payloadDict, "");
+            return output.Contains("\"success\": true") || (!output.Contains("Error") && !string.IsNullOrWhiteSpace(output));
+        }
+
+        private async Task<bool> DispatchCommandAsync(Func<Task<bool>> localAction, Func<Task<bool>> cloudAction)
+        {
+            string mode = _config.control_mode ?? "auto";
+            string priority = _config.auto_priority ?? "local_first";
+
+            if (mode == "local") return await localAction();
+            if (mode == "cloud") return await cloudAction();
+
+            if (priority == "cloud_first")
+            {
+                bool cloudSuccess = await cloudAction();
+                if (cloudSuccess) return true;
+                return await localAction();
+            }
+            else
+            {
+                bool localSuccess = await localAction();
+                if (localSuccess) return true;
+                return await cloudAction();
+            }
+        }
+
         public async Task<LampStatus> GetStatusAsync(DeviceInfo? target = null)
+        {
+            string mode = _config.control_mode ?? "auto";
+            string priority = _config.auto_priority ?? "local_first";
+
+            if (mode == "cloud")
+            {
+                return await GetCloudStatusAsync(target);
+            }
+            if (mode == "local")
+            {
+                return await GetLocalStatusAsync(target);
+            }
+
+            if (priority == "cloud_first")
+            {
+                var st = await GetCloudStatusAsync(target);
+                if (st.IsOnline) return st;
+                return await GetLocalStatusAsync(target);
+            }
+            else
+            {
+                var st = await GetLocalStatusAsync(target);
+                if (st.IsOnline) return st;
+                return await GetCloudStatusAsync(target);
+            }
+        }
+
+        private async Task<LampStatus> GetCloudStatusAsync(DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            var status = new LampStatus();
+            if (dev == null || string.IsNullOrWhiteSpace(_config.access_id) || string.IsNullOrWhiteSpace(_config.access_key))
+            {
+                status.ErrorMessage = "Tuya Cloud credentials not set";
+                status.IsOnline = false;
+                return status;
+            }
+
+            string plainKey = ConfigManager.DecryptSecret(_config.access_key);
+            var payload = new
+            {
+                action = "cloud_command",
+                cmd_type = "status",
+                dev_id = dev.DevId,
+                region = string.IsNullOrWhiteSpace(_config.region) ? "eu" : _config.region,
+                access_id = _config.access_id,
+                access_key = plainKey
+            };
+
+            string output = await SendBridgeRequestAsync(payload, "");
+            if (string.IsNullOrWhiteSpace(output) || output.Contains("\"error\""))
+            {
+                status.ErrorMessage = "Cloud status request failed";
+                status.IsOnline = false;
+                return status;
+            }
+
+            return ParseStatusJson(output);
+        }
+
+        private async Task<LampStatus> GetLocalStatusAsync(DeviceInfo? target = null)
         {
             var dev = target ?? _activeDevice;
             var status = new LampStatus();
@@ -291,17 +402,28 @@ namespace SmartLampApp.Services
             string pythonFallback = $"import tinytuya, json; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); print(json.dumps(b.status()))";
             string output = await SendBridgeRequestAsync(payload, pythonFallback);
 
-            string lowerOutput = output != null ? output.ToLowerInvariant() : "";
-
             if (string.IsNullOrWhiteSpace(output) ||
-                lowerOutput.Contains("\"error\"") ||
-                lowerOutput.Contains("\"err\"") ||
-                lowerOutput.Contains("\"success\": false") ||
-                lowerOutput.Contains("\"success\":false"))
+                output.ToLowerInvariant().Contains("\"error\"") ||
+                output.ToLowerInvariant().Contains("\"err\"") ||
+                output.ToLowerInvariant().Contains("\"success\": false"))
             {
                 status.ErrorMessage = "Device offline or key error";
                 status.IsOnline = false;
-                status.IsPowerOn = false;
+                return status;
+            }
+
+            return ParseStatusJson(output);
+        }
+
+        private LampStatus ParseStatusJson(string output)
+        {
+            var status = new LampStatus();
+            string lowerOutput = output != null ? output.ToLowerInvariant() : "";
+
+            if (string.IsNullOrWhiteSpace(output) || lowerOutput.Contains("\"error\""))
+            {
+                status.ErrorMessage = "Device error";
+                status.IsOnline = false;
                 return status;
             }
 
@@ -315,23 +437,14 @@ namespace SmartLampApp.Services
                 if (root.TryGetProperty("status", out var stElement) && stElement.TryGetProperty("dps", out dps) ||
                     root.TryGetProperty("dps", out dps))
                 {
-                    // 1. Check Power DataPoints (DP 20, 1, 101, switch_led, switch_1, switch)
                     string[] powerDpKeys = new[] { "20", "1", "101", "switch_led", "switch_1", "switch" };
                     foreach (var key in powerDpKeys)
                     {
                         if (dps.TryGetProperty(key, out var pVal))
                         {
-                            if (pVal.ValueKind == JsonValueKind.True)
-                            {
-                                status.IsPowerOn = true;
-                                break;
-                            }
-                            if (pVal.ValueKind == JsonValueKind.Number && pVal.GetInt32() == 1)
-                            {
-                                status.IsPowerOn = true;
-                                break;
-                            }
-                            if (pVal.ValueKind == JsonValueKind.String && pVal.GetString()?.ToLowerInvariant() == "true")
+                            if (pVal.ValueKind == JsonValueKind.True ||
+                                (pVal.ValueKind == JsonValueKind.Number && pVal.GetInt32() == 1) ||
+                                (pVal.ValueKind == JsonValueKind.String && pVal.GetString()?.ToLowerInvariant() == "true"))
                             {
                                 status.IsPowerOn = true;
                                 break;
@@ -344,7 +457,6 @@ namespace SmartLampApp.Services
                         }
                     }
 
-                    // 2. Brightness (DP 22 or 3)
                     if (dps.TryGetProperty("22", out var b22))
                     {
                         int bRaw = b22.GetInt32();
@@ -356,7 +468,6 @@ namespace SmartLampApp.Services
                         status.Brightness = Math.Max(1, bRaw > 255 ? bRaw / 10 : (bRaw * 100 / 255));
                     }
 
-                    // 3. Color Temp (DP 23 or 4)
                     if (dps.TryGetProperty("23", out var t23))
                     {
                         int tRaw = t23.GetInt32();
@@ -373,7 +484,6 @@ namespace SmartLampApp.Services
             }
             catch
             {
-                // Fallback string matching if JSON structure was unexpected
                 status.IsPowerOn = lowerOutput.Contains("\"20\":true") || lowerOutput.Contains("\"20\": true") ||
                                    lowerOutput.Contains("\"1\":true") || lowerOutput.Contains("\"1\": true") ||
                                    lowerOutput.Contains("\"101\":true") || lowerOutput.Contains("\"101\": true") ||
@@ -384,6 +494,14 @@ namespace SmartLampApp.Services
         }
 
         public async Task<bool> SetPowerAsync(bool on, DeviceInfo? target = null)
+        {
+            return await DispatchCommandAsync(
+                () => SetPowerLocalAsync(on, target),
+                () => SendCloudCommandAsync("set_power", new { power = on }, target)
+            );
+        }
+
+        private async Task<bool> SetPowerLocalAsync(bool on, DeviceInfo? target = null)
         {
             var dev = target ?? _activeDevice;
             if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
@@ -403,11 +521,15 @@ namespace SmartLampApp.Services
             return output.Contains("\"success\": true") || !output.Contains("Error");
         }
 
-        /// <summary>
-        /// Atomic toggle: reads current power state and flips it in a single bridge request.
-        /// Much faster than GetStatusAsync() + SetPowerAsync() for CLI usage.
-        /// </summary>
         public async Task<bool> TogglePowerAsync(DeviceInfo? target = null)
+        {
+            return await DispatchCommandAsync(
+                () => TogglePowerLocalAsync(target),
+                () => SendCloudCommandAsync("toggle", null, target)
+            );
+        }
+
+        private async Task<bool> TogglePowerLocalAsync(DeviceInfo? target = null)
         {
             var dev = target ?? _activeDevice;
             if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
@@ -427,9 +549,17 @@ namespace SmartLampApp.Services
 
         public async Task<bool> SetBrightnessAsync(int percent, DeviceInfo? target = null)
         {
+            percent = Math.Clamp(percent, 1, 100);
+            return await DispatchCommandAsync(
+                () => SetBrightnessLocalAsync(percent, target),
+                () => SendCloudCommandAsync("set_brightness", new { brightness = percent }, target)
+            );
+        }
+
+        private async Task<bool> SetBrightnessLocalAsync(int percent, DeviceInfo? target = null)
+        {
             var dev = target ?? _activeDevice;
             if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
-            percent = Math.Clamp(percent, 1, 100);
 
             var payload = new
             {
@@ -447,11 +577,20 @@ namespace SmartLampApp.Services
 
         public async Task<bool> SetColorTempAsync(int kelvin, DeviceInfo? target = null)
         {
-            var dev = target ?? _activeDevice;
-            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
             int pct = kelvin >= 2700 ? (kelvin - 2700) / 38 : kelvin;
             pct = Math.Clamp(pct, 0, 100);
             int valV2 = pct * 10;
+
+            return await DispatchCommandAsync(
+                () => SetColorTempLocalAsync(valV2, target),
+                () => SendCloudCommandAsync("set_temp", new { temp = valV2 }, target)
+            );
+        }
+
+        private async Task<bool> SetColorTempLocalAsync(int valV2, DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
 
             var payload = new
             {
@@ -469,8 +608,6 @@ namespace SmartLampApp.Services
 
         public async Task<bool> SetColorHexAsync(string hexCode, DeviceInfo? target = null)
         {
-            var dev = target ?? _activeDevice;
-            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
             hexCode = hexCode.TrimStart('#');
             if (hexCode.Length != 6) return false;
 
@@ -478,6 +615,17 @@ namespace SmartLampApp.Services
             int g = Convert.ToInt32(hexCode.Substring(2, 2), 16);
             int b = Convert.ToInt32(hexCode.Substring(4, 2), 16);
             string tuyaHex = RgbToTuyaV2Hex(r, g, b);
+
+            return await DispatchCommandAsync(
+                () => SetColorHexLocalAsync(tuyaHex, target),
+                () => SendCloudCommandAsync("set_color", new { hex = tuyaHex }, target)
+            );
+        }
+
+        private async Task<bool> SetColorHexLocalAsync(string tuyaHex, DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
 
             var payload = new
             {
@@ -495,24 +643,35 @@ namespace SmartLampApp.Services
 
         public async Task<bool> SetPresetAsync(string mode, int brightness, int colorTempK, string hexCode, DeviceInfo? target = null)
         {
+            brightness = Math.Clamp(brightness, 1, 100);
+            int pct = colorTempK >= 2700 ? (colorTempK - 2700) / 38 : colorTempK;
+            pct = Math.Clamp(pct, 0, 100);
+            int tempV2 = pct * 10;
+
+            string cleanHex = hexCode.TrimStart('#');
+            string tuyaHex = "000003e803e8";
+            if (cleanHex.Length == 6)
+            {
+                int r = Convert.ToInt32(cleanHex.Substring(0, 2), 16);
+                int g = Convert.ToInt32(cleanHex.Substring(2, 2), 16);
+                int b = Convert.ToInt32(cleanHex.Substring(4, 2), 16);
+                tuyaHex = RgbToTuyaV2Hex(r, g, b);
+            }
+
+            return await DispatchCommandAsync(
+                () => SetPresetLocalAsync(mode, brightness, tempV2, tuyaHex, target),
+                () => SendCloudCommandAsync("set_preset", new { mode = mode, brightness = brightness, temp = tempV2, hex = tuyaHex }, target)
+            );
+        }
+
+        private async Task<bool> SetPresetLocalAsync(string mode, int brightness, int tempV2, string tuyaHex, DeviceInfo? target = null)
+        {
             var dev = target ?? _activeDevice;
             if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
-
-            brightness = Math.Clamp(brightness, 1, 100);
             int brightV2 = brightness * 10;
 
             if (mode == "colour")
             {
-                string cleanHex = hexCode.TrimStart('#');
-                string tuyaHex = "000003e803e8";
-                if (cleanHex.Length == 6)
-                {
-                    int r = Convert.ToInt32(cleanHex.Substring(0, 2), 16);
-                    int g = Convert.ToInt32(cleanHex.Substring(2, 2), 16);
-                    int b = Convert.ToInt32(cleanHex.Substring(4, 2), 16);
-                    tuyaHex = RgbToTuyaV2Hex(r, g, b);
-                }
-
                 var payload = new
                 {
                     action = "set_preset",
@@ -530,10 +689,6 @@ namespace SmartLampApp.Services
             }
             else
             {
-                int pct = colorTempK >= 2700 ? (colorTempK - 2700) / 38 : colorTempK;
-                pct = Math.Clamp(pct, 0, 100);
-                int tempV2 = pct * 10;
-
                 var payload = new
                 {
                     action = "set_preset",

@@ -526,6 +526,36 @@
                                 </Grid>
                             </StackPanel>
                         </Border>
+
+                        <!-- Control Mode & Priority Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="🎮 Control Mode &amp; Fallback Priority" FontSize="13" FontWeight="Bold" Foreground="#FFD700" Margin="0,0,0,6"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                        <TextBlock Text="Control Mode:" FontSize="10" Foreground="#AAAAAA"/>
+                                        <ComboBox x:Name="CmbControlMode" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbControlMode_SelectionChanged">
+                                            <ComboBoxItem Content="🔄 Auto (Hybrid Fallback)" Tag="auto" IsSelected="True"/>
+                                            <ComboBoxItem Content="⚡ Local LAN Only" Tag="local"/>
+                                            <ComboBoxItem Content="☁️ Tuya Cloud API Only" Tag="cloud"/>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelAutoPriority" Grid.Column="1" Margin="3,0,0,0">
+                                        <TextBlock Text="Auto Priority Order:" FontSize="10" Foreground="#AAAAAA"/>
+                                        <ComboBox x:Name="CmbAutoPriority" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbAutoPriority_SelectionChanged">
+                                            <ComboBoxItem Content="1️⃣ Local LAN ➔ Fallback: Cloud" Tag="local_first" IsSelected="True"/>
+                                            <ComboBoxItem Content="1️⃣ Tuya Cloud ➔ Fallback: Local" Tag="cloud_first"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Grid>
 

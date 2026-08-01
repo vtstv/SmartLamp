@@ -44,6 +44,10 @@ namespace SmartLampApp.Models
         public string access_key { get; set; } = "";
         public string region { get; set; } = "eu";
 
+        // Control Mode & Priority ("auto", "local", "cloud"; "local_first", "cloud_first")
+        public string control_mode { get; set; } = "auto";
+        public string auto_priority { get; set; } = "local_first";
+
         // Custom Global Hotkey Configuration
         public bool hotkey_mod_ctrl { get; set; } = true;
         public bool hotkey_mod_alt { get; set; } = true;
