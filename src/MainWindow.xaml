@@ -540,7 +540,7 @@
                                     <StackPanel Grid.Column="0" Margin="0,0,3,0">
                                         <TextBlock Text="Control Mode:" FontSize="10" Foreground="#AAAAAA"/>
                                         <ComboBox x:Name="CmbControlMode" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbControlMode_SelectionChanged">
-                                            <ComboBoxItem Content="🔄 Auto (Hybrid Fallback)" Tag="auto" IsSelected="True"/>
+                                            <ComboBoxItem Content="🔄 Auto (Hybrid Fallback)" Tag="auto"/>
                                             <ComboBoxItem Content="⚡ Local LAN Only" Tag="local"/>
                                             <ComboBoxItem Content="☁️ Tuya Cloud API Only" Tag="cloud"/>
                                         </ComboBox>
@@ -549,7 +549,7 @@
                                     <StackPanel x:Name="PanelAutoPriority" Grid.Column="1" Margin="3,0,0,0">
                                         <TextBlock Text="Auto Priority Order:" FontSize="10" Foreground="#AAAAAA"/>
                                         <ComboBox x:Name="CmbAutoPriority" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbAutoPriority_SelectionChanged">
-                                            <ComboBoxItem Content="1️⃣ Local LAN ➔ Fallback: Cloud" Tag="local_first" IsSelected="True"/>
+                                            <ComboBoxItem Content="1️⃣ Local LAN ➔ Fallback: Cloud" Tag="local_first"/>
                                             <ComboBoxItem Content="1️⃣ Tuya Cloud ➔ Fallback: Local" Tag="cloud_first"/>
                                         </ComboBox>
                                     </StackPanel>

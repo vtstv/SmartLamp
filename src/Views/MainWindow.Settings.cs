@@ -123,6 +123,7 @@ namespace SmartLampApp
 
         private void CmbControlMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_config == null) return;
             if (CmbControlMode?.SelectedItem is ComboBoxItem selected)
             {
                 string tag = (string)selected.Tag;
@@ -138,6 +139,7 @@ namespace SmartLampApp
 
         private void CmbAutoPriority_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_config == null) return;
             if (CmbAutoPriority?.SelectedItem is ComboBoxItem selected)
             {
                 string tag = (string)selected.Tag;
