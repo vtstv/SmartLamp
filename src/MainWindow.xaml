@@ -56,6 +56,13 @@
             </Grid>
         </ControlTemplate>
 
+        <Style TargetType="ComboBox">
+            <Setter Property="Template" Value="{StaticResource DarkComboBoxTemplate}"/>
+            <Setter Property="Background" Value="#0C0C14"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#222236"/>
+        </Style>
+
         <Style TargetType="ComboBoxItem">
             <Setter Property="Background" Value="#161626"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -679,55 +686,47 @@
                         </Grid>
 
                         <!-- Step-by-Step Instructions in English -->
-                        <ScrollViewer MaxHeight="380" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
-                            <StackPanel TextElement.Foreground="#DDDDDD" TextElement.FontSize="12">
-                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                    <TextBlock TextWrapping="Wrap">
-                                        <Run FontWeight="Bold" Foreground="#00F0FF">1️⃣ Register on Tuya IoT Portal:</Run>
-                                        <LineBreak/>
-                                        Go to <Run Foreground="#FFEA00">https://iot.tuya.com</Run> and create a free developer account.
-                                    </TextBlock>
-                                </Border>
+                        <StackPanel TextElement.Foreground="#DDDDDD" TextElement.FontSize="11.5" Margin="0,0,0,12">
+                            <Border Background="#0C0C14" CornerRadius="8" Padding="10,6" Margin="0,0,0,6">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run FontWeight="Bold" Foreground="#00F0FF">1. Register on Tuya IoT Portal:</Run>
+                                    <LineBreak/>
+                                    Go to <Run Foreground="#FFEA00">https://iot.tuya.com</Run> and create a free developer account.
+                                </TextBlock>
+                            </Border>
 
-                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                    <TextBlock TextWrapping="Wrap">
-                                        <Run FontWeight="Bold" Foreground="#00F0FF">2️⃣ Create a Cloud Project:</Run>
-                                        <LineBreak/>
-                                        Navigate to <Run Foreground="#10B981">Cloud -&gt; Development -&gt; Create Cloud Project</Run>. Choose your data center region (e.g. Europe).
-                                    </TextBlock>
-                                </Border>
+                            <Border Background="#0C0C14" CornerRadius="8" Padding="10,6" Margin="0,0,0,6">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run FontWeight="Bold" Foreground="#00F0FF">2. Create a Cloud Project:</Run>
+                                    <LineBreak/>
+                                    Navigate to <Run Foreground="#10B981">Cloud -&gt; Development -&gt; Create Cloud Project</Run>. Choose your region (e.g. Europe).
+                                </TextBlock>
+                            </Border>
 
-                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                    <TextBlock TextWrapping="Wrap">
-                                        <Run FontWeight="Bold" Foreground="#00F0FF">3️⃣ Authorize IoT Core API:</Run>
-                                        <LineBreak/>
-                                        In your Cloud Project, go to <Run Foreground="#10B981">Service API</Run> tab, click <Run Foreground="#FFEA00">Go to Authorize</Run> and subscribe to the <Run Foreground="#00F0FF">IoT Core API</Run>.
-                                    </TextBlock>
-                                </Border>
+                            <Border Background="#0C0C14" CornerRadius="8" Padding="10,6" Margin="0,0,0,6">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run FontWeight="Bold" Foreground="#00F0FF">3. Authorize IoT Core API:</Run>
+                                    <LineBreak/>
+                                    In your Project, go to <Run Foreground="#10B981">Service API</Run> tab, click <Run Foreground="#FFEA00">Go to Authorize</Run> and subscribe to <Run Foreground="#00F0FF">IoT Core API</Run>.
+                                </TextBlock>
+                            </Border>
 
-                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                    <TextBlock TextWrapping="Wrap">
-                                        <Run FontWeight="Bold" Foreground="#00F0FF">4️⃣ Link Your Smart Life App Account:</Run>
-                                        <LineBreak/>
-                                        Go to <Run Foreground="#10B981">Devices -&gt; Link Tuya App Account -&gt; Add App Account</Run>. Scan the displayed QR code using your <Run Foreground="#FFEA00">Smart Life / Tuya Smart</Run> mobile app (Profile -&gt; QR Scanner).
-                                    </TextBlock>
-                                </Border>
+                            <Border Background="#0C0C14" CornerRadius="8" Padding="10,6" Margin="0,0,0,6">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run FontWeight="Bold" Foreground="#00F0FF">4. Link Your Smart Life App Account:</Run>
+                                    <LineBreak/>
+                                    Go to <Run Foreground="#10B981">Devices -&gt; Link Tuya App Account -&gt; Add App Account</Run>. Scan QR code using your <Run Foreground="#FFEA00">Smart Life / Tuya Smart</Run> app.
+                                </TextBlock>
+                            </Border>
 
-                                <Border Background="#0C0C14" CornerRadius="8" Padding="12" Margin="0,0,0,0">
-                                    <TextBlock TextWrapping="Wrap">
-                                        <Run FontWeight="Bold" Foreground="#00F0FF">5️⃣ Copy Your Credentials:</Run>
-                                        <LineBreak/>
-                                        Go back to your Project <Run Foreground="#10B981">Overview</Run> page and copy:
-                                        <LineBreak/>
-                                        • <Run FontWeight="Bold" Foreground="#FFEA00">Client ID</Run> (Access ID)
-                                        <LineBreak/>
-                                        • <Run FontWeight="Bold" Foreground="#FFEA00">Client Secret</Run> (Access Key)
-                                        <LineBreak/><LineBreak/>
-                                        Paste them into the fields and click <Run Foreground="#0066CC">Fetch Key from Cloud</Run>!
-                                    </TextBlock>
-                                </Border>
-                            </StackPanel>
-                        </ScrollViewer>
+                            <Border Background="#0C0C14" CornerRadius="8" Padding="10,6" Margin="0,0,0,0">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run FontWeight="Bold" Foreground="#00F0FF">5. Copy Your Credentials:</Run>
+                                    <LineBreak/>
+                                    From Project <Run Foreground="#10B981">Overview</Run> copy: <Run FontWeight="Bold" Foreground="#FFEA00">Client ID</Run> (Access ID) &amp; <Run FontWeight="Bold" Foreground="#FFEA00">Client Secret</Run> (Access Key). Paste them into Settings and click <Run Foreground="#0066CC">Fetch Key from Cloud</Run>!
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
 
                         <!-- Close Button -->
                         <Button Content="Got it!" Height="32" Style="{StaticResource GlassBtn}" Background="#0066CC" FontWeight="Bold" Click="BtnCloseTuyaGuide_Click"/>
