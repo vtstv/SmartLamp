@@ -40,17 +40,20 @@ namespace SmartLampApp.Services
             Directory.CreateDirectory(tempDir);
             string tempPath = Path.Combine(tempDir, "tuya_bridge.exe");
 
-            try
+            if (!File.Exists(tempPath))
             {
-                var assembly = Assembly.GetExecutingAssembly();
-                using var stream = assembly.GetManifestResourceStream("SmartLampApp.TuyaBridge.tuya_bridge.exe");
-                if (stream != null)
+                try
                 {
-                    using var fileStream = File.Create(tempPath);
-                    stream.CopyTo(fileStream);
+                    var assembly = Assembly.GetExecutingAssembly();
+                    using var stream = assembly.GetManifestResourceStream("SmartLampApp.TuyaBridge.tuya_bridge.exe");
+                    if (stream != null)
+                    {
+                        using var fileStream = File.Create(tempPath);
+                        stream.CopyTo(fileStream);
+                    }
                 }
+                catch { }
             }
-            catch { }
 
             _extractedExePath = File.Exists(tempPath) ? tempPath : "python";
             return _extractedExePath;
@@ -186,22 +189,31 @@ namespace SmartLampApp.Services
 
         private string RunPythonCommandCLI(string pythonCode)
         {
-            string exePath = GetBridgeExecutablePath();
-
-            var psi = new ProcessStartInfo
+            if (string.IsNullOrWhiteSpace(pythonCode)) return "";
+            try
             {
-                FileName = exePath,
-                Arguments = $"-c \"{pythonCode}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            using var process = Process.Start(psi);
-            if (process == null) return "";
-            string output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-            return output;
+                string exePath = GetBridgeExecutablePath();
+                if (string.IsNullOrWhiteSpace(exePath) || (!File.Exists(exePath) && exePath != "python")) return "";
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = exePath,
+                    Arguments = $"-c \"{pythonCode}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using var process = Process.Start(psi);
+                if (process == null) return "";
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                return output;
+            }
+            catch
+            {
+                return "";
+            }
         }
     }
 }
