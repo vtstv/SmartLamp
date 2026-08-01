@@ -18,8 +18,8 @@ namespace SmartLampApp
         [DllImport("user32.dll")]
         private static extern bool AllowSetForegroundWindow(int dwProcessId);
 
-        private static Mutex _mutex = null;
-        private static EventWaitHandle _showEvent = null;
+        private static Mutex? _mutex = null;
+        private static EventWaitHandle? _showEvent = null;
 
         protected override void OnStartup(StartupEventArgs e)
         {
