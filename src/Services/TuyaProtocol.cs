@@ -36,7 +36,7 @@ namespace SmartLampApp.Services
         public string ProductName { get; set; } = "Tuya Smart Device";
     }
 
-    public class TuyaProtocol
+    public partial class TuyaProtocol
     {
         private LampConfig _config;
         private DeviceInfo _activeDevice;
@@ -197,10 +197,6 @@ namespace SmartLampApp.Services
             }
         }
 
-        /// <summary>
-        /// Waits for the bridge daemon to be fully ready. Use from CLI mode
-        /// to ensure the first command doesn't fall through to slow CLI fallback.
-        /// </summary>
         public async Task WaitForBridgeReadyAsync()
         {
             await EnsureBridgeDaemonRunningAsync();
@@ -267,34 +263,6 @@ namespace SmartLampApp.Services
             return output;
         }
 
-        private async Task<bool> SendCloudCommandAsync(string cmdType, object? extra = null, DeviceInfo? target = null)
-        {
-            var dev = target ?? _activeDevice;
-            if (dev == null || string.IsNullOrWhiteSpace(_config.access_id) || string.IsNullOrWhiteSpace(_config.access_key)) return false;
-
-            string plainKey = ConfigManager.DecryptSecret(_config.access_key);
-            var payloadDict = new Dictionary<string, object>
-            {
-                ["action"] = "cloud_command",
-                ["cmd_type"] = cmdType,
-                ["dev_id"] = dev.DevId,
-                ["region"] = string.IsNullOrWhiteSpace(_config.region) ? "eu" : _config.region,
-                ["access_id"] = _config.access_id,
-                ["access_key"] = plainKey
-            };
-
-            if (extra != null)
-            {
-                foreach (var prop in extra.GetType().GetProperties())
-                {
-                    payloadDict[prop.Name] = prop.GetValue(extra) ?? "";
-                }
-            }
-
-            string output = await SendBridgeRequestAsync(payloadDict, "");
-            return output.Contains("\"success\": true") || (!output.Contains("Error") && !string.IsNullOrWhiteSpace(output));
-        }
-
         private async Task<bool> DispatchCommandAsync(Func<Task<bool>> localAction, Func<Task<bool>> cloudAction)
         {
             string mode = _config.control_mode ?? "auto";
@@ -343,39 +311,6 @@ namespace SmartLampApp.Services
                 if (st.IsOnline) return st;
                 return await GetCloudStatusAsync(target);
             }
-        }
-
-        private async Task<LampStatus> GetCloudStatusAsync(DeviceInfo? target = null)
-        {
-            var dev = target ?? _activeDevice;
-            var status = new LampStatus();
-            if (dev == null || string.IsNullOrWhiteSpace(_config.access_id) || string.IsNullOrWhiteSpace(_config.access_key))
-            {
-                status.ErrorMessage = "Tuya Cloud credentials not set";
-                status.IsOnline = false;
-                return status;
-            }
-
-            string plainKey = ConfigManager.DecryptSecret(_config.access_key);
-            var payload = new
-            {
-                action = "cloud_command",
-                cmd_type = "status",
-                dev_id = dev.DevId,
-                region = string.IsNullOrWhiteSpace(_config.region) ? "eu" : _config.region,
-                access_id = _config.access_id,
-                access_key = plainKey
-            };
-
-            string output = await SendBridgeRequestAsync(payload, "");
-            if (string.IsNullOrWhiteSpace(output) || output.Contains("\"error\""))
-            {
-                status.ErrorMessage = "Cloud status request failed";
-                status.IsOnline = false;
-                return status;
-            }
-
-            return ParseStatusJson(output);
         }
 
         private async Task<LampStatus> GetLocalStatusAsync(DeviceInfo? target = null)
@@ -745,114 +680,6 @@ namespace SmartLampApp.Services
                 tasks.Add(SetColorHexAsync(hexCode, dev));
             }
             await Task.WhenAll(tasks);
-        }
-
-        public async Task<List<DiscoveredDevice>> AutoDiscoverDevicesAsync()
-        {
-            return await ScanLocalNetworkAsync();
-        }
-
-        public async Task<(string localKey, string error)> AutoFetchKeyFromCloudAsync(string accessId, string accessKey, string region, string devId = "")
-        {
-            return await FetchLocalKeyFromCloudAsync(accessId, accessKey, region, devId);
-        }
-
-        public async Task<List<DiscoveredDevice>> ScanLocalNetworkAsync()
-        {
-            return await Task.Run(() =>
-            {
-                var list = new List<DiscoveredDevice>();
-                try
-                {
-                    string pythonCmd = "import tinytuya, json; print(json.dumps(tinytuya.deviceScan(verbose=False)))";
-                    string output = RunPythonCommandCLI(pythonCmd);
-
-                    if (!string.IsNullOrWhiteSpace(output) && output.StartsWith("{"))
-                    {
-                        using var doc = JsonDocument.Parse(output);
-                        foreach (var prop in doc.RootElement.EnumerateObject())
-                        {
-                            var item = prop.Value;
-                            list.Add(new DiscoveredDevice
-                            {
-                                Ip = item.TryGetProperty("ip", out var ip) ? ip.GetString() ?? "" : "",
-                                DevId = item.TryGetProperty("gwId", out var id) ? id.GetString() ?? prop.Name : prop.Name,
-                                Version = item.TryGetProperty("version", out var v) ? v.GetString() ?? "3.5" : "3.5",
-                                ProductName = item.TryGetProperty("productKey", out var pk) ? pk.GetString() ?? "Tuya Smart Lamp" : "Tuya Smart Lamp"
-                            });
-                        }
-                    }
-                }
-                catch { }
-                return list;
-            });
-        }
-
-        public async Task<(string localKey, string error)> FetchLocalKeyFromCloudAsync(string accessId, string accessKey, string region, string devId)
-        {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    string pythonCmd = $"import tinytuya, json; c=tinytuya.Cloud('{region}', '{accessId}', '{accessKey}'); print(json.dumps(c.getdevices()))";
-                    string output = RunPythonCommandCLI(pythonCmd);
-                    if (string.IsNullOrWhiteSpace(output) || output.Contains("error"))
-                    {
-                        return ("", "Failed to connect to Tuya Cloud. Verify credentials.");
-                    }
-
-                    using var doc = JsonDocument.Parse(output);
-                    var root = doc.RootElement;
-
-                    if (root.ValueKind == JsonValueKind.Array)
-                    {
-                        foreach (var item in root.EnumerateArray())
-                        {
-                            string id = item.TryGetProperty("id", out var idProp) ? idProp.GetString() ?? "" : "";
-                            if (id == devId || string.IsNullOrEmpty(devId))
-                            {
-                                string key = item.TryGetProperty("key", out var kProp) ? kProp.GetString() ?? "" : "";
-                                if (!string.IsNullOrEmpty(key)) return (key, "");
-                            }
-                        }
-                    }
-                    return ("", "Device not found in cloud account.");
-                }
-                catch (Exception ex)
-                {
-                    return ("", ex.Message);
-                }
-            });
-        }
-
-        private static string RgbToTuyaV2Hex(int r, int g, int b)
-        {
-            float rF = r / 255.0f;
-            float gF = g / 255.0f;
-            float bF = b / 255.0f;
-
-            float maxC = Math.Max(rF, Math.Max(gF, bF));
-            float minC = Math.Min(rF, Math.Min(gF, bF));
-            float delta = maxC - minC;
-
-            float h = 0f;
-            if (delta > 0.00001f)
-            {
-                if (maxC == rF) h = (gF - bF) / delta % 6f;
-                else if (maxC == gF) h = (bF - rF) / delta + 2f;
-                else h = (rF - gF) / delta + 4f;
-                h *= 60f;
-                if (h < 0f) h += 360f;
-            }
-
-            float s = maxC == 0f ? 0f : delta / maxC;
-            float v = maxC;
-
-            int hVal = (int)Math.Round(h);
-            int sVal = (int)Math.Round(s * 1000.0f);
-            int vVal = (int)Math.Round(v * 1000.0f);
-
-            return $"{hVal:x4}{sVal:x4}{vVal:x4}";
         }
     }
 }
