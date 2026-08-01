@@ -177,12 +177,33 @@ namespace SmartLampApp.Services
                 {
                     ChildProcessTracker.AddProcess(_bridgeDaemon);
                 }
+
+                // Wait for the daemon to become ready after starting
+                for (int i = 0; i < 40; i++) // up to 10 seconds
+                {
+                    await Task.Delay(250).ConfigureAwait(false);
+                    try
+                    {
+                        var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health").ConfigureAwait(false);
+                        if (res.IsSuccessStatusCode) return;
+                    }
+                    catch { }
+                }
             }
             catch { }
             finally
             {
                 _daemonLock.Release();
             }
+        }
+
+        /// <summary>
+        /// Waits for the bridge daemon to be fully ready. Use from CLI mode
+        /// to ensure the first command doesn't fall through to slow CLI fallback.
+        /// </summary>
+        public async Task WaitForBridgeReadyAsync()
+        {
+            await EnsureBridgeDaemonRunningAsync();
         }
 
         public static void StopDaemon()
@@ -378,6 +399,28 @@ namespace SmartLampApp.Services
             };
             string stateStr = on ? "True" : "False";
             string fallback = $"import tinytuya; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); b.set_status({stateStr}, switch=20)";
+            string output = await SendBridgeRequestAsync(payload, fallback);
+            return output.Contains("\"success\": true") || !output.Contains("Error");
+        }
+
+        /// <summary>
+        /// Atomic toggle: reads current power state and flips it in a single bridge request.
+        /// Much faster than GetStatusAsync() + SetPowerAsync() for CLI usage.
+        /// </summary>
+        public async Task<bool> TogglePowerAsync(DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey)) return false;
+
+            var payload = new
+            {
+                action = "toggle",
+                dev_id = dev.DevId,
+                ip = dev.Ip,
+                local_key = dev.LocalKey,
+                version = dev.Version
+            };
+            string fallback = $"import tinytuya, json; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); s=b.status(); cur=s.get('dps',{{}}).get('20',False); b.set_status(not cur, switch=20)";
             string output = await SendBridgeRequestAsync(payload, fallback);
             return output.Contains("\"success\": true") || !output.Contains("Error");
         }

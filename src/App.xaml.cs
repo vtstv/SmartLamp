@@ -200,6 +200,9 @@ namespace SmartLampApp
 
                 System.Threading.Tasks.Task.Run(async () =>
                 {
+                    // Wait for the bridge daemon to be fully ready before sending commands
+                    await protocol.WaitForBridgeReadyAsync();
+
                     if (argStr.Contains("--on"))
                     {
                         await protocol.SetPowerAsync(true);
@@ -210,9 +213,8 @@ namespace SmartLampApp
                     }
                     else if (argStr.Contains("--toggle") || argStr.Contains("-t"))
                     {
-                        var status = await protocol.GetStatusAsync();
-                        bool targetPower = !status.IsPowerOn;
-                        await protocol.SetPowerAsync(targetPower);
+                        // Atomic toggle: single bridge request instead of GetStatus + SetPower
+                        await protocol.TogglePowerAsync();
                     }
 
                     for (int i = 0; i < args.Length; i++)

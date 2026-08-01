@@ -60,6 +60,15 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 on = req.get('power', True)
                 b.set_status(on, switch=20)
                 res["success"] = True
+            elif action == 'toggle':
+                b = get_device(dev_id, ip, local_key, version)
+                st = b.status()
+                dps = st.get('dps', {})
+                current = dps.get('20', dps.get('1', False))
+                target = not bool(current)
+                b.set_status(target, switch=20)
+                res["power"] = target
+                res["success"] = True
             elif action == 'set_brightness':
                 b = get_device(dev_id, ip, local_key, version)
                 pct = req.get('brightness', 100)
