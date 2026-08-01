@@ -22,6 +22,14 @@ def get_device(dev_id, ip, local_key, version):
         devices[key] = b
     return devices[key]
 
+cloud_instances = {}
+
+def get_cloud(region, access_id, access_key):
+    key = (region, access_id, access_key)
+    if key not in cloud_instances:
+        cloud_instances[key] = tinytuya.Cloud(region, access_id, access_key)
+    return cloud_instances[key]
+
 class BridgeHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/health':
@@ -51,7 +59,82 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
         res = {"success": False}
         try:
-            if action == 'status':
+            if action == 'cloud_command':
+                region = req.get('region', 'eu')
+                access_id = req.get('access_id')
+                access_key = req.get('access_key')
+                c = get_cloud(region, access_id, access_key)
+
+                cmd_type = req.get('cmd_type')
+                if cmd_type == 'status':
+                    st = c.getstatus(dev_id)
+                    if isinstance(st, dict) and st.get('success'):
+                        dps = {}
+                        for item in st.get('result', []):
+                            code = item.get('code')
+                            val = item.get('value')
+                            if code in ('switch_led', 'switch_1', 'switch'):
+                                dps['20'] = val
+                            elif code == 'work_mode':
+                                dps['21'] = val
+                            elif code in ('bright_value_v2', 'bright_value'):
+                                dps['22'] = val
+                            elif code in ('temp_value_v2', 'temp_value'):
+                                dps['23'] = val
+                        res["status"] = {"dps": dps}
+                        res["success"] = True
+                    else:
+                        res["error"] = "Cloud status query failed"
+                elif cmd_type == 'toggle':
+                    st = c.getstatus(dev_id)
+                    is_on = False
+                    if isinstance(st, dict) and st.get('success'):
+                        for item in st.get('result', []):
+                            if item.get('code') in ('switch_led', 'switch_1', 'switch'):
+                                is_on = bool(item.get('value'))
+                                break
+                    target = not is_on
+                    c_res = c.sendcommand(dev_id, {'commands': [{'code': 'switch_led', 'value': target}]})
+                    if isinstance(c_res, dict) and c_res.get('success'):
+                        res["success"] = True
+                        res["power"] = target
+                    else:
+                        res["error"] = "Cloud toggle failed"
+                else:
+                    cmds = []
+                    if cmd_type == 'set_power':
+                        on = req.get('power', True)
+                        cmds.append({'code': 'switch_led', 'value': on})
+                    elif cmd_type == 'set_brightness':
+                        pct = req.get('brightness', 100)
+                        cmds.append({'code': 'switch_led', 'value': True})
+                        cmds.append({'code': 'bright_value_v2', 'value': int(pct * 10)})
+                    elif cmd_type == 'set_temp':
+                        val_v2 = req.get('temp', 1000)
+                        cmds.append({'code': 'switch_led', 'value': True})
+                        cmds.append({'code': 'work_mode', 'value': 'white'})
+                        cmds.append({'code': 'temp_value_v2', 'value': val_v2})
+                    elif cmd_type == 'set_preset':
+                        mode = req.get('mode', 'white')
+                        bright = req.get('brightness', 50)
+                        bright_v2 = max(10, min(1000, int(bright * 10)))
+                        cmds.append({'code': 'switch_led', 'value': True})
+                        if mode == 'colour':
+                            cmds.append({'code': 'work_mode', 'value': 'colour'})
+                            cmds.append({'code': 'bright_value_v2', 'value': bright_v2})
+                        else:
+                            val_v2 = req.get('temp', 0)
+                            cmds.append({'code': 'work_mode', 'value': 'white'})
+                            cmds.append({'code': 'bright_value_v2', 'value': bright_v2})
+                            cmds.append({'code': 'temp_value_v2', 'value': val_v2})
+
+                    if cmds:
+                        c_res = c.sendcommand(dev_id, {'commands': cmds})
+                        if isinstance(c_res, dict) and c_res.get('success'):
+                            res["success"] = True
+                        else:
+                            res["error"] = f"Cloud command failed: {c_res}"
+            elif action == 'status':
                 b = get_device(dev_id, ip, local_key, version)
                 res["status"] = b.status()
                 res["success"] = True
