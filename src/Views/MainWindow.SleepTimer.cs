@@ -7,6 +7,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using SmartLampApp.Models;
 
 using Button = System.Windows.Controls.Button;
 
@@ -48,7 +49,10 @@ namespace SmartLampApp
             _sleepCountdownSeconds = mins * 60;
             _sleepTimer?.Start();
             UpdateSleepTimerText();
-            ShowTrayNotification("Sleep Timer Set", $"Auto-turn off set for {mins} minutes.");
+            if (_config.enable_timer_notifications)
+            {
+                ShowTrayNotification("Sleep Timer Set", $"Auto-turn off set for {mins} minutes.");
+            }
         }
 
         private void BtnCancelTimer_Click(object sender, RoutedEventArgs e)
@@ -72,7 +76,10 @@ namespace SmartLampApp
                 _isPowerOn = false;
                 UpdatePowerButtonUi();
                 await _protocol.SetPowerAsync(false);
-                ShowTrayNotification("Sleep Timer Finished", "💤 Smart Lamp powered off automatically.");
+                if (_config.enable_timer_notifications)
+                {
+                    ShowTrayNotification("Sleep Timer Finished", "💤 Smart Lamp powered off automatically.");
+                }
             }
         }
 
@@ -81,6 +88,13 @@ namespace SmartLampApp
             int m = _sleepCountdownSeconds / 60;
             int s = _sleepCountdownSeconds % 60;
             TxtTimerStatus.Text = $"{m:D2}m {s:D2}s";
+        }
+
+        private void ChkTimerNotifications_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isUpdatingUi) return;
+            _config.enable_timer_notifications = ChkTimerNotifications.IsChecked == true;
+            ConfigManager.Save(_config);
         }
     }
 }
