@@ -179,7 +179,7 @@ namespace SmartLampApp.Services
                 catch { }
 
                 // Fallback to single-process CLI if daemon is unreachable
-                return RunPythonCommandCLI(rawPythonFallback);
+                return await RunPythonCommandCLIAsync(rawPythonFallback).ConfigureAwait(false);
             }
             finally
             {
@@ -187,7 +187,7 @@ namespace SmartLampApp.Services
             }
         }
 
-        private string RunPythonCommandCLI(string pythonCode)
+        private async Task<string> RunPythonCommandCLIAsync(string pythonCode)
         {
             if (string.IsNullOrWhiteSpace(pythonCode)) return "";
             try
@@ -206,9 +206,21 @@ namespace SmartLampApp.Services
                 };
                 using var process = Process.Start(psi);
                 if (process == null) return "";
-                string output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
+                string output = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+                await process.WaitForExitAsync().ConfigureAwait(false);
                 return output;
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private string RunPythonCommandCLI(string pythonCode)
+        {
+            try
+            {
+                return RunPythonCommandCLIAsync(pythonCode).GetAwaiter().GetResult();
             }
             catch
             {

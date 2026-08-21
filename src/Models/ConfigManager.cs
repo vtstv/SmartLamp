@@ -59,6 +59,7 @@ namespace SmartLampApp.Models
         public bool close_to_tray { get; set; } = true;
         public bool enable_timer_notifications { get; set; } = true;
         public bool check_updates_on_startup { get; set; } = true;
+        public DateTime last_update_check_time { get; set; } = DateTime.MinValue;
         public string ignored_update_version { get; set; } = "";
 
         // Integration Toggles

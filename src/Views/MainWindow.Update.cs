@@ -26,44 +26,62 @@ namespace SmartLampApp
         private void InitializeUpdateService()
         {
             ChkCheckUpdates.IsChecked = _config.check_updates_on_startup;
-            TxtUpdateCheckStatus.Text = $"Version v{AppVersion.Version}";
+            UpdateStatusLabelText();
 
             if (_config.check_updates_on_startup)
             {
+                // Run pure background check without touching the UI thread
                 Task.Run(async () =>
                 {
-                    // Delay initial check by 3.5 seconds so it doesn't block window rendering or LAN discovery
-                    await Task.Delay(3500);
-                    await Dispatcher.InvokeAsync(async () =>
+                    await Task.Delay(5000); // 5 sec initial delay
+
+                    if (!_config.check_updates_on_startup) return;
+
+                    // Check if at least 7 days (weekly) have passed since the last check
+                    double daysSinceLastCheck = (DateTime.UtcNow - _config.last_update_check_time).TotalDays;
+                    if (daysSinceLastCheck < 7.0 && _config.last_update_check_time != DateTime.MinValue)
                     {
-                        await CheckForUpdatesSilentAsync();
-                    });
+                        return; // Skip automatic check this session
+                    }
+
+                    try
+                    {
+                        var info = await UpdateService.CheckForUpdatesAsync(AppVersion.Version).ConfigureAwait(false);
+                        
+                        _config.last_update_check_time = DateTime.UtcNow;
+                        ConfigManager.Save(_config);
+
+                        if (info.IsUpdateAvailable && !string.IsNullOrWhiteSpace(info.LatestVersion))
+                        {
+                            if (info.LatestVersion != _config.ignored_update_version)
+                            {
+                                await Dispatcher.InvokeAsync(() =>
+                                {
+                                    TxtUpdateCheckStatus.Text = $"v{info.LatestVersion} available!";
+                                    TxtUpdateCheckStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9800"));
+                                    ShowUpdateModal(info);
+                                });
+                            }
+                        }
+                    }
+                    catch { }
                 });
             }
         }
 
-        private async Task CheckForUpdatesSilentAsync()
+        private void UpdateStatusLabelText()
         {
-            try
+            if (_config.last_update_check_time == DateTime.MinValue)
             {
-                var info = await UpdateService.CheckForUpdatesAsync(AppVersion.Version);
-                if (info.IsUpdateAvailable && !string.IsNullOrWhiteSpace(info.LatestVersion))
-                {
-                    TxtUpdateCheckStatus.Text = $"v{info.LatestVersion} available!";
-                    TxtUpdateCheckStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9800"));
-
-                    if (info.LatestVersion != _config.ignored_update_version)
-                    {
-                        ShowUpdateModal(info);
-                    }
-                }
-                else
-                {
-                    TxtUpdateCheckStatus.Text = $"Up to date (v{AppVersion.Version}) ✓";
-                    TxtUpdateCheckStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
-                }
+                TxtUpdateCheckStatus.Text = $"v{AppVersion.Version} (Not checked)";
             }
-            catch { }
+            else
+            {
+                var days = (DateTime.UtcNow - _config.last_update_check_time).TotalDays;
+                string when = days < 1 ? "today" : $"{(int)days}d ago";
+                TxtUpdateCheckStatus.Text = $"v{AppVersion.Version} (Checked {when})";
+            }
+            TxtUpdateCheckStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
         }
 
         private void ShowUpdateModal(UpdateInfo info)
@@ -93,7 +111,11 @@ namespace SmartLampApp
 
             try
             {
-                var info = await UpdateService.CheckForUpdatesAsync(AppVersion.Version);
+                var info = await Task.Run(() => UpdateService.CheckForUpdatesAsync(AppVersion.Version));
+
+                _config.last_update_check_time = DateTime.UtcNow;
+                ConfigManager.Save(_config);
+
                 if (info.IsUpdateAvailable)
                 {
                     TxtUpdateCheckStatus.Text = $"v{info.LatestVersion} available!";
