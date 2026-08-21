@@ -52,8 +52,11 @@ namespace SmartLampApp
             if ((DateTime.UtcNow - _lastUserCommandTime).TotalSeconds >= 4.0)
             {
                 _isPowerOn = status.IsPowerOn;
+                if (!string.IsNullOrWhiteSpace(status.Mode))
+                {
+                    _currentMode = status.Mode;
+                }
             }
-            UpdatePowerButtonUi();
 
             var active = _protocol.GetActiveDevice();
             if (status.Brightness > 0)
@@ -74,7 +77,34 @@ namespace SmartLampApp
                 _config.last_temp = status.ColorTempK;
                 _isUpdatingUi = false;
             }
+            if (!string.IsNullOrWhiteSpace(status.ColorHex) && status.Mode == "colour")
+            {
+                TxtHexCode.Text = status.ColorHex;
+            }
             ConfigManager.Save(_config);
+            UpdatePowerButtonUi();
+        }
+
+        public static Color KelvinToColor(int kelvin)
+        {
+            kelvin = Math.Clamp(kelvin, 2700, 6500);
+            float t = (kelvin - 2700f) / (6500f - 2700f);
+            byte r, g, b;
+            if (t <= 0.5f)
+            {
+                float localT = t / 0.5f;
+                r = 255;
+                g = (byte)(179 + (242 - 179) * localT);
+                b = (byte)(71 + (214 - 71) * localT);
+            }
+            else
+            {
+                float localT = (t - 0.5f) / 0.5f;
+                r = (byte)(255 - (255 - 212) * localT);
+                g = (byte)(242 - (242 - 236) * localT);
+                b = (byte)(214 + (255 - 214) * localT);
+            }
+            return Color.FromRgb(r, g, b);
         }
 
         private void UpdatePowerButtonUi()
@@ -102,7 +132,17 @@ namespace SmartLampApp
                     BulbGlowFrame.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2A3E"));
                     return;
                 }
-                var c = (Color)ColorConverter.ConvertFromString(hexCode);
+
+                Color c;
+                if (_currentMode == "white")
+                {
+                    int k = (int)SliderTemp.Value;
+                    c = KelvinToColor(k);
+                }
+                else
+                {
+                    c = (Color)ColorConverter.ConvertFromString(hexCode);
+                }
                 BulbGlowFrame.Background = new SolidColorBrush(c);
             }
             catch { }
@@ -158,6 +198,9 @@ namespace SmartLampApp
                 if (_isUpdatingUi || _protocol == null) return;
                 int kVal = (int)SliderTemp.Value;
 
+                _currentMode = "white";
+                UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
+
                 var active = _protocol.GetActiveDevice();
                 if (active != null) active.last_temp = kVal;
                 _config.last_temp = kVal;
@@ -184,6 +227,9 @@ namespace SmartLampApp
             int kVal = (int)e.NewValue;
             TxtTempVal.Text = $"{kVal}K";
 
+            _currentMode = "white";
+            UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
+
             if (_tempDebounceTimer == null) InitializeDebouncers();
             _tempDebounceTimer?.Stop();
             _tempDebounceTimer?.Start();
@@ -195,14 +241,32 @@ namespace SmartLampApp
         private void BtnB75_Click(object sender, RoutedEventArgs e) => SliderBright.Value = 75;
         private void BtnB100_Click(object sender, RoutedEventArgs e) => SliderBright.Value = 100;
 
-        private void BtnT2700_Click(object sender, RoutedEventArgs e) => SliderTemp.Value = 2700;
-        private void BtnT4000_Click(object sender, RoutedEventArgs e) => SliderTemp.Value = 4000;
-        private void BtnT6500_Click(object sender, RoutedEventArgs e) => SliderTemp.Value = 6500;
+        private void BtnT2700_Click(object sender, RoutedEventArgs e)
+        {
+            _currentMode = "white";
+            SliderTemp.Value = 2700;
+            UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
+        }
+
+        private void BtnT4000_Click(object sender, RoutedEventArgs e)
+        {
+            _currentMode = "white";
+            SliderTemp.Value = 4000;
+            UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
+        }
+
+        private void BtnT6500_Click(object sender, RoutedEventArgs e)
+        {
+            _currentMode = "white";
+            SliderTemp.Value = 6500;
+            UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
+        }
 
         private async void BtnColor_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string hex)
             {
+                _currentMode = "colour";
                 TxtHexCode.Text = hex;
                 UpdateBulbGlow(hex, _isPowerOn);
 
@@ -225,6 +289,7 @@ namespace SmartLampApp
             if (pickerWin.ShowDialog() == true)
             {
                 string hex = pickerWin.SelectedHex;
+                _currentMode = "colour";
                 TxtHexCode.Text = hex;
                 UpdateBulbGlow(hex, _isPowerOn);
 
@@ -240,6 +305,7 @@ namespace SmartLampApp
         private async void BtnApplyHex_Click(object sender, RoutedEventArgs e)
         {
             string hex = TxtHexCode.Text.Trim();
+            _currentMode = "colour";
             UpdateBulbGlow(hex, _isPowerOn);
 
             if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))

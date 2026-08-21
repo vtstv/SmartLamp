@@ -40,5 +40,15 @@ namespace SmartLampApp.Services
             }
             await Task.WhenAll(tasks);
         }
+
+        public async Task SetGroupPresetAsync(List<DeviceInfo> groupDevices, string mode, int brightness, int colorTempK, string hexCode)
+        {
+            var tasks = new List<Task>();
+            foreach (var dev in groupDevices)
+            {
+                tasks.Add(SetPresetAsync(mode, brightness, colorTempK, hexCode, dev));
+            }
+            await Task.WhenAll(tasks);
+        }
     }
 }

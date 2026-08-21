@@ -21,6 +21,7 @@ namespace SmartLampApp
         private MqttService _mqttService;
 
         private bool _isPowerOn = false;
+        private string _currentMode = "white";
         private bool _isUpdatingUi = false;
         private bool _isKeyVisible = false;
         private bool _isAccKeyVisible = false;

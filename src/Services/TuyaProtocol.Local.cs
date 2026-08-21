@@ -91,6 +91,11 @@ namespace SmartLampApp.Services
                         }
                     }
 
+                    if (dps.TryGetProperty("21", out var m21))
+                    {
+                        status.Mode = m21.GetString() ?? "white";
+                    }
+
                     if (dps.TryGetProperty("22", out var b22))
                     {
                         int bRaw = b22.GetInt32();
@@ -113,6 +118,22 @@ namespace SmartLampApp.Services
                         int tRaw = t4.GetInt32();
                         int pct = Math.Clamp(tRaw > 255 ? tRaw / 10 : (tRaw * 100 / 255), 0, 100);
                         status.ColorTempK = 2700 + (pct * 38);
+                    }
+
+                    if (dps.TryGetProperty("24", out var c24))
+                    {
+                        string tuyaHex = c24.GetString() ?? "";
+                        if (tuyaHex.Length >= 12)
+                        {
+                            try
+                            {
+                                int h = Convert.ToInt32(tuyaHex.Substring(0, 4), 16);
+                                int s = Convert.ToInt32(tuyaHex.Substring(4, 4), 16);
+                                int v = Convert.ToInt32(tuyaHex.Substring(8, 4), 16);
+                                status.ColorHex = TuyaHsvToRgbHex(h, s, v);
+                            }
+                            catch { }
+                        }
                     }
                 }
             }
