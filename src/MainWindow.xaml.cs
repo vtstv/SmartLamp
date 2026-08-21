@@ -70,6 +70,7 @@ namespace SmartLampApp
             ChkEnableMqtt.IsChecked = _config.enable_mqtt;
             ChkTimerNotifications.IsChecked = _config.enable_timer_notifications;
             UpdateInstallButtonState();
+            InitializeUpdateService();
 
             PopulateDeviceSelector();
             RenderCustomPresets();
