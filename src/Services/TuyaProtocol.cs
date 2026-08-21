@@ -187,9 +187,9 @@ namespace SmartLampApp.Services
 
         public async Task<bool> SetColorTempAsync(int kelvin, DeviceInfo? target = null)
         {
-            int pct = kelvin >= 2700 ? (kelvin - 2700) / 38 : kelvin;
-            pct = Math.Clamp(pct, 0, 100);
-            int valV2 = pct * 10;
+            kelvin = Math.Clamp(kelvin, 2700, 6500);
+            int valV2 = (int)Math.Round((kelvin - 2700.0) / 3800.0 * 1000.0);
+            valV2 = Math.Clamp(valV2, 0, 1000);
 
             return await DispatchCommandAsync(
                 () => SetColorTempLocalAsync(valV2, target),
@@ -216,9 +216,9 @@ namespace SmartLampApp.Services
         public async Task<bool> SetPresetAsync(string mode, int brightness, int colorTempK, string hexCode, DeviceInfo? target = null)
         {
             brightness = Math.Clamp(brightness, 1, 100);
-            int pct = colorTempK >= 2700 ? (colorTempK - 2700) / 38 : colorTempK;
-            pct = Math.Clamp(pct, 0, 100);
-            int tempV2 = pct * 10;
+            colorTempK = Math.Clamp(colorTempK, 2700, 6500);
+            int tempV2 = (int)Math.Round((colorTempK - 2700.0) / 3800.0 * 1000.0);
+            tempV2 = Math.Clamp(tempV2, 0, 1000);
 
             string cleanHex = hexCode.TrimStart('#');
             string tuyaHex = "000003e803e8";
