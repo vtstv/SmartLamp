@@ -310,6 +310,10 @@ namespace SmartLampApp.Services
                                     {
                                         status.IsPowerOn = val.ValueKind == JsonValueKind.True || (val.ValueKind == JsonValueKind.Number && val.GetInt32() == 1);
                                     }
+                                    else if (code == "work_mode" || code == "21")
+                                    {
+                                        status.Mode = val.GetString() ?? "white";
+                                    }
                                     else if (code == "bright_value_v2" || code == "22")
                                     {
                                         status.Brightness = val.GetInt32() / 10;
@@ -318,6 +322,31 @@ namespace SmartLampApp.Services
                                     {
                                         int pct = val.GetInt32() / 10;
                                         status.ColorTempK = 2700 + (pct * 38);
+                                    }
+                                    else if (code == "colour_data_v2" || code == "24")
+                                    {
+                                        if (val.ValueKind == JsonValueKind.Object)
+                                        {
+                                            int hVal = val.TryGetProperty("h", out var hProp) ? hProp.GetInt32() : 0;
+                                            int sVal = val.TryGetProperty("s", out var sProp) ? sProp.GetInt32() : 1000;
+                                            int vVal = val.TryGetProperty("v", out var vProp) ? vProp.GetInt32() : 1000;
+                                            status.ColorHex = TuyaHsvToRgbHex(hVal, sVal, vVal);
+                                        }
+                                        else if (val.ValueKind == JsonValueKind.String)
+                                        {
+                                            string tuyaHex = val.GetString() ?? "";
+                                            if (tuyaHex.Length >= 12)
+                                            {
+                                                try
+                                                {
+                                                    int hVal = Convert.ToInt32(tuyaHex.Substring(0, 4), 16);
+                                                    int sVal = Convert.ToInt32(tuyaHex.Substring(4, 4), 16);
+                                                    int vVal = Convert.ToInt32(tuyaHex.Substring(8, 4), 16);
+                                                    status.ColorHex = TuyaHsvToRgbHex(hVal, sVal, vVal);
+                                                }
+                                                catch { }
+                                            }
+                                        }
                                     }
                                 }
                             }

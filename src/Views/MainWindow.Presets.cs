@@ -53,6 +53,10 @@ namespace SmartLampApp
 
         private UIElement CreatePresetChip(UserPreset preset)
         {
+            string tooltipText = preset.Mode == "colour"
+                ? $"⭐ Preset: {preset.Name}\nMode: Colour\nBrightness: {preset.Brightness}%\nColor: {preset.ColorHex}\n\n(Click to apply)"
+                : $"⭐ Preset: {preset.Name}\nMode: White\nBrightness: {preset.Brightness}%\nTemp: {preset.ColorTempK}K\n\n(Click to apply)";
+
             var container = new Border
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#222236")),
@@ -60,7 +64,7 @@ namespace SmartLampApp
                 Padding = new Thickness(8, 4, 8, 4),
                 Margin = new Thickness(3),
                 Cursor = System.Windows.Input.Cursors.Hand,
-                ToolTip = $"Click to apply:\nMode: {preset.Mode}\nBrightness: {preset.Brightness}%\nTemp: {preset.ColorTempK}K\nHex: {preset.ColorHex}"
+                ToolTip = tooltipText
             };
 
             var grid = new Grid();
@@ -68,10 +72,17 @@ namespace SmartLampApp
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            // Color Indicator
-            string dotColor = preset.Mode == "colour" ? preset.ColorHex : "#FFB347";
+            // Color Indicator Dot
             Color brushColor;
-            try { brushColor = (Color)ColorConverter.ConvertFromString(dotColor); } catch { brushColor = Colors.Cyan; }
+            if (preset.Mode == "colour")
+            {
+                try { brushColor = (Color)ColorConverter.ConvertFromString(preset.ColorHex); }
+                catch { brushColor = Colors.Cyan; }
+            }
+            else
+            {
+                brushColor = KelvinToColor(preset.ColorTempK);
+            }
 
             var dot = new Border
             {
@@ -138,18 +149,29 @@ namespace SmartLampApp
             if (_isUpdatingUi) return;
 
             _isUpdatingUi = true;
+            _currentMode = preset.Mode;
             SliderBright.Value = preset.Brightness;
             TxtBrightVal.Text = $"{preset.Brightness}%";
             SliderTemp.Value = preset.ColorTempK;
             TxtTempVal.Text = $"{preset.ColorTempK}K";
-            TxtHexCode.Text = preset.ColorHex;
+            if (!string.IsNullOrWhiteSpace(preset.ColorHex))
+            {
+                TxtHexCode.Text = preset.ColorHex;
+            }
             _isUpdatingUi = false;
 
             _isPowerOn = true;
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
 
-            await _protocol.SetPresetAsync(preset.Mode, preset.Brightness, preset.ColorTempK, preset.ColorHex);
+            if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
+            {
+                await _protocol.SetGroupPresetAsync(_config.devices, preset.Mode, preset.Brightness, preset.ColorTempK, preset.ColorHex);
+            }
+            else
+            {
+                await _protocol.SetPresetAsync(preset.Mode, preset.Brightness, preset.ColorTempK, preset.ColorHex);
+            }
 
             await Task.Delay(250);
             _ = RefreshStatusAsync();
@@ -157,12 +179,20 @@ namespace SmartLampApp
 
         private void BtnSavePreset_Click(object sender, RoutedEventArgs e)
         {
-            string mode = !string.IsNullOrWhiteSpace(TxtHexCode.Text) && TxtHexCode.Text != "#00E5FF" ? "colour" : "white";
+            string mode = _currentMode;
             int bright = (int)SliderBright.Value;
             int temp = (int)SliderTemp.Value;
             string hex = TxtHexCode.Text;
 
-            TxtPresetSummary.Text = $"Mode: {mode.ToUpper()} | Brightness: {bright}% | Temp: {temp}K | Hex: {hex}";
+            if (mode == "colour")
+            {
+                TxtPresetSummary.Text = $"Mode: COLOUR | Brightness: {bright}% | Color: {hex}";
+            }
+            else
+            {
+                TxtPresetSummary.Text = $"Mode: WHITE | Brightness: {bright}% | Temp: {temp}K";
+            }
+
             TxtPresetName.Text = $"My Preset {(_config.custom_presets.Count + 1)}";
             OverlaySavePreset.Visibility = Visibility.Visible;
         }
@@ -172,7 +202,7 @@ namespace SmartLampApp
             string name = TxtPresetName.Text.Trim();
             if (string.IsNullOrWhiteSpace(name)) name = "Custom Preset";
 
-            string mode = !string.IsNullOrWhiteSpace(TxtHexCode.Text) && TxtHexCode.Text != "#00E5FF" ? "colour" : "white";
+            string mode = _currentMode;
             var preset = new UserPreset
             {
                 Name = name,
