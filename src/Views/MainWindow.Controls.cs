@@ -36,7 +36,7 @@ namespace SmartLampApp
             }
 
             TxtStatus.Text = "Connecting...";
-            var status = await _protocol.GetStatusAsync();
+            var status = await Task.Run(() => _protocol.GetStatusAsync());
 
             if (!status.IsOnline)
             {
