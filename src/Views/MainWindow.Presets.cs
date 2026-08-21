@@ -164,6 +164,18 @@ namespace SmartLampApp
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
 
+            var active = _protocol.GetActiveDevice();
+            if (active != null)
+            {
+                active.last_brightness = preset.Brightness;
+                active.last_temp = preset.ColorTempK;
+                if (!string.IsNullOrWhiteSpace(preset.ColorHex)) active.last_color_hex = preset.ColorHex;
+            }
+            _config.last_brightness = preset.Brightness;
+            _config.last_temp = preset.ColorTempK;
+            if (!string.IsNullOrWhiteSpace(preset.ColorHex)) _config.last_color_hex = preset.ColorHex;
+            ConfigManager.Save(_config);
+
             if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
             {
                 await _protocol.SetGroupPresetAsync(_config.devices, preset.Mode, preset.Brightness, preset.ColorTempK, preset.ColorHex);
@@ -172,9 +184,6 @@ namespace SmartLampApp
             {
                 await _protocol.SetPresetAsync(preset.Mode, preset.Brightness, preset.ColorTempK, preset.ColorHex);
             }
-
-            await Task.Delay(250);
-            _ = RefreshStatusAsync();
         }
 
         private void BtnSavePreset_Click(object sender, RoutedEventArgs e)

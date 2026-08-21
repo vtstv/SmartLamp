@@ -49,39 +49,40 @@ namespace SmartLampApp
             PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
             TxtStatus.Text = "🟢 ONLINE";
 
-            if ((DateTime.UtcNow - _lastUserCommandTime).TotalSeconds >= 4.0)
+            bool isUserActive = (DateTime.UtcNow - _lastUserCommandTime).TotalSeconds < 4.0;
+            if (!isUserActive)
             {
                 _isPowerOn = status.IsPowerOn;
                 if (!string.IsNullOrWhiteSpace(status.Mode))
                 {
                     _currentMode = status.Mode;
                 }
-            }
 
-            var active = _protocol.GetActiveDevice();
-            if (status.Brightness > 0)
-            {
-                _isUpdatingUi = true;
-                SliderBright.Value = status.Brightness;
-                TxtBrightVal.Text = $"{status.Brightness}%";
-                if (active != null) active.last_brightness = status.Brightness;
-                _config.last_brightness = status.Brightness;
-                _isUpdatingUi = false;
+                var active = _protocol.GetActiveDevice();
+                if (status.Brightness > 0)
+                {
+                    _isUpdatingUi = true;
+                    SliderBright.Value = status.Brightness;
+                    TxtBrightVal.Text = $"{status.Brightness}%";
+                    if (active != null) active.last_brightness = status.Brightness;
+                    _config.last_brightness = status.Brightness;
+                    _isUpdatingUi = false;
+                }
+                if (status.ColorTempK >= 2700)
+                {
+                    _isUpdatingUi = true;
+                    SliderTemp.Value = status.ColorTempK;
+                    TxtTempVal.Text = $"{status.ColorTempK}K";
+                    if (active != null) active.last_temp = status.ColorTempK;
+                    _config.last_temp = status.ColorTempK;
+                    _isUpdatingUi = false;
+                }
+                if (!string.IsNullOrWhiteSpace(status.ColorHex) && status.Mode == "colour")
+                {
+                    TxtHexCode.Text = status.ColorHex;
+                }
+                ConfigManager.Save(_config);
             }
-            if (status.ColorTempK >= 2700)
-            {
-                _isUpdatingUi = true;
-                SliderTemp.Value = status.ColorTempK;
-                TxtTempVal.Text = $"{status.ColorTempK}K";
-                if (active != null) active.last_temp = status.ColorTempK;
-                _config.last_temp = status.ColorTempK;
-                _isUpdatingUi = false;
-            }
-            if (!string.IsNullOrWhiteSpace(status.ColorHex) && status.Mode == "colour")
-            {
-                TxtHexCode.Text = status.ColorHex;
-            }
-            ConfigManager.Save(_config);
             UpdatePowerButtonUi();
         }
 

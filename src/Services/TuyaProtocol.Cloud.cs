@@ -320,8 +320,9 @@ namespace SmartLampApp.Services
                                     }
                                     else if (code == "temp_value_v2" || code == "23")
                                     {
-                                        int pct = val.GetInt32() / 10;
-                                        status.ColorTempK = 2700 + (pct * 38);
+                                        int tRaw = Math.Clamp(val.GetInt32(), 0, 1000);
+                                        int kelvin = (int)Math.Round(2700.0 + (tRaw / 1000.0) * 3800.0);
+                                        status.ColorTempK = Math.Clamp(kelvin, 2700, 6500);
                                     }
                                     else if (code == "colour_data_v2" || code == "24")
                                     {

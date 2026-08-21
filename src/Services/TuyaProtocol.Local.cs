@@ -110,14 +110,15 @@ namespace SmartLampApp.Services
                     if (dps.TryGetProperty("23", out var t23))
                     {
                         int tRaw = t23.GetInt32();
-                        int pct = Math.Clamp(tRaw / 10, 0, 100);
-                        status.ColorTempK = 2700 + (pct * 38);
+                        int kelvin = (int)Math.Round(2700.0 + (Math.Clamp(tRaw, 0, 1000) / 1000.0) * 3800.0);
+                        status.ColorTempK = Math.Clamp(kelvin, 2700, 6500);
                     }
                     else if (dps.TryGetProperty("4", out var t4))
                     {
                         int tRaw = t4.GetInt32();
-                        int pct = Math.Clamp(tRaw > 255 ? tRaw / 10 : (tRaw * 100 / 255), 0, 100);
-                        status.ColorTempK = 2700 + (pct * 38);
+                        double normalized = tRaw > 255 ? Math.Clamp(tRaw, 0, 1000) / 1000.0 : Math.Clamp(tRaw, 0, 255) / 255.0;
+                        int kelvin = (int)Math.Round(2700.0 + normalized * 3800.0);
+                        status.ColorTempK = Math.Clamp(kelvin, 2700, 6500);
                     }
 
                     if (dps.TryGetProperty("24", out var c24))
