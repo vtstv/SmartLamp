@@ -11,7 +11,7 @@ namespace SmartLampApp
         // CENTRAL APPLICATION VERSION & BRANDING CONFIGURATION
         // Edit the constants below to update the version across the entire app.
         // ====================================================================
-        public const string Version = "2.0";
+        public const string Version = "2.1";
         public const string AppName = "SmartLamp Studio";
         public const string Author = "Murr";
         public const string GitHubUrl = "https://github.com/vtstv";
