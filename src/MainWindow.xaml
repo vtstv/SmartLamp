@@ -198,9 +198,9 @@
                         <TextBlock x:Name="TxtDeviceInfo" Text="IP: Select or Add Device  |  ID: --" FontSize="11" Foreground="#AAAAAA" Margin="0,4,0,0"/>
                     </StackPanel>
 
-                    <!-- Harmonious Natural Emerald Online Status Pill -->
-                    <Border x:Name="PillStatus" Grid.Column="2" Background="#10B981" CornerRadius="10" Padding="12,5" VerticalAlignment="Center">
-                        <TextBlock x:Name="TxtStatus" Text="🟢 ONLINE" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                    <!-- Connecting / Online Status Pill -->
+                    <Border x:Name="PillStatus" Grid.Column="2" Background="#0284C7" CornerRadius="10" Padding="12,5" VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtStatus" Text="⏳ CONNECTING..." FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
                     </Border>
                 </Grid>
             </Border>
@@ -224,10 +224,10 @@
 
                     <!-- LEFT COLUMN: Power, Brightness, Temp & Custom Sleep Timer -->
                     <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                        <!-- Hero Power Card (Natural Harmonious Emerald Tone #10B981) -->
+                        <!-- Hero Power Card -->
                         <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
-                            <Button x:Name="BtnPower" Content="⚡ POWERED ON" Height="48" Style="{StaticResource PowerBtnStyle}"
-                                    Background="#10B981" Click="BtnPower_Click"/>
+                            <Button x:Name="BtnPower" Content="⚡ POWERED OFF" Height="48" Style="{StaticResource PowerBtnStyle}"
+                                    Background="#FF1744" Click="BtnPower_Click"/>
                         </Border>
 
                         <!-- Sleep Timer Card -->

@@ -30,19 +30,22 @@ namespace SmartLampApp
             {
                 PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9100"));
                 TxtStatus.Text = "⚠️ KEY REQUIRED";
-                BtnPower.Content = "⚡ POWERED ON";
-                BtnPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                _isPowerOn = false;
+                UpdatePowerButtonUi();
                 return;
             }
 
-            TxtStatus.Text = "Connecting...";
+            PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
+            TxtStatus.Text = "⏳ CONNECTING...";
+
             var status = await Task.Run(() => _protocol.GetStatusAsync());
 
             if (!status.IsOnline)
             {
                 PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
                 TxtStatus.Text = "❌ OFFLINE";
-                UpdateBulbGlow("#333344", false);
+                _isPowerOn = false;
+                UpdatePowerButtonUi();
                 return;
             }
 
