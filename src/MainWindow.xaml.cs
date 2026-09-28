@@ -74,6 +74,7 @@ namespace SmartLampApp
 
             PopulateDeviceSelector();
             RenderCustomPresets();
+            UpdatePowerButtonUi();
             _ = RefreshStatusAsync();
         }
 
