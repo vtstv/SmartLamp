@@ -5,6 +5,7 @@
 
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using TuyaNet.Native.Crypto;
 using TuyaNet.Native.Framing;
 using TuyaNet.Native.Models;
@@ -93,16 +94,26 @@ namespace TuyaNet.Native
         {
             if (dps == null || dps.Count == 0) return true;
 
+            var dpsNode = new JsonObject();
+            foreach (var kvp in dps)
+            {
+                if (kvp.Value is bool b) dpsNode[kvp.Key] = b;
+                else if (kvp.Value is int i) dpsNode[kvp.Key] = i;
+                else if (kvp.Value is long l) dpsNode[kvp.Key] = l;
+                else if (kvp.Value is string s) dpsNode[kvp.Key] = s;
+                else dpsNode[kvp.Key] = kvp.Value?.ToString();
+            }
+
             if (_session.IsVersion35)
             {
                 long t = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var dataObj = new
+                var root = new JsonObject
                 {
-                    protocol = 5,
-                    t = t,
-                    data = new { dps = dps }
+                    ["protocol"] = 5,
+                    ["t"] = t,
+                    ["data"] = new JsonObject { ["dps"] = dpsNode }
                 };
-                string jsonStr = JsonSerializer.Serialize(dataObj);
+                string jsonStr = root.ToJsonString();
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonStr);
 
                 byte[] fullPayload = new byte[TuyaHeader.Version35Header.Length + jsonBytes.Length];
@@ -132,14 +143,14 @@ namespace TuyaNet.Native
             else
             {
                 long t = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var dataObj = new
+                var root = new JsonObject
                 {
-                    devId = _devId,
-                    uid = _devId,
-                    t = t.ToString(),
-                    dps = dps
+                    ["devId"] = _devId,
+                    ["uid"] = _devId,
+                    ["t"] = t.ToString(),
+                    ["dps"] = dpsNode
                 };
-                string jsonStr = JsonSerializer.Serialize(dataObj);
+                string jsonStr = root.ToJsonString();
                 byte[] encPayload = TuyaCrypto.AesEcbEncrypt(Encoding.UTF8.GetBytes(jsonStr), _localKeyBytes);
 
                 byte[] fullPayload = new byte[TuyaHeader.Version33Header.Length + encPayload.Length];
@@ -149,6 +160,7 @@ namespace TuyaNet.Native
                 var (respCmd, _) = await _session.SendReceive55AAAsync(TuyaCommandType.Control, fullPayload, cancellationToken).ConfigureAwait(false);
                 return respCmd == TuyaCommandType.Status || respCmd == TuyaCommandType.Control;
             }
+
         }
 
         /// <summary>
