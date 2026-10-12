@@ -26,22 +26,9 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Setup Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Install Python Dependencies
+      - name: Build and Pack TuyaNet.Native Class Library
         run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller tinytuya requests
-
-      - name: Build PyInstaller Tuya Bridge Executable
-        shell: powershell
-        run: |
-          Set-Location src/TuyaBridge
-          python -m PyInstaller --onefile --console tuya_bridge.py
-          Copy-Item -Path "dist/tuya_bridge.exe" -Destination "tuya_bridge.exe" -Force
+          dotnet pack libs/TuyaNet.Native/TuyaNet.Native.csproj -c Release -o releases
 
       - name: Compile Lightweight WPF Application (.NET 9 win-x64)
         run: |
@@ -51,7 +38,7 @@ jobs:
         shell: powershell
         run: |
           $versionFile = "src/AppVersion.cs"
-          $appVersion = "2.0"
+          $appVersion = "3.0"
           if (Test-Path $versionFile) {
               $content = Get-Content $versionFile -Raw
               if ($content -match 'Version = "([^"]+)"') {
@@ -78,6 +65,7 @@ jobs:
           files: |
             releases/*.zip
             releases/*.exe
+            releases/*.nupkg
           draft: false
           prerelease: false
           generate_release_notes: true
