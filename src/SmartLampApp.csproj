@@ -18,4 +18,8 @@
     <EmbeddedResource Include="Assets/app_icon.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\libs\TuyaNet.Native\TuyaNet.Native.csproj" />
+  </ItemGroup>
+
 </Project>

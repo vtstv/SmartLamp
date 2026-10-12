@@ -9,17 +9,18 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using SmartLampApp.Models;
+using TuyaNet.Native;
 
 namespace SmartLampApp.Services
 {
     public partial class TuyaProtocol
     {
-        private static readonly ConcurrentDictionary<string, TuyaLocalClient> _localClients = new();
+        private static readonly ConcurrentDictionary<string, TuyaDevice> _localClients = new();
 
-        private TuyaLocalClient GetLocalClient(DeviceInfo dev)
+        private TuyaDevice GetLocalDevice(DeviceInfo dev)
         {
             string key = $"{dev.DevId}_{dev.Ip}_{dev.LocalKey}_{dev.Version}";
-            return _localClients.GetOrAdd(key, _ => new TuyaLocalClient(dev.Ip, dev.DevId, dev.LocalKey, dev.Version));
+            return _localClients.GetOrAdd(key, _ => new TuyaDevice(dev.Ip, dev.DevId, dev.LocalKey, dev.Version));
         }
 
         private async Task<LampStatus> GetLocalStatusAsync(DeviceInfo? target = null)
@@ -36,8 +37,9 @@ namespace SmartLampApp.Services
 
             try
             {
-                var client = GetLocalClient(dev);
-                string output = await client.GetStatusJsonAsync(timeoutMs: 4000).ConfigureAwait(false);
+                var device = GetLocalDevice(dev);
+                using var cts = new CancellationTokenSource(4000);
+                string output = await device.GetStatusJsonAsync(cts.Token).ConfigureAwait(false);
                 var result = ParseStatusJson(output);
                 if (result.IsOnline)
                 {
@@ -162,12 +164,9 @@ namespace SmartLampApp.Services
 
             try
             {
-                var client = GetLocalClient(dev);
-                var dps = new Dictionary<string, object>
-                {
-                    ["20"] = on
-                };
-                bool ok = await client.SetDpsAsync(dps, timeoutMs: 3000).ConfigureAwait(false);
+                var device = GetLocalDevice(dev);
+                using var cts = new CancellationTokenSource(3000);
+                bool ok = await device.SetPowerAsync(on, "20", cts.Token).ConfigureAwait(false);
                 if (ok)
                 {
                     dev.last_power_on = on;
@@ -188,14 +187,11 @@ namespace SmartLampApp.Services
 
             try
             {
-                var client = GetLocalClient(dev);
+                var device = GetLocalDevice(dev);
                 var curStatus = await GetLocalStatusAsync(dev).ConfigureAwait(false);
                 bool targetPower = curStatus.IsOnline ? !curStatus.IsPowerOn : !dev.last_power_on;
-                var dps = new Dictionary<string, object>
-                {
-                    ["20"] = targetPower
-                };
-                bool ok = await client.SetDpsAsync(dps, timeoutMs: 3000).ConfigureAwait(false);
+                using var cts = new CancellationTokenSource(3000);
+                bool ok = await device.SetPowerAsync(targetPower, "20", cts.Token).ConfigureAwait(false);
                 if (ok)
                 {
                     dev.last_power_on = targetPower;
@@ -216,14 +212,15 @@ namespace SmartLampApp.Services
 
             try
             {
-                var client = GetLocalClient(dev);
+                var device = GetLocalDevice(dev);
                 int brightVal = Math.Clamp(percent * 10, 10, 1000);
                 var dps = new Dictionary<string, object>
                 {
                     ["20"] = true,
                     ["22"] = brightVal
                 };
-                return await client.SetDpsAsync(dps, timeoutMs: 3000).ConfigureAwait(false);
+                using var cts = new CancellationTokenSource(3000);
+                return await device.SetDpsAsync(dps, cts.Token).ConfigureAwait(false);
             }
             catch
             {
@@ -238,14 +235,15 @@ namespace SmartLampApp.Services
 
             try
             {
-                var client = GetLocalClient(dev);
+                var device = GetLocalDevice(dev);
                 var dps = new Dictionary<string, object>
                 {
                     ["20"] = true,
                     ["21"] = "white",
                     ["23"] = Math.Clamp(valV2, 0, 1000)
                 };
-                return await client.SetDpsAsync(dps, timeoutMs: 3000).ConfigureAwait(false);
+                using var cts = new CancellationTokenSource(3000);
+                return await device.SetDpsAsync(dps, cts.Token).ConfigureAwait(false);
             }
             catch
             {
@@ -260,14 +258,15 @@ namespace SmartLampApp.Services
 
             try
             {
-                var client = GetLocalClient(dev);
+                var device = GetLocalDevice(dev);
                 var dps = new Dictionary<string, object>
                 {
                     ["20"] = true,
                     ["21"] = "colour",
                     ["24"] = tuyaHex
                 };
-                return await client.SetDpsAsync(dps, timeoutMs: 3000).ConfigureAwait(false);
+                using var cts = new CancellationTokenSource(3000);
+                return await device.SetDpsAsync(dps, cts.Token).ConfigureAwait(false);
             }
             catch
             {
@@ -282,7 +281,7 @@ namespace SmartLampApp.Services
 
             try
             {
-                var client = GetLocalClient(dev);
+                var device = GetLocalDevice(dev);
                 int brightV2 = Math.Clamp(brightness * 10, 10, 1000);
                 var dps = new Dictionary<string, object>
                 {
@@ -298,7 +297,8 @@ namespace SmartLampApp.Services
                 {
                     dps["23"] = Math.Clamp(tempV2, 0, 1000);
                 }
-                return await client.SetDpsAsync(dps, timeoutMs: 3000).ConfigureAwait(false);
+                using var cts = new CancellationTokenSource(3000);
+                return await device.SetDpsAsync(dps, cts.Token).ConfigureAwait(false);
             }
             catch
             {

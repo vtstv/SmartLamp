@@ -224,7 +224,6 @@ namespace SmartLampApp
 
         protected override void OnExit(ExitEventArgs e)
         {
-            SmartLampApp.Services.TuyaProtocol.StopDaemon();
             base.OnExit(e);
         }
 
@@ -284,8 +283,8 @@ namespace SmartLampApp
                 var dev = cfg.devices.Count > 0 ? cfg.devices[0] : null;
                 if (dev != null)
                 {
-                    Console.WriteLine($"Testing pure C# TuyaLocalClient against {dev.Ip} ({dev.DevId}, ver={dev.Version})...");
-                    using var client = new SmartLampApp.Services.TuyaLocalClient(dev.Ip, dev.DevId, dev.LocalKey, dev.Version);
+                    Console.WriteLine($"Testing TuyaNet.Native TuyaDevice against {dev.Ip} ({dev.DevId}, ver={dev.Version})...");
+                    using var client = new TuyaNet.Native.TuyaDevice(dev.Ip, dev.DevId, dev.LocalKey, dev.Version);
                     try
                     {
                         string status = client.GetStatusJsonAsync().GetAwaiter().GetResult();
@@ -307,14 +306,10 @@ namespace SmartLampApp
                 if (dev != null)
                 {
                     Console.WriteLine($"Testing SetDpsAsync against {dev.Ip}...");
-                    using var client = new SmartLampApp.Services.TuyaLocalClient(dev.Ip, dev.DevId, dev.LocalKey, dev.Version);
+                    using var client = new TuyaNet.Native.TuyaDevice(dev.Ip, dev.DevId, dev.LocalKey, dev.Version);
                     try
                     {
-                        string status = client.GetStatusJsonAsync().GetAwaiter().GetResult();
-                        bool currentPower = status.Contains("\"20\":true");
-                        bool targetPower = !currentPower;
-                        Console.WriteLine($"Current power: {currentPower}, toggling to: {targetPower}");
-                        bool ok = client.SetDpsAsync(new Dictionary<string, object> { ["20"] = targetPower }).GetAwaiter().GetResult();
+                        bool ok = client.TogglePowerAsync().GetAwaiter().GetResult();
                         Console.WriteLine($"SET_DPS RESULT: {ok}");
                     }
                     catch (Exception ex)
