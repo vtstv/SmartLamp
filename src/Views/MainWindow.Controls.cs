@@ -62,6 +62,7 @@ namespace SmartLampApp
                 }
 
                 var active = _protocol.GetActiveDevice();
+                if (active != null) active.last_power_on = status.IsPowerOn;
                 if (status.Brightness > 0)
                 {
                     _isUpdatingUi = true;

@@ -207,6 +207,7 @@ namespace SmartLampApp
             }
 
             _config.selected_dev_id = devId;
+            _config.cloud_subscription_expired = false;
             ConfigManager.Save(_config);
             _protocol.UpdateConfig(_config);
 

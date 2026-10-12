@@ -49,6 +49,7 @@ namespace SmartLampApp
 
             if (args.Length > 0)
             {
+                IsCommandLineLaunch = true;
                 bool handled = HandleCommandLineArgs(args);
                 if (handled)
                 {
@@ -133,12 +134,19 @@ namespace SmartLampApp
                     {
                         Current.Dispatcher.BeginInvoke((Action)(async () =>
                         {
-                            foreach (Window window in Current.Windows)
+                            try
                             {
-                                if (window is MainWindow mw)
+                                foreach (Window window in Current.Windows)
                                 {
-                                    await mw.TogglePowerFromExternalTriggerAsync();
+                                    if (window is MainWindow mw)
+                                    {
+                                        await mw.TogglePowerFromExternalTriggerAsync();
+                                    }
                                 }
+                            }
+                            catch (Exception ex)
+                            {
+                                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] IPC Toggle Error: {ex.Message}\n"); } catch { }
                             }
                         }));
                     }
@@ -156,12 +164,19 @@ namespace SmartLampApp
                     {
                         Current.Dispatcher.BeginInvoke((Action)(async () =>
                         {
-                            foreach (Window window in Current.Windows)
+                            try
                             {
-                                if (window is MainWindow mw)
+                                foreach (Window window in Current.Windows)
                                 {
-                                    await mw.SetPowerFromExternalTriggerAsync(true);
+                                    if (window is MainWindow mw)
+                                    {
+                                        await mw.SetPowerFromExternalTriggerAsync(true);
+                                    }
                                 }
+                            }
+                            catch (Exception ex)
+                            {
+                                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] IPC On Error: {ex.Message}\n"); } catch { }
                             }
                         }));
                     }
@@ -179,12 +194,19 @@ namespace SmartLampApp
                     {
                         Current.Dispatcher.BeginInvoke((Action)(async () =>
                         {
-                            foreach (Window window in Current.Windows)
+                            try
                             {
-                                if (window is MainWindow mw)
+                                foreach (Window window in Current.Windows)
                                 {
-                                    await mw.SetPowerFromExternalTriggerAsync(false);
+                                    if (window is MainWindow mw)
+                                    {
+                                        await mw.SetPowerFromExternalTriggerAsync(false);
+                                    }
                                 }
+                            }
+                            catch (Exception ex)
+                            {
+                                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] IPC Off Error: {ex.Message}\n"); } catch { }
                             }
                         }));
                     }
@@ -232,6 +254,7 @@ namespace SmartLampApp
         }
 
         public static bool IsAutostartLaunch { get; set; } = false;
+        public static bool IsCommandLineLaunch { get; set; } = false;
 
         private bool HandleCommandLineArgs(string[] args)
         {
@@ -318,8 +341,9 @@ namespace SmartLampApp
                 {
                     string mode = config.control_mode ?? "auto";
                     string priority = config.auto_priority ?? "cloud_first";
+                    bool isCloudExpired = config.cloud_subscription_expired && (DateTime.UtcNow - config.cloud_subscription_check_time).TotalHours < 12;
 
-                    if (mode == "local" || (!hasCloud && mode == "auto") || (mode == "auto" && priority == "local_first"))
+                    if (mode == "local" || (!hasCloud && mode == "auto") || (mode == "auto" && priority == "local_first") || (isCloudExpired && hasLocal))
                     {
                         await protocol.WaitForBridgeReadyAsync();
                     }
