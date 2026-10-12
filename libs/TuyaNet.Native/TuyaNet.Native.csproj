@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net8.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>TuyaNet.Native</RootNamespace>
+    <AssemblyName>TuyaNet.Native</AssemblyName>
+    
+    <!-- Package metadata -->
+    <PackageId>TuyaNet.Native</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Murr</Authors>
+    <Company>vtstv</Company>
+    <Description>High-performance, pure C# native implementation of Tuya Local Protocol v3.1, v3.3, v3.4, and v3.5 without Python dependencies.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/vtstv/SmartLamp</RepositoryUrl>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+</Project>

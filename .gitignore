@@ -34,3 +34,8 @@ make_release.ps1
 release_builder.*
 releases/
 release/
+
+# Private Agent Notes & Instructions
+prv/
+agents.md
+
