@@ -81,19 +81,21 @@ namespace SmartLampApp.Services
             {
                 try
                 {
-                    var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health").ConfigureAwait(false);
+                    using var cts = new CancellationTokenSource(150);
+                    var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health", cts.Token).ConfigureAwait(false);
                     if (res.IsSuccessStatusCode) return;
                 }
                 catch { }
 
                 if ((_bridgeDaemon != null && !_bridgeDaemon.HasExited) || Process.GetProcessesByName("tuya_bridge").Length > 0)
                 {
-                    for (int i = 0; i < 8; i++)
+                    for (int i = 0; i < 20; i++)
                     {
-                        await Task.Delay(250).ConfigureAwait(false);
+                        await Task.Delay(100).ConfigureAwait(false);
                         try
                         {
-                            var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health").ConfigureAwait(false);
+                            using var cts = new CancellationTokenSource(150);
+                            var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health", cts.Token).ConfigureAwait(false);
                             if (res.IsSuccessStatusCode) return;
                         }
                         catch { }
@@ -108,23 +110,22 @@ namespace SmartLampApp.Services
                     FileName = exePath,
                     Arguments = $"--server {ServerPort}",
                     UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
+                    CreateNoWindow = true
                 };
                 _bridgeDaemon = Process.Start(psi);
-                if (_bridgeDaemon != null)
+                if (_bridgeDaemon != null && !SmartLampApp.App.IsCommandLineLaunch)
                 {
                     ChildProcessTracker.AddProcess(_bridgeDaemon);
                 }
 
                 // Wait for the daemon to become ready after starting
-                for (int i = 0; i < 40; i++) // up to 10 seconds
+                for (int i = 0; i < 80; i++) // up to 8 seconds
                 {
-                    await Task.Delay(250).ConfigureAwait(false);
+                    await Task.Delay(100).ConfigureAwait(false);
                     try
                     {
-                        var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health").ConfigureAwait(false);
+                        using var cts = new CancellationTokenSource(150);
+                        var res = await _httpClient.GetAsync($"http://127.0.0.1:{ServerPort}/health", cts.Token).ConfigureAwait(false);
                         if (res.IsSuccessStatusCode) return;
                     }
                     catch { }

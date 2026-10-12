@@ -57,11 +57,25 @@ namespace SmartLampApp.Services
                 return _cachedCloudToken;
             }
 
+            if (!string.IsNullOrEmpty(_config.cached_cloud_token) && DateTime.UtcNow < _config.cached_cloud_token_expiry)
+            {
+                _cachedCloudToken = _config.cached_cloud_token;
+                _cloudTokenExpiry = _config.cached_cloud_token_expiry;
+                return _cachedCloudToken;
+            }
+
             await _tokenLock.WaitAsync();
             try
             {
                 if (!string.IsNullOrEmpty(_cachedCloudToken) && DateTime.UtcNow < _cloudTokenExpiry)
                 {
+                    return _cachedCloudToken;
+                }
+
+                if (!string.IsNullOrEmpty(_config.cached_cloud_token) && DateTime.UtcNow < _config.cached_cloud_token_expiry)
+                {
+                    _cachedCloudToken = _config.cached_cloud_token;
+                    _cloudTokenExpiry = _config.cached_cloud_token_expiry;
                     return _cachedCloudToken;
                 }
 
@@ -90,6 +104,11 @@ namespace SmartLampApp.Services
                     _cachedCloudToken = result.GetProperty("access_token").GetString();
                     int expireSeconds = result.TryGetProperty("expire_time", out var exp) ? exp.GetInt32() : 7200;
                     _cloudTokenExpiry = DateTime.UtcNow.AddSeconds(expireSeconds - 60);
+
+                    _config.cached_cloud_token = _cachedCloudToken ?? "";
+                    _config.cached_cloud_token_expiry = _cloudTokenExpiry;
+                    ConfigManager.Save(_config);
+
                     return _cachedCloudToken;
                 }
                 return null;
@@ -133,14 +152,35 @@ namespace SmartLampApp.Services
                 req.Headers.Add("sign_method", "HMAC-SHA256");
 
                 var res = await _httpClient.SendAsync(req);
+                string jsonStr = await res.Content.ReadAsStringAsync();
+                try { System.IO.File.AppendAllText("cli.log", $"[{DateTime.Now}] DirectCloud: HTTP {(int)res.StatusCode}, Response: {jsonStr}\n"); } catch { }
                 if (!res.IsSuccessStatusCode) return false;
 
-                string jsonStr = await res.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(jsonStr);
-                return doc.RootElement.TryGetProperty("success", out var s) && s.GetBoolean();
+                if (doc.RootElement.TryGetProperty("success", out var s) && s.GetBoolean())
+                {
+                    if (_cloudSubscriptionExpired)
+                    {
+                        _cloudSubscriptionExpired = false;
+                        _config.cloud_subscription_expired = false;
+                        ConfigManager.Save(_config);
+                    }
+                    return true;
+                }
+
+                if (jsonStr.Contains("28841002") || jsonStr.Contains("subscription has expired"))
+                {
+                    _cloudSubscriptionExpired = true;
+                    _config.cloud_subscription_expired = true;
+                    _config.cloud_subscription_check_time = DateTime.UtcNow;
+                    ConfigManager.Save(_config);
+                }
+
+                return false;
             }
-            catch
+            catch (Exception ex)
             {
+                try { System.IO.File.AppendAllText("cli.log", $"[{DateTime.Now}] DirectCloud Exception: {ex.Message}\n"); } catch { }
                 return false;
             }
         }
@@ -159,16 +199,16 @@ namespace SmartLampApp.Services
             if (cmdType == "set_power")
             {
                 bool pwr = extra != null && extra.GetType().GetProperty("power")?.GetValue(extra) is bool b && b;
+                dev.last_power_on = pwr;
+                ConfigManager.Save(_config);
                 tuyaCmds.Add(new { code = "switch_led", value = pwr });
             }
             else if (cmdType == "toggle")
             {
-                var curStatus = await GetCloudStatusAsync(target);
-                if (!curStatus.IsOnline)
-                {
-                    return false;
-                }
-                bool newPwr = !curStatus.IsPowerOn;
+                // Invert the last saved state directly for instant execution (<150ms) without querying delayed cloud status
+                bool newPwr = !dev.last_power_on;
+                dev.last_power_on = newPwr;
+                ConfigManager.Save(_config);
                 tuyaCmds.Add(new { code = "switch_led", value = newPwr });
             }
             else if (cmdType == "set_brightness")
@@ -235,7 +275,7 @@ namespace SmartLampApp.Services
             if (tuyaCmds.Count > 0)
             {
                 bool ok = await SendDirectCloudCommandAsync(_config.access_id, plainKey, region, dev.DevId, tuyaCmds);
-                if (ok) return true;
+                return ok;
             }
 
             // Fallback to Python Bridge request if direct C# call didn't handle custom command
@@ -303,6 +343,12 @@ namespace SmartLampApp.Services
                         var root = doc.RootElement;
                         if (root.TryGetProperty("success", out var s) && s.GetBoolean())
                         {
+                            if (_cloudSubscriptionExpired)
+                            {
+                                _cloudSubscriptionExpired = false;
+                                _config.cloud_subscription_expired = false;
+                                ConfigManager.Save(_config);
+                            }
                             status.IsOnline = true;
                             if (root.TryGetProperty("result", out var resultArr) && resultArr.ValueKind == JsonValueKind.Array)
                             {
@@ -313,6 +359,8 @@ namespace SmartLampApp.Services
                                     if (code == "switch_led" || code == "switch_1" || code == "20" || code == "1")
                                     {
                                         status.IsPowerOn = val.ValueKind == JsonValueKind.True || (val.ValueKind == JsonValueKind.Number && val.GetInt32() == 1);
+                                        dev.last_power_on = status.IsPowerOn;
+                                        ConfigManager.Save(_config);
                                     }
                                     else if (code == "work_mode" || code == "21")
                                     {
@@ -357,31 +405,27 @@ namespace SmartLampApp.Services
                             }
                             return status;
                         }
+                        else
+                        {
+                            if (jsonStr.Contains("28841002") || jsonStr.Contains("subscription has expired"))
+                            {
+                                _cloudSubscriptionExpired = true;
+                                _config.cloud_subscription_expired = true;
+                                _config.cloud_subscription_check_time = DateTime.UtcNow;
+                                ConfigManager.Save(_config);
+                            }
+                            status.ErrorMessage = "Cloud status request failed";
+                            status.IsOnline = false;
+                            return status;
+                        }
                     }
                 }
             }
             catch { }
 
-            // Fallback to Python bridge request if direct C# call fails
-            var payload = new
-            {
-                action = "cloud_command",
-                cmd_type = "status",
-                dev_id = dev.DevId,
-                region = region,
-                access_id = _config.access_id,
-                access_key = plainKey
-            };
-
-            string output = await SendBridgeRequestAsync(payload, "");
-            if (string.IsNullOrWhiteSpace(output) || output.Contains("\"error\""))
-            {
-                status.ErrorMessage = "Cloud status request failed";
-                status.IsOnline = false;
-                return status;
-            }
-
-            return ParseStatusJson(output);
+            status.ErrorMessage = "Cloud status request failed";
+            status.IsOnline = false;
+            return status;
         }
 
         public async Task<(string localKey, string error)> AutoFetchKeyFromCloudAsync(string accessId, string accessKey, string region, string devId = "")

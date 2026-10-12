@@ -34,17 +34,34 @@ namespace SmartLampApp.Services
         private LampConfig _config;
         private DeviceInfo _activeDevice;
         private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+        public static bool _cloudSubscriptionExpired = false;
 
         public TuyaProtocol(LampConfig config)
         {
             _config = config;
             _activeDevice = GetActiveDevice();
+            if (_config.cloud_subscription_expired && (DateTime.UtcNow - _config.cloud_subscription_check_time).TotalHours < 12)
+            {
+                _cloudSubscriptionExpired = true;
+            }
+            else if ((DateTime.UtcNow - _config.cloud_subscription_check_time).TotalHours >= 12)
+            {
+                _cloudSubscriptionExpired = false;
+            }
         }
 
         public void UpdateConfig(LampConfig config)
         {
             _config = config;
             _activeDevice = GetActiveDevice();
+            if (_config.cloud_subscription_expired && (DateTime.UtcNow - _config.cloud_subscription_check_time).TotalHours < 12)
+            {
+                _cloudSubscriptionExpired = true;
+            }
+            else if ((DateTime.UtcNow - _config.cloud_subscription_check_time).TotalHours >= 12)
+            {
+                _cloudSubscriptionExpired = false;
+            }
         }
 
         public DeviceInfo GetActiveDevice()
@@ -93,11 +110,16 @@ namespace SmartLampApp.Services
             bool hasCloud = !string.IsNullOrWhiteSpace(_config.access_id) && !string.IsNullOrWhiteSpace(_config.access_key);
             bool hasLocal = _activeDevice != null && !string.IsNullOrWhiteSpace(_activeDevice.LocalKey);
 
+            if (_cloudSubscriptionExpired && hasLocal)
+            {
+                return await localAction();
+            }
+
             if (priority == "local_first" && hasLocal)
             {
                 bool localSuccess = await localAction();
                 if (localSuccess) return true;
-                if (hasCloud) return await cloudAction();
+                if (hasCloud && !_cloudSubscriptionExpired) return await cloudAction();
                 return false;
             }
 
@@ -129,11 +151,16 @@ namespace SmartLampApp.Services
             bool hasCloud = !string.IsNullOrWhiteSpace(_config.access_id) && !string.IsNullOrWhiteSpace(_config.access_key);
             bool hasLocal = _activeDevice != null && !string.IsNullOrWhiteSpace(_activeDevice.LocalKey);
 
+            if (_cloudSubscriptionExpired && hasLocal)
+            {
+                return await GetLocalStatusAsync(target);
+            }
+
             if (priority == "local_first" && hasLocal)
             {
                 var st = await GetLocalStatusAsync(target);
                 if (st.IsOnline) return st;
-                if (hasCloud) return await GetCloudStatusAsync(target);
+                if (hasCloud && !_cloudSubscriptionExpired) return await GetCloudStatusAsync(target);
                 return st;
             }
 

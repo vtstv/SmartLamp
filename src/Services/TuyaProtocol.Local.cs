@@ -46,7 +46,9 @@ namespace SmartLampApp.Services
                 return status;
             }
 
-            return ParseStatusJson(output);
+            var result = ParseStatusJson(output);
+            if (result.IsOnline) { dev.last_power_on = result.IsPowerOn; ConfigManager.Save(_config); }
+            return result;
         }
 
         private LampStatus ParseStatusJson(string output)
@@ -166,7 +168,9 @@ namespace SmartLampApp.Services
             string stateStr = on ? "True" : "False";
             string fallback = $"import tinytuya; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); b.set_status({stateStr}, switch=20)";
             string output = await SendBridgeRequestAsync(payload, fallback);
-            return output.Contains("\"success\": true") || !output.Contains("Error");
+            bool ok = output.Contains("\"success\": true") || !output.Contains("Error");
+            if (ok) { dev.last_power_on = on; ConfigManager.Save(_config); }
+            return ok;
         }
 
         private async Task<bool> TogglePowerLocalAsync(DeviceInfo? target = null)
@@ -184,7 +188,9 @@ namespace SmartLampApp.Services
             };
             string fallback = $"import tinytuya, json; b=tinytuya.BulbDevice('{dev.DevId}', '{dev.Ip}', '{dev.LocalKey}', version={dev.Version}); s=b.status(); cur=s.get('dps',{{}}).get('20',False); b.set_status(not cur, switch=20)";
             string output = await SendBridgeRequestAsync(payload, fallback);
-            return output.Contains("\"success\": true") || !output.Contains("Error");
+            bool ok = output.Contains("\"success\": true") || !output.Contains("Error");
+            if (ok) { dev.last_power_on = !dev.last_power_on; ConfigManager.Save(_config); }
+            return ok;
         }
 
         private async Task<bool> SetBrightnessLocalAsync(int percent, DeviceInfo? target = null)

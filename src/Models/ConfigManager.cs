@@ -22,6 +22,7 @@ namespace SmartLampApp.Models
         public string GroupName { get; set; } = "Default Group";
 
         // Last saved state
+        public bool last_power_on { get; set; } = false;
         public int last_brightness { get; set; } = 50;
         public int last_temp { get; set; } = 4000;
         public string last_color_hex { get; set; } = "#00E5FF";
@@ -44,9 +45,17 @@ namespace SmartLampApp.Models
         public string access_key { get; set; } = "";
         public string region { get; set; } = "eu";
 
+        // Cached Cloud Token for fast CLI execution without extra HTTP roundtrips
+        public string cached_cloud_token { get; set; } = "";
+        public DateTime cached_cloud_token_expiry { get; set; } = DateTime.MinValue;
+
         // Control Mode & Priority ("auto", "local", "cloud"; "local_first", "cloud_first")
         public string control_mode { get; set; } = "auto";
         public string auto_priority { get; set; } = "cloud_first";
+
+        // Cloud subscription status
+        public bool cloud_subscription_expired { get; set; } = false;
+        public DateTime cloud_subscription_check_time { get; set; } = DateTime.MinValue;
 
         // Custom Global Hotkey Configuration
         public bool hotkey_mod_ctrl { get; set; } = true;
