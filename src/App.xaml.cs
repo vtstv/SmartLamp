@@ -278,6 +278,52 @@ namespace SmartLampApp
                 IsAutostartLaunch = true;
                 return false; // Proceed to run normal WPF app, but minimized to tray
             }
+            if (argStr.Contains("--test-local"))
+            {
+                var cfg = SmartLampApp.Models.ConfigManager.Load();
+                var dev = cfg.devices.Count > 0 ? cfg.devices[0] : null;
+                if (dev != null)
+                {
+                    Console.WriteLine($"Testing pure C# TuyaLocalClient against {dev.Ip} ({dev.DevId}, ver={dev.Version})...");
+                    using var client = new SmartLampApp.Services.TuyaLocalClient(dev.Ip, dev.DevId, dev.LocalKey, dev.Version);
+                    try
+                    {
+                        string status = client.GetStatusJsonAsync().GetAwaiter().GetResult();
+                        Console.WriteLine($"STATUS SUCCESS: {status}");
+                        File.AppendAllText("cli.log", $"[{DateTime.Now}] TestLocal Result: {status}\n");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"STATUS ERROR: {ex}");
+                        File.AppendAllText("cli.log", $"[{DateTime.Now}] TestLocal Error: {ex}\n");
+                    }
+                }
+                return true;
+            }
+            if (argStr.Contains("--test-toggle"))
+            {
+                var cfg = SmartLampApp.Models.ConfigManager.Load();
+                var dev = cfg.devices.Count > 0 ? cfg.devices[0] : null;
+                if (dev != null)
+                {
+                    Console.WriteLine($"Testing SetDpsAsync against {dev.Ip}...");
+                    using var client = new SmartLampApp.Services.TuyaLocalClient(dev.Ip, dev.DevId, dev.LocalKey, dev.Version);
+                    try
+                    {
+                        string status = client.GetStatusJsonAsync().GetAwaiter().GetResult();
+                        bool currentPower = status.Contains("\"20\":true");
+                        bool targetPower = !currentPower;
+                        Console.WriteLine($"Current power: {currentPower}, toggling to: {targetPower}");
+                        bool ok = client.SetDpsAsync(new Dictionary<string, object> { ["20"] = targetPower }).GetAwaiter().GetResult();
+                        Console.WriteLine($"SET_DPS RESULT: {ok}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"SET_DPS ERROR: {ex}");
+                    }
+                }
+                return true;
+            }
 
             if (!argStr.Contains("--toggle") && !argStr.Contains("-t") &&
                 !argStr.Contains("--on") && !argStr.Contains("--off") &&
@@ -339,15 +385,6 @@ namespace SmartLampApp
 
                 System.Threading.Tasks.Task.Run(async () =>
                 {
-                    string mode = config.control_mode ?? "auto";
-                    string priority = config.auto_priority ?? "cloud_first";
-                    bool isCloudExpired = config.cloud_subscription_expired && (DateTime.UtcNow - config.cloud_subscription_check_time).TotalHours < 12;
-
-                    if (mode == "local" || (!hasCloud && mode == "auto") || (mode == "auto" && priority == "local_first") || (isCloudExpired && hasLocal))
-                    {
-                        await protocol.WaitForBridgeReadyAsync();
-                    }
-
                     bool success = false;
                     if (argStr.Contains("--on"))
                     {
