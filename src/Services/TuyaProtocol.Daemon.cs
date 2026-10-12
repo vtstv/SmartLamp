@@ -40,20 +40,30 @@ namespace SmartLampApp.Services
             Directory.CreateDirectory(tempDir);
             string tempPath = Path.Combine(tempDir, "tuya_bridge.exe");
 
-            if (!File.Exists(tempPath))
+            try
             {
-                try
+                var assembly = Assembly.GetExecutingAssembly();
+                using var stream = assembly.GetManifestResourceStream("SmartLampApp.TuyaBridge.tuya_bridge.exe");
+                if (stream != null)
                 {
-                    var assembly = Assembly.GetExecutingAssembly();
-                    using var stream = assembly.GetManifestResourceStream("SmartLampApp.TuyaBridge.tuya_bridge.exe");
-                    if (stream != null)
+                    var fi = new FileInfo(tempPath);
+                    if (!fi.Exists || fi.Length != stream.Length)
                     {
+                        try
+                        {
+                            foreach (var p in Process.GetProcessesByName("tuya_bridge"))
+                            {
+                                try { p.Kill(); } catch { }
+                            }
+                        }
+                        catch { }
+
                         using var fileStream = File.Create(tempPath);
                         stream.CopyTo(fileStream);
                     }
                 }
-                catch { }
             }
+            catch { }
 
             _extractedExePath = File.Exists(tempPath) ? tempPath : "python";
             return _extractedExePath;
@@ -165,7 +175,7 @@ namespace SmartLampApp.Services
             await _semaphore.WaitAsync();
             try
             {
-                EnsureBridgeDaemonRunning();
+                await EnsureBridgeDaemonRunningAsync().ConfigureAwait(false);
                 try
                 {
                     string json = JsonSerializer.Serialize(payload);

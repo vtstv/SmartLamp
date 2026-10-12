@@ -91,29 +91,26 @@ namespace SmartLampApp.Services
             if (mode == "cloud") return await cloudAction();
 
             bool hasCloud = !string.IsNullOrWhiteSpace(_config.access_id) && !string.IsNullOrWhiteSpace(_config.access_key);
+            bool hasLocal = _activeDevice != null && !string.IsNullOrWhiteSpace(_activeDevice.LocalKey);
 
-            if ((priority == "cloud_first" || string.IsNullOrEmpty(_config.auto_priority)) && hasCloud)
-            {
-                bool cloudSuccess = await cloudAction();
-                if (cloudSuccess) return true;
-                return await localAction();
-            }
-
-            // Priority is local_first:
-            bool daemonRunning = await IsBridgeDaemonRunningAsync();
-            if (daemonRunning)
+            if (priority == "local_first" && hasLocal)
             {
                 bool localSuccess = await localAction();
                 if (localSuccess) return true;
                 if (hasCloud) return await cloudAction();
+                return false;
             }
-            else if (hasCloud)
+
+            // Default: cloud_first (super fast direct C# HTTP, local bridge only as fallback)
+            if (hasCloud)
             {
                 bool cloudSuccess = await cloudAction();
                 if (cloudSuccess) return true;
-                return await localAction();
+                if (hasLocal) return await localAction();
+                return false;
             }
-            else
+
+            if (hasLocal)
             {
                 return await localAction();
             }
@@ -130,34 +127,26 @@ namespace SmartLampApp.Services
             if (mode == "local") return await GetLocalStatusAsync(target);
 
             bool hasCloud = !string.IsNullOrWhiteSpace(_config.access_id) && !string.IsNullOrWhiteSpace(_config.access_key);
+            bool hasLocal = _activeDevice != null && !string.IsNullOrWhiteSpace(_activeDevice.LocalKey);
 
-            if (priority == "cloud_first" && hasCloud)
+            if (priority == "local_first" && hasLocal)
+            {
+                var st = await GetLocalStatusAsync(target);
+                if (st.IsOnline) return st;
+                if (hasCloud) return await GetCloudStatusAsync(target);
+                return st;
+            }
+
+            // Default: cloud_first (instant HTTP status, local bridge only as fallback)
+            if (hasCloud)
             {
                 var st = await GetCloudStatusAsync(target);
                 if (st.IsOnline) return st;
-                return await GetLocalStatusAsync(target);
+                if (hasLocal) return await GetLocalStatusAsync(target);
+                return st;
             }
-            else
-            {
-                bool daemonRunning = await IsBridgeDaemonRunningAsync();
-                if (daemonRunning)
-                {
-                    var st = await GetLocalStatusAsync(target);
-                    if (st.IsOnline) return st;
-                    if (hasCloud) return await GetCloudStatusAsync(target);
-                    return st;
-                }
-                else if (hasCloud)
-                {
-                    var st = await GetCloudStatusAsync(target);
-                    if (st.IsOnline) return st;
-                    return await GetLocalStatusAsync(target);
-                }
-                else
-                {
-                    return await GetLocalStatusAsync(target);
-                }
-            }
+
+            return await GetLocalStatusAsync(target);
         }
 
         public async Task<bool> SetPowerAsync(bool on, DeviceInfo? target = null)

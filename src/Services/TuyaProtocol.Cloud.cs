@@ -164,6 +164,10 @@ namespace SmartLampApp.Services
             else if (cmdType == "toggle")
             {
                 var curStatus = await GetCloudStatusAsync(target);
+                if (!curStatus.IsOnline)
+                {
+                    return false;
+                }
                 bool newPwr = !curStatus.IsPowerOn;
                 tuyaCmds.Add(new { code = "switch_led", value = newPwr });
             }
