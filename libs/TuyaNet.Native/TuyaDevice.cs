@@ -109,9 +109,25 @@ namespace TuyaNet.Native
                 Buffer.BlockCopy(TuyaHeader.Version35Header, 0, fullPayload, 0, TuyaHeader.Version35Header.Length);
                 Buffer.BlockCopy(jsonBytes, 0, fullPayload, TuyaHeader.Version35Header.Length, jsonBytes.Length);
 
-                var (_, plaintext) = await _session.SendReceive6699Async(TuyaCommandType.ControlNew, fullPayload, cancellationToken).ConfigureAwait(false);
-                string respJson = TuyaHeader.ExtractJsonString(plaintext);
-                return !string.IsNullOrWhiteSpace(respJson) && !respJson.Contains("\"error\"");
+                var (respCmd, plaintext) = await _session.SendReceive6699Async(TuyaCommandType.ControlNew, fullPayload, cancellationToken).ConfigureAwait(false);
+                if (plaintext == null || plaintext.Length == 0)
+                {
+                    return respCmd == TuyaCommandType.ControlNew || respCmd == TuyaCommandType.Status;
+                }
+
+                if (plaintext.Length >= 4)
+                {
+                    uint returnCode = System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(plaintext.AsSpan(0, 4));
+                    if (returnCode == 0)
+                    {
+                        string respJson = TuyaHeader.ExtractJsonString(plaintext);
+                        return string.IsNullOrWhiteSpace(respJson) || !respJson.Contains("\"error\"");
+                    }
+                    return false;
+                }
+
+                string json = TuyaHeader.ExtractJsonString(plaintext);
+                return !string.IsNullOrWhiteSpace(json) && !json.Contains("\"error\"");
             }
             else
             {
