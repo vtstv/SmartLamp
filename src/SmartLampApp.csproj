@@ -16,12 +16,6 @@
     <Resource Include="Assets/app_icon.png" />
     <Resource Include="Assets/app_icon.ico" />
     <EmbeddedResource Include="Assets/app_icon.ico" />
-    <EmbeddedResource Include="TuyaBridge\tuya_bridge.exe" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="kwolo.tuya.net" Version="1.0.5" />
-    <PackageReference Include="TuyaNet" Version="1.0.3" />
   </ItemGroup>
 
 </Project>
