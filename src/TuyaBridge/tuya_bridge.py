@@ -6,7 +6,7 @@
 import sys
 import json
 import tinytuya
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 devices = {}
 
@@ -18,7 +18,7 @@ def get_device(dev_id, ip, local_key, version):
         except:
             v = 3.5
         b = tinytuya.BulbDevice(dev_id, ip, local_key, version=v)
-        b.set_socketPersistent(True)
+        b.set_socketPersistent(False)
         devices[key] = b
     return devices[key]
 
@@ -35,6 +35,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.path == '/health':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            self.send_header('Connection', 'close')
             self.end_headers()
             self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
             return
@@ -141,17 +142,44 @@ class BridgeHandler(BaseHTTPRequestHandler):
             elif action == 'set_power':
                 b = get_device(dev_id, ip, local_key, version)
                 on = req.get('power', True)
-                b.set_status(on, switch=20)
-                res["success"] = True
+                set_res = b.set_status(on, switch=20)
+                if isinstance(set_res, dict) and 'Error' in set_res:
+                    if (dev_id, ip) in devices:
+                        del devices[(dev_id, ip)]
+                    b = get_device(dev_id, ip, local_key, version)
+                    set_res = b.set_status(on, switch=20)
+                if isinstance(set_res, dict) and 'Error' in set_res:
+                    res["error"] = str(set_res.get('Error'))
+                else:
+                    res["success"] = True
             elif action == 'toggle':
                 b = get_device(dev_id, ip, local_key, version)
                 st = b.status()
-                dps = st.get('dps', {})
-                current = dps.get('20', dps.get('1', False))
-                target = not bool(current)
-                b.set_status(target, switch=20)
-                res["power"] = target
-                res["success"] = True
+                if not isinstance(st, dict) or 'dps' not in st or not st['dps']:
+                    # Stale socket or error, refresh socket cache and retry
+                    if (dev_id, ip) in devices:
+                        del devices[(dev_id, ip)]
+                    b = get_device(dev_id, ip, local_key, version)
+                    st = b.status()
+
+                if isinstance(st, dict) and 'dps' in st and st['dps']:
+                    dps = st['dps']
+                    current = dps.get('20', dps.get('1', dps.get('101', False)))
+                    target = not bool(current)
+                    set_res = b.set_status(target, switch=20)
+                    if isinstance(set_res, dict) and 'Error' in set_res:
+                        if (dev_id, ip) in devices:
+                            del devices[(dev_id, ip)]
+                        b = get_device(dev_id, ip, local_key, version)
+                        set_res = b.set_status(target, switch=20)
+
+                    if isinstance(set_res, dict) and 'Error' in set_res:
+                        res["error"] = str(set_res.get('Error'))
+                    else:
+                        res["power"] = target
+                        res["success"] = True
+                else:
+                    res["error"] = f"Failed to get device status: {st}"
             elif action == 'set_brightness':
                 b = get_device(dev_id, ip, local_key, version)
                 pct = req.get('brightness', 100)
@@ -196,6 +224,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Connection', 'close')
         self.end_headers()
         self.wfile.write(json.dumps(res).encode('utf-8'))
 
@@ -205,7 +234,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
 def run_server(port=18889):
     server_address = ('127.0.0.1', port)
     try:
-        httpd = HTTPServer(server_address, BridgeHandler)
+        httpd = ThreadingHTTPServer(server_address, BridgeHandler)
     except OSError:
         # Address already in use! Exit immediately so duplicate processes never linger!
         sys.exit(0)

@@ -20,10 +20,14 @@ namespace SmartLampApp
 
         private static Mutex? _mutex = null;
         private static EventWaitHandle? _showEvent = null;
+        private static EventWaitHandle? _toggleEvent = null;
+        private static EventWaitHandle? _onEvent = null;
+        private static EventWaitHandle? _offEvent = null;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             DispatcherUnhandledException += App_DispatcherUnhandledException;
@@ -83,8 +87,12 @@ namespace SmartLampApp
                 return;
             }
 
-            // We are the first instance. Create the event and listen for signals.
+            // We are the first instance. Create the events and listen for signals.
             _showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, eventName);
+            _toggleEvent = new EventWaitHandle(false, EventResetMode.AutoReset, "SmartLampApp_ToggleEvent");
+            _onEvent = new EventWaitHandle(false, EventResetMode.AutoReset, "SmartLampApp_OnEvent");
+            _offEvent = new EventWaitHandle(false, EventResetMode.AutoReset, "SmartLampApp_OffEvent");
+
             Thread waitThread = new Thread(() =>
             {
                 while (true)
@@ -115,6 +123,75 @@ namespace SmartLampApp
             });
             waitThread.IsBackground = true;
             waitThread.Start();
+
+            Thread toggleThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    _toggleEvent.WaitOne();
+                    if (Current != null)
+                    {
+                        Current.Dispatcher.BeginInvoke((Action)(async () =>
+                        {
+                            foreach (Window window in Current.Windows)
+                            {
+                                if (window is MainWindow mw)
+                                {
+                                    await mw.TogglePowerFromExternalTriggerAsync();
+                                }
+                            }
+                        }));
+                    }
+                }
+            });
+            toggleThread.IsBackground = true;
+            toggleThread.Start();
+
+            Thread onThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    _onEvent.WaitOne();
+                    if (Current != null)
+                    {
+                        Current.Dispatcher.BeginInvoke((Action)(async () =>
+                        {
+                            foreach (Window window in Current.Windows)
+                            {
+                                if (window is MainWindow mw)
+                                {
+                                    await mw.SetPowerFromExternalTriggerAsync(true);
+                                }
+                            }
+                        }));
+                    }
+                }
+            });
+            onThread.IsBackground = true;
+            onThread.Start();
+
+            Thread offThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    _offEvent.WaitOne();
+                    if (Current != null)
+                    {
+                        Current.Dispatcher.BeginInvoke((Action)(async () =>
+                        {
+                            foreach (Window window in Current.Windows)
+                            {
+                                if (window is MainWindow mw)
+                                {
+                                    await mw.SetPowerFromExternalTriggerAsync(false);
+                                }
+                            }
+                        }));
+                    }
+                }
+            });
+            offThread.IsBackground = true;
+            offThread.Start();
 
             var mainWindow = new MainWindow();
             if (!IsAutostartLaunch)
@@ -187,38 +264,81 @@ namespace SmartLampApp
                 return false;
             }
 
+            // If an active instance of SmartLampApp is already running, delegate command via Win32 EventWaitHandle for instant response
+            if (argStr.Contains("--toggle") || argStr.Contains("-t"))
+            {
+                try
+                {
+                    using var evt = EventWaitHandle.OpenExisting("SmartLampApp_ToggleEvent");
+                    evt.Set();
+                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Delegated --toggle to active instance.\n"); } catch { }
+                    return true;
+                }
+                catch { }
+            }
+            else if (argStr.Contains("--on"))
+            {
+                try
+                {
+                    using var evt = EventWaitHandle.OpenExisting("SmartLampApp_OnEvent");
+                    evt.Set();
+                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Delegated --on to active instance.\n"); } catch { }
+                    return true;
+                }
+                catch { }
+            }
+            else if (argStr.Contains("--off"))
+            {
+                try
+                {
+                    using var evt = EventWaitHandle.OpenExisting("SmartLampApp_OffEvent");
+                    evt.Set();
+                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Delegated --off to active instance.\n"); } catch { }
+                    return true;
+                }
+                catch { }
+            }
+
             try
             {
                 var config = SmartLampApp.Models.ConfigManager.Load();
                 var protocol = new SmartLampApp.Services.TuyaProtocol(config);
                 var active = protocol.GetActiveDevice();
 
-                if (active == null || string.IsNullOrWhiteSpace(active.LocalKey))
+                bool hasCloud = !string.IsNullOrWhiteSpace(config.access_id) && !string.IsNullOrWhiteSpace(config.access_key);
+                bool hasLocal = active != null && !string.IsNullOrWhiteSpace(active.LocalKey);
+
+                if (!hasCloud && !hasLocal)
                 {
+                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Device not configured (missing keys)\n"); } catch { }
                     return true;
                 }
 
                 System.Threading.Tasks.Task.Run(async () =>
                 {
                     string mode = config.control_mode ?? "auto";
-                    if (mode == "local")
+                    string priority = config.auto_priority ?? "cloud_first";
+
+                    if (mode == "local" || (!hasCloud && mode == "auto") || (mode == "auto" && priority == "local_first"))
                     {
                         await protocol.WaitForBridgeReadyAsync();
                     }
 
+                    bool success = false;
                     if (argStr.Contains("--on"))
                     {
-                        await protocol.SetPowerAsync(true);
+                        success = await protocol.SetPowerAsync(true);
                     }
                     else if (argStr.Contains("--off"))
                     {
-                        await protocol.SetPowerAsync(false);
+                        success = await protocol.SetPowerAsync(false);
                     }
                     else if (argStr.Contains("--toggle") || argStr.Contains("-t"))
                     {
-                        // Atomic toggle: single bridge request instead of GetStatus + SetPower
-                        await protocol.TogglePowerAsync();
+                        success = await protocol.TogglePowerAsync();
                     }
+
+                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Command '{argStr}' executed. Success: {success}\n"); } catch { }
 
                     for (int i = 0; i < args.Length; i++)
                     {
@@ -243,7 +363,10 @@ namespace SmartLampApp
                     }
                 }).GetAwaiter().GetResult();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] CLI Error: {ex.Message}\n"); } catch { }
+            }
 
             return true;
         }

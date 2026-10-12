@@ -152,7 +152,7 @@ namespace SmartLampApp
             catch { }
         }
 
-        private async void BtnPower_Click(object sender, RoutedEventArgs e)
+        public async Task<bool> TogglePowerFromExternalTriggerAsync()
         {
             _isPowerOn = !_isPowerOn;
             _lastUserCommandTime = DateTime.UtcNow;
@@ -161,10 +161,30 @@ namespace SmartLampApp
             if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
             {
                 await _protocol.SetGroupPowerAsync(_config.devices, _isPowerOn);
-                return;
+                return true;
             }
 
-            bool success = await _protocol.SetPowerAsync(_isPowerOn);
+            return await _protocol.SetPowerAsync(_isPowerOn);
+        }
+
+        public async Task<bool> SetPowerFromExternalTriggerAsync(bool powerOn)
+        {
+            _isPowerOn = powerOn;
+            _lastUserCommandTime = DateTime.UtcNow;
+            UpdatePowerButtonUi();
+
+            if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
+            {
+                await _protocol.SetGroupPowerAsync(_config.devices, _isPowerOn);
+                return true;
+            }
+
+            return await _protocol.SetPowerAsync(_isPowerOn);
+        }
+
+        private async void BtnPower_Click(object sender, RoutedEventArgs e)
+        {
+            bool success = await TogglePowerFromExternalTriggerAsync();
             if (!success)
             {
                 System.Windows.MessageBox.Show("Command failed. Please make sure Smart Life mobile app is CLOSED on your phone (Tuya devices allow only 1 socket connection at a time).", "Device Connection Error", MessageBoxButton.OK, MessageBoxImage.Warning);

@@ -86,7 +86,7 @@ namespace SmartLampApp
                 }
             }
 
-            string priority = string.IsNullOrWhiteSpace(_config.auto_priority) ? "local_first" : _config.auto_priority;
+            string priority = string.IsNullOrWhiteSpace(_config.auto_priority) ? "cloud_first" : _config.auto_priority;
             foreach (ComboBoxItem item in CmbAutoPriority.Items)
             {
                 if ((string)item.Tag == priority)
