@@ -3,7 +3,7 @@
     <!-- Central Application Versioning - Single Source of Truth from root VERSION file -->
     <VersionFilePath>$([MSBuild]::NormalizePath($(MSBuildThisFileDirectory), "VERSION"))</VersionFilePath>
     <AppVersionText Condition="Exists('$(VersionFilePath)')">$([System.IO.File]::ReadAllText('$(VersionFilePath)').Trim())</AppVersionText>
-    <AppVersionText Condition="'$(AppVersionText)' == ''">3.2.0</AppVersionText>
+    <AppVersionText Condition="'$(AppVersionText)' == ''">3.3.0</AppVersionText>
     
     <Version Condition="'$(PackageId)' != 'TuyaNet.Native'">$(AppVersionText)</Version>
     <AssemblyVersion Condition="'$(PackageId)' != 'TuyaNet.Native'">$(AppVersionText).0</AssemblyVersion>
