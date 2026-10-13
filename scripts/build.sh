@@ -51,7 +51,7 @@ if [ "$CLEAN" = true ]; then
 fi
 
 # Extract Version
-VERSION="3.1.0"
+VERSION="3.2.0"
 if [ -f "$ROOT_DIR/VERSION" ]; then
     VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '\r\n')
 fi

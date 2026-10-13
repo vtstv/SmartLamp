@@ -14,7 +14,7 @@ SRC_CLI="$ROOT_DIR/src/SmartLamp.Cli"
 PKG_TEMPLATES="$ROOT_DIR/packaging"
 
 # Detect version
-VERSION="3.1.0"
+VERSION="3.2.0"
 if [ -f "$ROOT_DIR/VERSION" ]; then
     VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '\r\n')
 fi

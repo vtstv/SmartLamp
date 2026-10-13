@@ -56,7 +56,7 @@ $versionFile = Join-Path $rootDir "VERSION"
 if (Test-Path $versionFile) {
     $appVersion = (Get-Content $versionFile -Raw).Trim()
 } else {
-    $appVersion = "3.1.0"
+    $appVersion = "3.2.0"
 }
 
 Write-Host "================================================================" -ForegroundColor Cyan
