@@ -1,0 +1,53 @@
+# Maintainer: Murr <vtstv@users.noreply.github.com>
+pkgname=smartlamp-studio
+pkgver=3.1.0
+pkgrel=1
+pkgdesc="High-performance Tuya Smart Lamp Controller with sub-35ms response time"
+arch=('x86_64' 'aarch64')
+url="https://github.com/vtstv/SmartLamp"
+license=('MIT')
+depends=('fontconfig' 'glibc' 'libx11' 'libice' 'libsm')
+makedepends=('dotnet-sdk>=9.0')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "SmartLamp-$pkgver"
+    local rid="linux-x64"
+    if [ "$CARCH" = "aarch64" ]; then
+        rid="linux-arm64"
+    fi
+
+    dotnet publish src/SmartLamp.Desktop/SmartLamp.Desktop.csproj \
+        -c Release -r "$rid" --self-contained \
+        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+        -o build/desktop
+
+    dotnet publish src/SmartLamp.Cli/SmartLamp.Cli.csproj \
+        -c Release -r "$rid" --self-contained \
+        -p:PublishSingleFile=true -p:PublishTrimmed=true \
+        -o build/cli
+}
+
+package() {
+    cd "SmartLamp-$pkgver"
+    install -Dm755 build/desktop/SmartLampDesktop "$pkgdir/usr/bin/SmartLampDesktop"
+    ln -sf /usr/bin/SmartLampDesktop "$pkgdir/usr/bin/smartlamp-studio"
+    install -Dm755 build/cli/smartlamp "$pkgdir/usr/bin/smartlamp"
+
+    install -Dm644 src/SmartLamp.Desktop/Assets/app_icon.png "$pkgdir/usr/share/icons/hicolor/512x512/apps/smartlamp.png"
+    install -Dm644 src/SmartLamp.Desktop/Assets/app_icon.png "$pkgdir/usr/share/pixmaps/smartlamp.png"
+
+    cat << 'EOF' > "$pkgdir/usr/share/applications/smartlamp.desktop"
+[Desktop Entry]
+Type=Application
+Name=SmartLamp Studio
+Comment=Control Tuya Smart Lamps Locally with Sub-35ms Latency
+Exec=/usr/bin/SmartLampDesktop
+Icon=smartlamp
+Terminal=false
+Categories=Utility;HardwareSettings;
+Keywords=tuya;smartlamp;light;lamp;
+StartupNotify=true
+EOF
+}

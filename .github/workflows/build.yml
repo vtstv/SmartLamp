@@ -13,8 +13,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build Windows App & Release
+  build-windows:
+    name: Build Windows App & Library
     runs-on: windows-latest
 
     steps:
@@ -34,11 +34,7 @@ jobs:
         run: |
           dotnet publish src/SmartLampApp.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
 
-      - name: Compile Cross-Platform Linux Native CLI (.NET 9 linux-x64)
-        run: |
-          dotnet publish src/SmartLamp.Cli/SmartLamp.Cli.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o dist/cli-linux-x64
-
-      - name: Create Release Package (Zip, Tar & Standalone Executables)
+      - name: Create Windows Release Packages
         shell: powershell
         run: |
           $versionFile = "src/AppVersion.cs"
@@ -49,7 +45,6 @@ jobs:
                   $appVersion = $matches[1]
               }
           }
-          "APP_VERSION=$appVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           New-Item -ItemType Directory -Path releases -Force
 
           # Package Windows WPF Application
@@ -57,28 +52,85 @@ jobs:
           Compress-Archive -Path "dist/SmartLampApp.exe", "README.md", "LICENSE" -DestinationPath $winZipPath -Force
           Copy-Item -Path "dist/SmartLampApp.exe" -Destination "releases/SmartLampApp_v${appVersion}.exe" -Force
 
-          # Package Linux CLI
-          tar -czvf "releases/SmartLamp_CLI_v${appVersion}_linux-x64.tar.gz" -C dist/cli-linux-x64 smartlamp
-
-          # Package Linux Desktop Application (Full bundle with installer & icon)
-          & .\scripts\publish-linux.ps1
-          Copy-Item -Path "dist/SmartLampStudio-linux-x64.tar.gz" -Destination "releases/SmartLampStudio_v${appVersion}_linux-x64.tar.gz" -Force
-
-      - name: Upload Build Artifacts to GitHub Actions
+      - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SmartLampStudio-Packages
-          path: |
-            releases/*
+          name: windows-packages
+          path: releases/*
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+  build-linux:
+    name: Build Linux Multi-OS Packages (deb, pacman, tar.gz for x64 & arm64)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9.0 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install Packaging Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zstd dpkg binutils
+
+      - name: Build All Linux Packages (.deb, .pkg.tar.zst, .tar.gz for x64 and arm64)
+        run: |
+          chmod +x scripts/package-linux.sh
+          ./scripts/package-linux.sh
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: releases/*
+
+  release:
+    name: Publish Multi-OS GitHub Release
+    needs: [build-windows, build-linux]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract Application Version
+        id: get_version
+        run: |
+          VERSION="3.1.0"
+          if [ -f "src/AppVersion.cs" ]; then
+            VERSION=$(grep 'public const string Version' src/AppVersion.cs | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+          fi
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Download Windows Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-packages
+          path: releases
+
+      - name: Download Linux Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: releases
+
+      - name: List Release Packages
+        run: |
+          ls -lh releases/
+
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', env.APP_VERSION) }}
           files: |
-            releases/*.zip
+            releases/*.deb
+            releases/*.pkg.tar.zst
             releases/*.tar.gz
+            releases/*.zip
             releases/*.exe
             releases/*.nupkg
           draft: false

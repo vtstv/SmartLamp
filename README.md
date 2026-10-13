@@ -29,6 +29,35 @@ A high-performance desktop application and CLI suite for instant local control o
 
 ---
 
+## Installation & Downloads
+
+Pre-built binaries and native packages for all major operating systems and architectures are available on the **[GitHub Releases](https://github.com/vtstv/SmartLamp/releases)** page:
+
+### Debian / Ubuntu (x86_64 & ARM64)
+```bash
+# Download and install the .deb package (amd64 or arm64)
+sudo apt install ./smartlamp-studio_3.1.0_amd64.deb
+# or on Raspberry Pi / ARM64:
+sudo apt install ./smartlamp-studio_3.1.0_arm64.deb
+```
+
+### CachyOS / Arch Linux (x86_64 & ARM64)
+```bash
+# Install native pacman package directly
+sudo pacman -U ./smartlamp-studio-3.1.0-1-x86_64.pkg.tar.zst
+# or on aarch64:
+sudo pacman -U ./smartlamp-studio-3.1.0-1-aarch64.pkg.tar.zst
+```
+
+### Universal Linux Tarball (Ubuntu, Fedora, CachyOS, openSUSE)
+```bash
+tar -xvf SmartLampStudio_v3.1.0_linux-x64.tar.gz
+cd SmartLampStudio
+./install.sh
+```
+
+---
+
 ## CLI Usage
 
 Control your lighting directly from the command line or automation scripts:
