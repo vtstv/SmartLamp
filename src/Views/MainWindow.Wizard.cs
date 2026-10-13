@@ -27,10 +27,11 @@ namespace SmartLampApp
         {
             WifiDiscovery,
             CloudSync,
-            Manual
+            Manual,
+            QrLogin
         }
 
-        private WizardMethod _wizardMethod = WizardMethod.WifiDiscovery;
+        private WizardMethod _wizardMethod = WizardMethod.QrLogin;
         private int _wizardCurrentStep = 1;
         private List<DiscoveredDevice> _wizardDiscoveredDevices = new();
         private List<DeviceInfo> _wizardCloudDevices = new();
@@ -58,6 +59,7 @@ namespace SmartLampApp
 
         private void BtnCloseWizard_Click(object sender, RoutedEventArgs e)
         {
+            CancelQrPolling();
             OverlayDeviceWizard.Visibility = Visibility.Collapsed;
         }
 
@@ -188,13 +190,27 @@ namespace SmartLampApp
 
         private void BtnWizStep2Back_Click(object sender, RoutedEventArgs e)
         {
+            CancelQrPolling();
             _wizardCurrentStep = 1;
             UpdateWizardStepUi();
         }
 
         private void BtnWizStep2Next_Click(object sender, RoutedEventArgs e)
         {
-            if (_wizardMethod == WizardMethod.WifiDiscovery)
+            if (_wizardMethod == WizardMethod.QrLogin)
+            {
+                if (_wizardCandidateDevice == null && _config.devices.Count > 0)
+                {
+                    _wizardCandidateDevice = _config.devices[^1];
+                }
+
+                if (_wizardCandidateDevice == null)
+                {
+                    MessageBox.Show(LocalizationService.T("QrWaitingScan"), "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+            }
+            else if (_wizardMethod == WizardMethod.WifiDiscovery)
             {
                 int idx = LstWizDiscovered.SelectedIndex;
                 if (idx < 0 || idx >= _wizardDiscoveredDevices.Count)
@@ -401,6 +417,7 @@ namespace SmartLampApp
                 SubPanelWizWifi.Visibility = (_wizardMethod == WizardMethod.WifiDiscovery) ? Visibility.Visible : Visibility.Collapsed;
                 SubPanelWizCloud.Visibility = (_wizardMethod == WizardMethod.CloudSync) ? Visibility.Visible : Visibility.Collapsed;
                 SubPanelWizManual.Visibility = (_wizardMethod == WizardMethod.Manual) ? Visibility.Visible : Visibility.Collapsed;
+                SubPanelWizQr.Visibility = (_wizardMethod == WizardMethod.QrLogin) ? Visibility.Visible : Visibility.Collapsed;
             }
             else if (_wizardCurrentStep == 3)
             {

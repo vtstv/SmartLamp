@@ -224,6 +224,80 @@ namespace SmartLampApp.Services
                 ["de"] = "Smarte Lampe '{0}' wurde erfolgreich hinzugefügt und ist betriebsbereit!",
                 ["ru"] = "Умная лампа '{0}' успешно добавлена и готова к управлению!"
             };
+
+            // --- QR Code & Mobile App Login ---
+            dict["QrLoginBtn"] = new()
+            {
+                ["en"] = "📲 QR Login",
+                ["de"] = "📲 QR-Anmeldung",
+                ["ru"] = "📲 Вход по QR"
+            };
+            dict["TooltipQrLogin"] = new()
+            {
+                ["en"] = "Quick login via Smart Life / Tuya Smart mobile app QR scan (no developer account)",
+                ["de"] = "Schnellanmeldung per QR-Scan in Smart Life / Tuya Smart (kein Entwicklerkonto)",
+                ["ru"] = "Быстрый вход через QR-код в Smart Life / Tuya Smart (без аккаунта разработчика)"
+            };
+            dict["WizardOptQrTitle"] = new()
+            {
+                ["en"] = "📲 Scan QR Code / App Login (Recommended)",
+                ["de"] = "📲 QR-Code scannen / App-Anmeldung (Empfohlen)",
+                ["ru"] = "📲 Вход через QR-код / Приложение (Рекомендуется)"
+            };
+            dict["WizardOptQrDesc"] = new()
+            {
+                ["en"] = "Log in instantly with Smart Life or Tuya Smart app — scan a QR code to import all lamps and keys automatically",
+                ["de"] = "Sofort mit Smart Life oder Tuya Smart anmelden — QR-Code scannen, um alle Lampen & Schlüssel automatisch zu laden",
+                ["ru"] = "Быстрый вход через приложение Smart Life или Tuya Smart — сканируйте QR-код для автоматического импорта ламп и ключей"
+            };
+            dict["QrInstruction"] = new()
+            {
+                ["en"] = "Log in with your Smart Life or Tuya Smart phone app:",
+                ["de"] = "Melden Sie sich mit Ihrer Smart Life- oder Tuya Smart-App an:",
+                ["ru"] = "Войдите через мобильное приложение Smart Life или Tuya Smart:"
+            };
+            dict["UserCodePrompt"] = new()
+            {
+                ["en"] = "User Code from App:",
+                ["de"] = "Benutzercode aus App:",
+                ["ru"] = "Код пользователя из приложения:"
+            };
+            dict["UserCodeHelp"] = new()
+            {
+                ["en"] = "💡 In app: Me ➔ Settings (gear) ➔ Account and Security ➔ User Code",
+                ["de"] = "💡 In der App: Profil ➔ Einstellungen (Zahnrad) ➔ Konto und Sicherheit ➔ Benutzercode",
+                ["ru"] = "💡 В приложении: Профиль ➔ Настройки (шестерёнка) ➔ Безопасность аккаунта ➔ Код пользователя"
+            };
+            dict["GenerateQrBtn"] = new()
+            {
+                ["en"] = "📱 Generate Login QR Code",
+                ["de"] = "📱 Anmelde-QR-Code erstellen",
+                ["ru"] = "📱 Создать QR-код для входа"
+            };
+            dict["QrWaitingScan"] = new()
+            {
+                ["en"] = "📲 Scan this QR code with your Smart Life app scanner (+) and confirm authorization on phone.",
+                ["de"] = "📲 Scannen Sie diesen QR-Code mit Smart Life (+) und bestätigen Sie die Anmeldung auf dem Telefon.",
+                ["ru"] = "📲 Отсканируйте этот QR-код сканером в приложении Smart Life (+) и подтвердите вход на телефоне."
+            };
+            dict["QrAuthorized"] = new()
+            {
+                ["en"] = "✅ Login authorized! Fetching lamps and local keys...",
+                ["de"] = "✅ Anmeldung autorisiert! Lampen & lokale Schlüssel werden abgerufen...",
+                ["ru"] = "✅ Авторизация подтверждена! Загружаем лампы и локальные ключи..."
+            };
+            dict["QrDevicesImported"] = new()
+            {
+                ["en"] = "Successfully imported {0} lamp(s) from your mobile app!",
+                ["de"] = "{0} Lampe(n) erfolgreich aus Ihrer mobilen App importiert!",
+                ["ru"] = "Успешно импортировано {0} ламп из вашего мобильного приложения!"
+            };
+            dict["QrUserCodeRequired"] = new()
+            {
+                ["en"] = "Please enter your User Code from the Smart Life or Tuya Smart app.",
+                ["de"] = "Bitte geben Sie Ihren Benutzercode aus der Smart Life- oder Tuya Smart-App ein.",
+                ["ru"] = "Пожалуйста, введите код пользователя из приложения Smart Life или Tuya Smart."
+            };
         }
     }
 }

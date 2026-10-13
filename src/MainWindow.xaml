@@ -558,6 +558,7 @@
                                         <TextBlock x:Name="LblMyDevicesTitle" Text="My Smart Lamps &amp; Devices" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button x:Name="BtnDeviceTabQrLogin" Content="📲 QR Login" Height="24" MinWidth="80" Padding="6,0" Margin="0,0,6,0" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnDeviceTabQrLogin_Click" ToolTip="Quick login via Smart Life / Tuya Smart app QR scan"/>
                                         <Button x:Name="BtnDeviceTabWizard" Content="🪄 Setup Wizard" Height="24" MinWidth="95" Padding="8,0" Margin="0,0,6,0" Style="{StaticResource GlassBtn}" Background="#651FFF" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnOpenWizard_Click" ToolTip="Launch interactive step-by-step setup wizard"/>
                                         <Button x:Name="BtnNewDevice" Content="➕ New Lamp" Height="24" MinWidth="85" Padding="8,0" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#00F0FF" FontSize="11" Click="BtnNewDevice_Click"/>
                                     </StackPanel>
@@ -796,6 +797,22 @@
                                         <ComboBox x:Name="CmbHotkeyKey" Width="64" Height="24" Template="{StaticResource DarkComboBoxTemplate}"/>
                                     </StackPanel>
                                     <Button x:Name="BtnSaveHotkey" Content="💾 Register &amp; Save Hotkey" Height="26" Style="{StaticResource GlassBtn}" Background="#651FFF" Click="BtnSaveHotkey_Click"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- BACKUP & DATA PORTABILITY CARD -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12,10" Margin="0,6,0,0">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblBackupTitle" Text="💾 Backup &amp; Data Migration" FontSize="13" FontWeight="Bold" Foreground="#10B981" Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="LblBackupDesc" Text="Export or import all devices, room groups, custom presets, and settings to a portable JSON backup file." FontSize="10.5" Foreground="#AAAAAA" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="BtnExportBackup" Grid.Column="0" Content="📤 Export Backup" Height="26" Margin="0,0,3,0" Style="{StaticResource GlassBtn}" Background="#10B981" Click="BtnExportBackup_Click"/>
+                                        <Button x:Name="BtnImportBackup" Grid.Column="1" Content="📥 Import Backup" Height="26" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnImportBackup_Click"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -1090,7 +1107,24 @@
                         <StackPanel x:Name="PanelWizardStep1" Visibility="Visible">
                             <TextBlock Text="How would you like to connect your new lamp?" FontSize="12" Foreground="#CCCCCC" Margin="0,0,0,10"/>
 
-                            <!-- Option A: Wi-Fi Discovery -->
+                            <!-- Option A: QR Code App Login (Recommended) -->
+                            <Button x:Name="BtnWizardChooseQr" Height="62" Margin="0,0,0,8" Style="{StaticResource GlassBtn}" Background="#1F1F32" HorizontalContentAlignment="Stretch" Padding="12,8" Click="BtnWizardChooseQr_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="📲" FontSize="22" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                                        <TextBlock x:Name="LblWizOptQrTitle" Text="📲 Scan QR Code / App Login (Recommended)" FontSize="12.5" FontWeight="Bold" Foreground="#10B981"/>
+                                        <TextBlock x:Name="LblWizOptQrDesc" Text="Log in with Smart Life or Tuya Smart app — scan a QR code to import all lamps and keys automatically" FontSize="11" Foreground="#AAAAAA"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="➔" FontSize="16" Foreground="#10B981" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                </Grid>
+                            </Button>
+
+                            <!-- Option B: Wi-Fi Discovery -->
                             <Button x:Name="BtnWizardChooseWifi" Height="62" Margin="0,0,0,8" Style="{StaticResource GlassBtn}" Background="#1F1F32" HorizontalContentAlignment="Stretch" Padding="12,8" Click="BtnWizardChooseWifi_Click">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -1204,6 +1238,35 @@
                                 <TextBox x:Name="TxtWizManualId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Margin="0,1,0,4"/>
                                 <TextBlock Text="Local Key (16 Characters):" FontSize="10.5" Foreground="#FFEA00"/>
                                 <TextBox x:Name="TxtWizManualKey" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236" Margin="0,1,0,6"/>
+                            </StackPanel>
+
+                            <!-- Step 2D: QR Code / Mobile App Login Sub-View -->
+                            <StackPanel x:Name="SubPanelWizQr" Visibility="Collapsed">
+                                <TextBlock x:Name="LblWizQrInstruction" Text="Log in with your Smart Life or Tuya Smart phone app:" FontSize="12" Foreground="#CCCCCC" Margin="0,0,0,6"/>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                        <TextBlock x:Name="LblWizUserCodePrompt" Text="User Code from App:" FontSize="10.5" FontWeight="Bold" Foreground="#00F0FF"/>
+                                        <TextBox x:Name="TxtWizUserCode" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#00F0FF" Padding="6,0" ToolTip="Found in Tuya Smart or Smart Life under Me -> Settings -> Account and Security -> User Code"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                        <TextBlock x:Name="LblWizAppSchema" Text="Mobile App:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                        <ComboBox x:Name="CmbWizSchema" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236">
+                                            <ComboBoxItem Content="Smart Life" Tag="smartlife" IsSelected="True"/>
+                                            <ComboBoxItem Content="Tuya Smart" Tag="tuyaSmart"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock x:Name="LblWizUserCodeHelp" Text="💡 In app: Me ➔ Settings (gear) ➔ Account and Security ➔ User Code" FontSize="10" Foreground="#AAAAAA" Margin="0,0,0,8"/>
+                                <Button x:Name="BtnGenerateQrCode" Content="📱 Generate Login QR Code" Height="28" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Margin="0,0,0,8" Click="BtnGenerateQrCode_Click"/>
+                                <Border x:Name="BorderQrCode" Background="#FFFFFF" CornerRadius="8" Padding="6" HorizontalAlignment="Center" Width="144" Height="144" Margin="0,0,0,6" Visibility="Collapsed">
+                                    <Image x:Name="ImgWizQrCode" Width="132" Height="132" Stretch="Uniform"/>
+                                </Border>
+                                <TextBlock x:Name="TxtWizQrStatus" Text="" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                <ListBox x:Name="LstWizQrDevices" Height="70" Margin="0,6,0,0" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Visibility="Collapsed" SelectionChanged="LstWizQrDevices_SelectionChanged"/>
                             </StackPanel>
 
                             <!-- Step 2 Navigation Buttons -->

@@ -320,6 +320,56 @@ namespace SmartLampApp.Services
                 ["de"] = "IP: Gerät auswählen oder hinzufügen  |  ID: --",
                 ["ru"] = "IP: Выберите или добавьте устройство  |  ID: --"
             };
+
+            // --- Backup & Data Portability ---
+            dict["BackupTitle"] = new()
+            {
+                ["en"] = "💾 Backup & Data Migration",
+                ["de"] = "💾 Sicherung & Datenmigration",
+                ["ru"] = "💾 Резервное копирование и перенос"
+            };
+            dict["BackupDesc"] = new()
+            {
+                ["en"] = "Export or import all devices, room groups, custom presets, and settings to a portable JSON backup file.",
+                ["de"] = "Alle Geräte, Raumgruppen, eigene Presets und Einstellungen in eine portable JSON-Sicherung exportieren oder importieren.",
+                ["ru"] = "Экспорт и импорт всех устройств, групп комнат, пресетов и настроек в переносимый JSON-файл."
+            };
+            dict["ExportBackup"] = new()
+            {
+                ["en"] = "📤 Export Backup",
+                ["de"] = "📤 Sicherung exportieren",
+                ["ru"] = "📤 Экспорт настроек"
+            };
+            dict["ImportBackup"] = new()
+            {
+                ["en"] = "📥 Import Backup",
+                ["de"] = "📥 Sicherung importieren",
+                ["ru"] = "📥 Импорт настроек"
+            };
+            dict["BackupExportSuccess"] = new()
+            {
+                ["en"] = "Configuration successfully exported to:\n{0}",
+                ["de"] = "Konfiguration erfolgreich exportiert nach:\n{0}",
+                ["ru"] = "Конфигурация успешно экспортирована в:\n{0}"
+            };
+            dict["BackupImportConfirm"] = new()
+            {
+                ["en"] = "Found in backup file:\n• {0} device(s)\n• {1} room group(s)\n• {2} custom preset(s)\n\nClick [Yes] to OVERWRITE and REPLACE existing configuration.\nClick [No] to MERGE new items with current ones.\nClick [Cancel] to abort.",
+                ["de"] = "In Sicherung gefunden:\n• {0} Gerät(e)\n• {1} Raumgruppe(n)\n• {2} eigene(s) Preset(s)\n\nKlicken Sie [Ja], um aktuelle Konfiguration zu ERSETZEN.\nKlicken Sie [Nein], um neue Elemente ZUSAMMENZUFÜHREN.\nKlicken Sie [Abbrechen] zum Abbrechen.",
+                ["ru"] = "Найдено в файле резервной копии:\n• {0} устройств\n• {1} групп комнат\n• {2} пресетов\n\nНажмите [Да], чтобы ПОЛНОСТЬЮ ЗАМЕНИТЬ текущие настройки.\nНажмите [Нет], чтобы ОБЪЕДИНИТЬ новые устройства с текущими.\nНажмите [Отмена] для отмены."
+            };
+            dict["BackupImportSuccess"] = new()
+            {
+                ["en"] = "Configuration successfully restored ({0} mode)!",
+                ["de"] = "Konfiguration erfolgreich wiederhergestellt ({0}-Modus)!",
+                ["ru"] = "Конфигурация успешно восстановлена (режим: {0})!"
+            };
+            dict["BackupImportError"] = new()
+            {
+                ["en"] = "Failed to parse backup file. Please select a valid SmartLamp backup or config JSON file.",
+                ["de"] = "Fehler beim Lesen der Sicherungsdatei. Bitte wählen Sie eine gültige SmartLamp-Sicherungsdatei aus.",
+                ["ru"] = "Не удалось прочитать файл резервной копии. Убедитесь, что выбран корректный JSON-файл SmartLamp."
+            };
         }
     }
 }

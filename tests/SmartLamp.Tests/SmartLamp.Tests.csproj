@@ -32,6 +32,8 @@
     <Compile Include="..\..\src\Services\LocalizationService.Settings.cs" Link="Services\LocalizationService.Settings.cs" />
     <Compile Include="..\..\src\Services\LocalizationService.Devices.cs" Link="Services\LocalizationService.Devices.cs" />
     <Compile Include="..\..\src\Services\TuyaProtocol.Color.cs" Link="Services\TuyaProtocol.Color.cs" />
+    <Compile Include="..\..\src\Services\BackupService.cs" Link="Services\BackupService.cs" />
+    <Compile Include="..\..\src\Services\TuyaSharingAuthService.cs" Link="Services\TuyaSharingAuthService.cs" />
   </ItemGroup>
 
 </Project>

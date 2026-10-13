@@ -249,8 +249,13 @@ namespace SmartLampApp
             if (BtnRemindLater != null) BtnRemindLater.Content = LocalizationService.T("RemindLater");
             if (BtnInstallUpdate != null) BtnInstallUpdate.Content = LocalizationService.T("UpdateNow");
 
-            // Devices Tab
+            // Devices Tab & QR Login
             if (LblMyDevicesTitle != null) LblMyDevicesTitle.Text = LocalizationService.T("MyDevicesTitle");
+            if (BtnDeviceTabQrLogin != null)
+            {
+                BtnDeviceTabQrLogin.Content = LocalizationService.T("QrLoginBtn");
+                BtnDeviceTabQrLogin.ToolTip = LocalizationService.T("TooltipQrLogin");
+            }
             if (BtnDeviceTabWizard != null)
             {
                 BtnDeviceTabWizard.Content = LocalizationService.T("AddDeviceWizardBtn");
@@ -258,17 +263,32 @@ namespace SmartLampApp
             }
             if (BtnTestDevice != null) BtnTestDevice.Content = LocalizationService.T("TestDeviceBtn");
 
+            // Backup & Data Portability Card
+            if (LblBackupTitle != null) LblBackupTitle.Text = LocalizationService.T("BackupTitle");
+            if (LblBackupDesc != null) LblBackupDesc.Text = LocalizationService.T("BackupDesc");
+            if (BtnExportBackup != null) BtnExportBackup.Content = LocalizationService.T("ExportBackup");
+            if (BtnImportBackup != null) BtnImportBackup.Content = LocalizationService.T("ImportBackup");
+
             // Setup Wizard Modal
             if (LblWizardTitle != null) LblWizardTitle.Text = LocalizationService.T("WizardTitle");
             if (TxtBadgeStep1 != null) TxtBadgeStep1.Text = LocalizationService.T("WizardBadgeStep1");
             if (TxtBadgeStep2 != null) TxtBadgeStep2.Text = LocalizationService.T("WizardBadgeStep2");
             if (TxtBadgeStep3 != null) TxtBadgeStep3.Text = LocalizationService.T("WizardBadgeStep3");
+            if (LblWizOptQrTitle != null) LblWizOptQrTitle.Text = LocalizationService.T("WizardOptQrTitle");
+            if (LblWizOptQrDesc != null) LblWizOptQrDesc.Text = LocalizationService.T("WizardOptQrDesc");
             if (LblWizOptWifiTitle != null) LblWizOptWifiTitle.Text = LocalizationService.T("WizardOptWifiTitle");
             if (LblWizOptWifiDesc != null) LblWizOptWifiDesc.Text = LocalizationService.T("WizardOptWifiDesc");
             if (LblWizOptCloudTitle != null) LblWizOptCloudTitle.Text = LocalizationService.T("WizardOptCloudTitle");
             if (LblWizOptCloudDesc != null) LblWizOptCloudDesc.Text = LocalizationService.T("WizardOptCloudDesc");
             if (LblWizOptManualTitle != null) LblWizOptManualTitle.Text = LocalizationService.T("WizardOptManualTitle");
             if (LblWizOptManualDesc != null) LblWizOptManualDesc.Text = LocalizationService.T("WizardOptManualDesc");
+            if (LblWizQrInstruction != null) LblWizQrInstruction.Text = LocalizationService.T("QrInstruction");
+            if (LblWizUserCodePrompt != null) LblWizUserCodePrompt.Text = LocalizationService.T("UserCodePrompt");
+            if (LblWizUserCodeHelp != null) LblWizUserCodeHelp.Text = LocalizationService.T("UserCodeHelp");
+            if (BtnGenerateQrCode != null && (string)BtnGenerateQrCode.Content != "🔄 Refresh QR Code" && (string)BtnGenerateQrCode.Content != "⏳ Generating...")
+            {
+                BtnGenerateQrCode.Content = LocalizationService.T("GenerateQrBtn");
+            }
             if (LblWizFoundDevices != null) LblWizFoundDevices.Text = LocalizationService.T("WizardFoundDevices");
             if (BtnWizRescan != null) BtnWizRescan.Content = LocalizationService.T("WizardScanNow");
             if (BtnWizLoadCloud != null) BtnWizLoadCloud.Content = LocalizationService.T("WizardCloudFetchBtn");
