@@ -140,7 +140,7 @@ namespace SmartLampApp
 
                                 var knownIds = new List<string>();
                                 if (_config?.devices != null) knownIds.AddRange(_config.devices.Select(x => x.DevId));
-                                if (_protocol?.DiscoveredDevices != null) knownIds.AddRange(_protocol.DiscoveredDevices.Select(x => x.DevId));
+                                if (_discoveredList != null) knownIds.AddRange(_discoveredList.Select(x => x.DevId));
                                 if (!string.IsNullOrEmpty(_config?.dev_id)) knownIds.Add(_config.dev_id);
 
                                 _sharingDevices = await _sharingAuthService.QueryUserDevicesAsync(session, knownIds);
@@ -153,7 +153,7 @@ namespace SmartLampApp
                                         string devIp = d.Ip ?? "";
                                         if (string.IsNullOrEmpty(devIp))
                                         {
-                                            var disc = _protocol?.DiscoveredDevices?.Find(x => x.DevId == d.Id);
+                                            var disc = _discoveredList?.Find(x => x.DevId == d.Id);
                                             if (disc != null && !string.IsNullOrEmpty(disc.Ip))
                                             {
                                                 devIp = disc.Ip;
