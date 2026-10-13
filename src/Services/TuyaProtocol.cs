@@ -87,8 +87,8 @@ namespace SmartLampApp.Services
                 return new DeviceInfo
                 {
                     Name = "Smart Lamp 1",
-                    Ip = string.IsNullOrWhiteSpace(_config.ip) ? "192.168.1.100" : _config.ip,
-                    DevId = string.IsNullOrWhiteSpace(_config.dev_id) ? "sample_device_id" : _config.dev_id,
+                    Ip = _config.ip ?? "",
+                    DevId = _config.dev_id ?? "",
                     LocalKey = _config.local_key,
                     Version = string.IsNullOrWhiteSpace(_config.version) ? "3.5" : _config.version
                 };
