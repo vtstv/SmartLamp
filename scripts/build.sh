@@ -75,6 +75,13 @@ case "$ARCH" in
     *) echo "Invalid arch: $ARCH"; exit 1 ;;
 esac
 
+# 0. Run Automated Unit Tests
+if [ -f "$ROOT_DIR/tests/SmartLamp.Tests/SmartLamp.Tests.csproj" ]; then
+    echo -e "\n[0] Running Automated Unit Tests..."
+    dotnet test "$ROOT_DIR/tests/SmartLamp.Tests/SmartLamp.Tests.csproj" -c "$CONFIG" --verbosity quiet --nologo
+    echo "  --> All unit tests passed successfully!"
+fi
+
 # 1. Build Library
 if [ "$TARGET" = "all" ] || [ "$TARGET" = "lib" ]; then
     echo -e "\n[1] Building TuyaNet.Native Protocol Library..."

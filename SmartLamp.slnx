@@ -7,4 +7,7 @@
     <Project Path="src/SmartLamp.Desktop/SmartLamp.Desktop.csproj" />
     <Project Path="src/SmartLampApp.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SmartLamp.Tests/SmartLamp.Tests.csproj" />
+  </Folder>
 </Solution>

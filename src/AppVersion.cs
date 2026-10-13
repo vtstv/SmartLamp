@@ -45,5 +45,33 @@ namespace SmartLampApp
         public static string DisplayTitle => $"{AppName} v{Version}";
         public static string SystemTrayToolTip => $"{AppName} v{Version}";
         public static string CopyrightNotice => $"© 2026 {Author} ({GitHubUrl})";
+
+        public static bool IsNewerVersion(string currentVersion, string remoteVersion)
+        {
+            if (string.IsNullOrWhiteSpace(remoteVersion)) return false;
+
+            string cleanCurrent = currentVersion.TrimStart('v', 'V').Trim();
+            string cleanRemote = remoteVersion.TrimStart('v', 'V').Trim();
+
+            if (System.Version.TryParse(cleanCurrent, out var currVer) && System.Version.TryParse(cleanRemote, out var remVer))
+            {
+                return remVer > currVer;
+            }
+
+            var currParts = cleanCurrent.Split('.');
+            var remParts = cleanRemote.Split('.');
+            int maxLen = Math.Max(currParts.Length, remParts.Length);
+
+            for (int i = 0; i < maxLen; i++)
+            {
+                int currNum = (i < currParts.Length && int.TryParse(currParts[i], out int c)) ? c : 0;
+                int remNum = (i < remParts.Length && int.TryParse(remParts[i], out int r)) ? r : 0;
+
+                if (remNum > currNum) return true;
+                if (remNum < currNum) return false;
+            }
+
+            return false;
+        }
     }
 }

@@ -32,7 +32,9 @@ param(
 
     [switch]$Pack,
 
-    [switch]$Clean
+    [switch]$Clean,
+
+    [switch]$NoTest
 )
 
 $ErrorActionPreference = "Stop"
@@ -75,6 +77,22 @@ switch ($Arch) {
     "x64"   { $linuxRids = @("linux-x64") }
     "arm64" { $linuxRids = @("linux-arm64") }
     "all"   { $linuxRids = @("linux-x64", "linux-arm64") }
+}
+
+# ------------------------------------------------------------------
+# Pre-Build Verification: Run Automated Unit Tests
+# ------------------------------------------------------------------
+if (-not $NoTest) {
+    Write-Host "`n[0] Running Automated Unit Tests..." -ForegroundColor Yellow
+    $projTests = Join-Path $rootDir "tests\SmartLamp.Tests\SmartLamp.Tests.csproj"
+    if (Test-Path $projTests) {
+        dotnet test $projTests -c $Configuration --verbosity quiet --nologo
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Automated unit tests failed! Aborting build to ensure release stability."
+            exit $LASTEXITCODE
+        }
+        Write-Host "  --> All unit tests passed successfully!" -ForegroundColor Green
+    }
 }
 
 # ------------------------------------------------------------------
