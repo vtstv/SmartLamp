@@ -1,23 +1,27 @@
 # SmartLamp Studio
 
-A high-performance Windows desktop application and CLI tool for instant control of Tuya-compatible smart lighting devices, built entirely on .NET 9.
+A high-performance desktop application and CLI suite for instant local control of Tuya-compatible smart lighting devices, built entirely in C# / .NET 9.
 
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4.svg)]()
-[![Framework](https://img.shields.io/badge/Framework-.NET%209%20WPF-512BD4.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-0078D4.svg)]()
+[![Framework](https://img.shields.io/badge/Framework-.NET%209%20%7C%20Avalonia%20%7C%20WPF-512BD4.svg)]()
 [![Pure C#](https://img.shields.io/badge/Architecture-100%25%20C%23-239120.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-![SmartLamp Studio Interface](src/Assets/Screenshot.png?v=2026)
+| Windows (WPF Native) | Linux (Avalonia UI / KDE Plasma) |
+| :---: | :---: |
+| ![Windows Interface](src/Assets/Screenshot.png?v=2026) | ![Linux Interface](src/Assets/Screenshot_Linux.png?v=2026) |
 
 ---
 
 ## Features
 
-- **Instant Control**: Direct local TCP connection with near-zero latency (~25–35 ms via CLI shortcuts).
-- **Pure C# Architecture**: 100% native .NET 9 implementation with zero Python or runtime dependencies.
-- **Lightweight & Portable**: Single-file standalone executable under 1 MB.
+- **Instant Control**: Direct local TCP socket communication with sub-35ms latency via CLI shortcuts.
+- **Cross-Platform**:
+  - **Windows 10/11**: Ultra-compact native WPF single-file executable (~900 KB).
+  - **Linux (Ubuntu, CachyOS, Arch, Debian)**: Modern Avalonia UI desktop application & native standalone CLI binary.
+- **Pure C# Architecture**: 100% native .NET implementation with zero Python or runtime dependencies.
 - **Hybrid Connectivity**: Direct LAN protocol (v3.1–v3.5) with automatic Tuya Cloud OpenAPI fallback.
 - **Smart Home Bridges**: Built-in endpoints for Google Home (port 8088) and MQTT (port 1883).
 - **Subnet Auto-Discovery**: Automatic UDP scanning for local Tuya devices.
@@ -27,19 +31,18 @@ A high-performance Windows desktop application and CLI tool for instant control 
 
 ## CLI Usage
 
-Control your lighting directly from the command line or desktop shortcuts:
+Control your lighting directly from the command line or automation scripts:
 
-| Command | Description |
-| :--- | :--- |
-| `SmartLampApp.exe --toggle` | Toggles lamp power state |
-| `SmartLampApp.exe --on` | Turns the lamp ON |
-| `SmartLampApp.exe --off` | Turns the lamp OFF |
-| `SmartLampApp.exe --brightness <1-100>` | Sets brightness percentage |
-| `SmartLampApp.exe --temp <2700-6500>` | Sets color temperature in Kelvin |
-| `SmartLampApp.exe --color <#HEX>` | Sets RGB color (e.g. `#FF0080`) |
-| `SmartLampApp.exe --status` | Outputs current device state JSON |
-| `SmartLampApp.exe --install` | Registers Start Menu shortcuts and startup entries |
-| `SmartLampApp.exe --uninstall` | Removes shortcuts and system registration |
+| Command (Windows) | Command (Linux) | Description |
+| :--- | :--- | :--- |
+| `SmartLampApp.exe --toggle` | `smartlamp --toggle` | Toggles lamp power state |
+| `SmartLampApp.exe --on` | `smartlamp --on` | Turns the lamp ON |
+| `SmartLampApp.exe --off` | `smartlamp --off` | Turns the lamp OFF |
+| `SmartLampApp.exe --brightness <1-100>` | `smartlamp --brightness <1-100>` | Sets brightness percentage |
+| `SmartLampApp.exe --temp <2700-6500>` | `smartlamp --temp <2700-6500>` | Sets color temperature in Kelvin |
+| `SmartLampApp.exe --color <#HEX>` | `smartlamp --color <#HEX>` | Sets RGB color (e.g. `#FF0080`) |
+| `SmartLampApp.exe --status` | `smartlamp --status` | Outputs current device state JSON |
+| `SmartLampApp.exe --install` | — | Registers Start Menu & autostart (Windows) |
 
 ---
 
@@ -59,13 +62,19 @@ await device.TogglePowerAsync();
 
 ## Building from Source
 
-**Prerequisites**: Windows 10/11 x64, [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+**Prerequisites**: [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 
-```powershell
-# Build application
+```bash
+# Windows Desktop App (WPF, standalone)
 dotnet publish src/SmartLampApp.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o dist
 
-# Build library package
+# Linux CLI (Single-file native binary)
+dotnet publish src/SmartLamp.Cli/SmartLamp.Cli.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o dist/cli-linux-x64
+
+# Linux Desktop App (Avalonia UI)
+dotnet publish src/SmartLamp.Desktop/SmartLamp.Desktop.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o dist/desktop-linux-x64
+
+# Standalone Protocol Library (NuGet)
 dotnet pack libs/TuyaNet.Native/TuyaNet.Native.csproj -c Release -o releases
 ```
 

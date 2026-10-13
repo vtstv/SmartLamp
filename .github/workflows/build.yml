@@ -34,7 +34,15 @@ jobs:
         run: |
           dotnet publish src/SmartLampApp.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
 
-      - name: Create Release Package (Zip & Standalone Exe)
+      - name: Compile Cross-Platform Linux Native CLI (.NET 9 linux-x64)
+        run: |
+          dotnet publish src/SmartLamp.Cli/SmartLamp.Cli.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o dist/cli-linux-x64
+
+      - name: Compile Cross-Platform Avalonia Desktop App (.NET 9 linux-x64)
+        run: |
+          dotnet publish src/SmartLamp.Desktop/SmartLamp.Desktop.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o dist/desktop-linux-x64
+
+      - name: Create Release Package (Zip, Tar & Standalone Executables)
         shell: powershell
         run: |
           $versionFile = "src/AppVersion.cs"
@@ -46,16 +54,23 @@ jobs:
               }
           }
           New-Item -ItemType Directory -Path releases -Force
-          $zipPath = "releases/SmartLampStudio_v${appVersion}_win-x64.zip"
-          Compress-Archive -Path "dist/SmartLampApp.exe", "README.md", "LICENSE" -DestinationPath $zipPath -Force
+
+          # Package Windows WPF Application
+          $winZipPath = "releases/SmartLampStudio_v${appVersion}_win-x64.zip"
+          Compress-Archive -Path "dist/SmartLampApp.exe", "README.md", "LICENSE" -DestinationPath $winZipPath -Force
           Copy-Item -Path "dist/SmartLampApp.exe" -Destination "releases/SmartLampApp_v${appVersion}.exe" -Force
+
+          # Package Linux CLI
+          tar -czvf "releases/SmartLamp_CLI_v${appVersion}_linux-x64.tar.gz" -C dist/cli-linux-x64 smartlamp
+
+          # Package Linux Desktop Application
+          tar -czvf "releases/SmartLampStudio_v${appVersion}_linux-x64.tar.gz" -C dist/desktop-linux-x64 SmartLampDesktop
 
       - name: Upload Build Artifacts to GitHub Actions
         uses: actions/upload-artifact@v4
         with:
-          name: SmartLampStudio-win-x64
+          name: SmartLampStudio-Packages
           path: |
-            dist/SmartLampApp.exe
             releases/*
 
       - name: Create GitHub Release (On Tag Push)
@@ -64,6 +79,7 @@ jobs:
         with:
           files: |
             releases/*.zip
+            releases/*.tar.gz
             releases/*.exe
             releases/*.nupkg
           draft: false

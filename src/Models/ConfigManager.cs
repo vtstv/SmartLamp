@@ -70,6 +70,8 @@ namespace SmartLampApp.Models
         public bool check_updates_on_startup { get; set; } = true;
         public DateTime last_update_check_time { get; set; } = DateTime.MinValue;
         public string ignored_update_version { get; set; } = "";
+        public string language { get; set; } = "en"; // "en", "de", "ru"
+        public bool compact_mode { get; set; } = false;
 
         // Integration Toggles
         public bool enable_google_home { get; set; } = false;

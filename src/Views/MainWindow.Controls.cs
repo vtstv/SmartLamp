@@ -30,6 +30,8 @@ namespace SmartLampApp
             {
                 PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9100"));
                 TxtStatus.Text = "⚠️ KEY REQUIRED";
+                if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+                if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
                 _isPowerOn = false;
                 UpdatePowerButtonUi();
                 return;
@@ -37,6 +39,8 @@ namespace SmartLampApp
 
             PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
             TxtStatus.Text = "⏳ CONNECTING...";
+            if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+            if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
 
             var status = await Task.Run(() => _protocol.GetStatusAsync());
 
@@ -44,6 +48,8 @@ namespace SmartLampApp
             {
                 PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
                 TxtStatus.Text = "❌ OFFLINE";
+                if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+                if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
                 _isPowerOn = false;
                 UpdatePowerButtonUi();
                 return;
@@ -51,6 +57,14 @@ namespace SmartLampApp
 
             PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
             TxtStatus.Text = "🟢 ONLINE";
+            if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+            if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
+
+            var currentActive = _protocol.GetActiveDevice();
+            if (TxtCompactDevice != null && currentActive != null)
+            {
+                TxtCompactDevice.Text = currentActive.Name;
+            }
 
             bool isUserActive = (DateTime.UtcNow - _lastUserCommandTime).TotalSeconds < 4.0;
             if (!isUserActive)
@@ -68,6 +82,8 @@ namespace SmartLampApp
                     _isUpdatingUi = true;
                     SliderBright.Value = status.Brightness;
                     TxtBrightVal.Text = $"{status.Brightness}%";
+                    if (SliderCompactBright != null) SliderCompactBright.Value = status.Brightness;
+                    if (TxtCompactBrightVal != null) TxtCompactBrightVal.Text = $"{status.Brightness}%";
                     if (active != null) active.last_brightness = status.Brightness;
                     _config.last_brightness = status.Brightness;
                     _isUpdatingUi = false;
@@ -77,6 +93,8 @@ namespace SmartLampApp
                     _isUpdatingUi = true;
                     SliderTemp.Value = status.ColorTempK;
                     TxtTempVal.Text = $"{status.ColorTempK}K";
+                    if (SliderCompactTemp != null) SliderCompactTemp.Value = status.ColorTempK;
+                    if (TxtCompactTempVal != null) TxtCompactTempVal.Text = $"{status.ColorTempK}K";
                     if (active != null) active.last_temp = status.ColorTempK;
                     _config.last_temp = status.ColorTempK;
                     _isUpdatingUi = false;
@@ -118,12 +136,22 @@ namespace SmartLampApp
             {
                 BtnPower.Content = "⚡ POWERED ON";
                 BtnPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
-                UpdateBulbGlow(TxtHexCode.Text, true);
+                if (BtnCompactPower != null)
+                {
+                    BtnCompactPower.Content = "⚡ POWERED ON";
+                    BtnCompactPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                }
+                UpdateBulbGlow(TxtHexCode?.Text ?? "#FFFFFF", true);
             }
             else
             {
                 BtnPower.Content = "⚡ POWERED OFF";
                 BtnPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
+                if (BtnCompactPower != null)
+                {
+                    BtnCompactPower.Content = "⚡ POWERED OFF";
+                    BtnCompactPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
+                }
                 UpdateBulbGlow("#333344", false);
             }
         }
@@ -135,6 +163,10 @@ namespace SmartLampApp
                 if (!isPowerOn)
                 {
                     BulbGlowFrame.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2A3E"));
+                    if (CompactBulbGlow != null)
+                    {
+                        CompactBulbGlow.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2A3E"));
+                    }
                     return;
                 }
 
@@ -149,6 +181,10 @@ namespace SmartLampApp
                     c = (Color)ColorConverter.ConvertFromString(hexCode);
                 }
                 BulbGlowFrame.Background = new SolidColorBrush(c);
+                if (CompactBulbGlow != null)
+                {
+                    CompactBulbGlow.Background = new SolidColorBrush(c);
+                }
             }
             catch { }
         }
@@ -240,10 +276,26 @@ namespace SmartLampApp
             if (_isUpdatingUi || _protocol == null) return;
             int val = (int)e.NewValue;
             TxtBrightVal.Text = $"{val}%";
+            if (TxtCompactBrightVal != null) TxtCompactBrightVal.Text = $"{val}%";
+            if (SliderCompactBright != null && (int)SliderCompactBright.Value != val)
+            {
+                SliderCompactBright.Value = val;
+            }
 
             if (_brightDebounceTimer == null) InitializeDebouncers();
             _brightDebounceTimer?.Stop();
             _brightDebounceTimer?.Start();
+        }
+
+        private void SliderCompactBright_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isUpdatingUi || _protocol == null) return;
+            int val = (int)e.NewValue;
+            if (TxtCompactBrightVal != null) TxtCompactBrightVal.Text = $"{val}%";
+            if (SliderBright != null && (int)SliderBright.Value != val)
+            {
+                SliderBright.Value = val;
+            }
         }
 
         private void SliderTemp_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -251,6 +303,11 @@ namespace SmartLampApp
             if (_isUpdatingUi || _protocol == null) return;
             int kVal = (int)e.NewValue;
             TxtTempVal.Text = $"{kVal}K";
+            if (TxtCompactTempVal != null) TxtCompactTempVal.Text = $"{kVal}K";
+            if (SliderCompactTemp != null && (int)SliderCompactTemp.Value != kVal)
+            {
+                SliderCompactTemp.Value = kVal;
+            }
 
             _currentMode = "white";
             UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
@@ -258,6 +315,17 @@ namespace SmartLampApp
             if (_tempDebounceTimer == null) InitializeDebouncers();
             _tempDebounceTimer?.Stop();
             _tempDebounceTimer?.Start();
+        }
+
+        private void SliderCompactTemp_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isUpdatingUi || _protocol == null) return;
+            int kVal = (int)e.NewValue;
+            if (TxtCompactTempVal != null) TxtCompactTempVal.Text = $"{kVal}K";
+            if (SliderTemp != null && (int)SliderTemp.Value != kVal)
+            {
+                SliderTemp.Value = kVal;
+            }
         }
 
         private void BtnB1_Click(object sender, RoutedEventArgs e) => SliderBright.Value = 1;

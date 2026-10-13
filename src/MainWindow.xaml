@@ -146,33 +146,58 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Compact Language Button Style -->
+        <Style x:Key="LangBtn" TargetType="Button">
+            <Setter Property="Foreground" Value="#8888AA"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="#1F1F30"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <!-- Outer Window Border Frame (Zero Scrollbars!) -->
     <Border Background="#0C0C14" CornerRadius="16" BorderBrush="#222234" BorderThickness="1">
         <Grid Margin="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="38"/> <!-- Custom Title Bar -->
-                <RowDefinition Height="Auto"/> <!-- App Header -->
-                <RowDefinition Height="Auto"/> <!-- Nav Pills -->
-                <RowDefinition Height="*"/>    <!-- Content Area -->
-                <RowDefinition Height="36"/>   <!-- Footer -->
-            </Grid.RowDefinitions>
+            <!-- FULL STUDIO MODE ROOT -->
+            <Grid x:Name="ViewFullRoot">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="38"/> <!-- Custom Title Bar -->
+                    <RowDefinition Height="Auto"/> <!-- App Header -->
+                    <RowDefinition Height="Auto"/> <!-- Nav Pills -->
+                    <RowDefinition Height="*"/>    <!-- Content Area -->
+                    <RowDefinition Height="36"/>   <!-- Footer -->
+                </Grid.RowDefinitions>
 
-            <!-- 1. Custom Title Bar -->
-            <Border Grid.Row="0" Background="#12121E" CornerRadius="16,16,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <Grid Margin="14,0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="💡" FontSize="14" Margin="0,0,6,0"/>
-                        <TextBlock x:Name="TxtAppTitle" Text="SmartLamp Studio" FontSize="12" FontWeight="Bold" Foreground="#8888AA"/>
-                    </StackPanel>
+                <!-- 1. Custom Title Bar -->
+                <Border Grid.Row="0" Background="#12121E" CornerRadius="16,16,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid Margin="14,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="💡" FontSize="14" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="TxtAppTitle" Text="SmartLamp Studio" FontSize="12" FontWeight="Bold" Foreground="#8888AA"/>
+                        </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="—" Width="30" Height="24" Style="{StaticResource GlassBtn}" Background="Transparent" Foreground="#AAAAAA" Click="BtnMinimize_Click"/>
-                        <Button Content="✕" Width="30" Height="24" Style="{StaticResource GlassBtn}" Background="Transparent" Foreground="#AAAAAA" Click="BtnClose_Click"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <!-- Mode Toggle (Switch to Compact) -->
+                            <Button x:Name="BtnToggleModeFull" Content="🗗" Width="28" Height="24" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#00F0FF" ToolTip="Compact Mode" Margin="0,0,6,0" Click="BtnToggleModeFull_Click"/>
+
+                            <Button Content="—" Width="30" Height="24" Style="{StaticResource GlassBtn}" Background="Transparent" Foreground="#AAAAAA" Click="BtnMinimize_Click"/>
+                            <Button Content="✕" Width="30" Height="24" Style="{StaticResource GlassBtn}" Background="Transparent" Foreground="#AAAAAA" Click="BtnClose_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
             <!-- 2. Main App Header & Multi-Device Selector -->
             <Border Grid.Row="1" Background="#161626" Margin="14,8,14,6" CornerRadius="12" Padding="14,10">
@@ -190,7 +215,7 @@
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Active Device:" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="LblActiveDevice" Text="Active Device:" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
                             <ComboBox x:Name="CmbDeviceSelector" Width="260" Height="28" Margin="10,0,0,0"
                                       Template="{StaticResource DarkComboBoxTemplate}"
                                       SelectionChanged="CmbDeviceSelector_SelectionChanged"/>
@@ -234,7 +259,7 @@
                         <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,6">
                             <StackPanel>
                                 <Grid>
-                                    <TextBlock Text="⏳ Sleep Timer (Auto Off)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="LblSleepTimer" Text="⏳ Sleep Timer (Auto Off)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
                                     <TextBlock x:Name="TxtTimerStatus" Text="Off" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" HorizontalAlignment="Right"/>
                                 </Grid>
                                 
@@ -261,7 +286,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="TxtCustomTimerMins" Grid.Column="0" Text="20" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#00F0FF" FontWeight="Bold" BorderBrush="#222236" Padding="6,0"/>
-                                    <Button Grid.Column="1" Content="⚡ Set Custom Mins" Width="130" Height="24" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnSetCustomTimer_Click"/>
+                                    <Button x:Name="BtnSetCustomTimer" Grid.Column="1" Content="⚡ Set Custom Mins" Width="130" Height="24" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnSetCustomTimer_Click"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -270,7 +295,7 @@
                         <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
                             <StackPanel>
                                 <Grid>
-                                    <TextBlock Text="☀️ Brightness Level" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="LblBrightness" Text="☀️ Brightness Level" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
                                     <TextBlock x:Name="TxtBrightVal" Text="50%" FontSize="12" FontWeight="Bold" Foreground="#00F0FF" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Slider x:Name="SliderBright" Minimum="1" Maximum="100" Value="50" Margin="0,6,0,6" ValueChanged="SliderBright_ValueChanged"/>
@@ -283,10 +308,10 @@
                                          <ColumnDefinition Width="*"/>
                                      </Grid.ColumnDefinitions>
                                      <Button Grid.Column="0" Content="1%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB1_Click"/>
-                                    <Button Grid.Column="1" Content="25%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB25_Click"/>
-                                    <Button Grid.Column="2" Content="50%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB50_Click"/>
-                                    <Button Grid.Column="3" Content="75%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB75_Click"/>
-                                    <Button Grid.Column="4" Content="100%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB100_Click"/>
+                                     <Button Grid.Column="1" Content="25%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB25_Click"/>
+                                     <Button Grid.Column="2" Content="50%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB50_Click"/>
+                                     <Button Grid.Column="3" Content="75%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB75_Click"/>
+                                     <Button Grid.Column="4" Content="100%" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnB100_Click"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -295,7 +320,7 @@
                         <Border Background="#161626" CornerRadius="12" Padding="12">
                             <StackPanel>
                                 <Grid>
-                                    <TextBlock Text="🌡️ Color Temperature" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="LblColorTemp" Text="🌡️ Color Temperature" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
                                     <TextBlock x:Name="TxtTempVal" Text="4000K" FontSize="12" FontWeight="Bold" Foreground="#FFB347" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Slider x:Name="SliderTemp" Minimum="2700" Maximum="6500" Value="4000" Margin="0,6,0,6" ValueChanged="SliderTemp_ValueChanged"/>
@@ -305,9 +330,9 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Content="Warm 2700K" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnT2700_Click"/>
-                                    <Button Grid.Column="1" Content="Neutral 4000K" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnT4000_Click"/>
-                                    <Button Grid.Column="2" Content="Cool 6500K" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnT6500_Click"/>
+                                    <Button Grid.Column="0" x:Name="BtnT2700" Content="Warm 2700K" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnT2700_Click"/>
+                                    <Button Grid.Column="1" x:Name="BtnT4000" Content="Neutral 4000K" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnT4000_Click"/>
+                                    <Button Grid.Column="2" x:Name="BtnT6500" Content="Cool 6500K" Margin="1" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnT6500_Click"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -318,7 +343,7 @@
                         <!-- RGB Color Palette Card with Color Picker -->
                         <Border Background="#161626" CornerRadius="12" Padding="14" Margin="0,0,0,8">
                             <StackPanel>
-                                <TextBlock Text="🎨 RGB Color Palette" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="LblRgbPalette" Text="🎨 RGB Color Palette" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
                                 <WrapPanel HorizontalAlignment="Center">
                                     <!-- Row 1: Warm & Green Tones -->
                                     <Button Style="{StaticResource ColorSwatchBtn}" Background="#FF1744" Tag="#FF1744" Click="BtnColor_Click" ToolTip="Red"/>
@@ -350,8 +375,8 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="TxtHexCode" Grid.Column="0" Text="#00E5FF" FontSize="13" Height="30" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#00F0FF" FontWeight="Bold" BorderBrush="#222236" Padding="8,0"/>
-                                    <Button Grid.Column="1" Content="🎨 Color Studio" Width="105" Height="30" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#651FFF" Click="BtnColorPicker_Click"/>
-                                    <Button Grid.Column="2" Content="Apply" Width="70" Height="30" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnApplyHex_Click"/>
+                                    <Button x:Name="BtnColorPicker" Grid.Column="1" Content="🎨 Color Studio" Width="105" Height="30" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#651FFF" Click="BtnColorPicker_Click"/>
+                                    <Button x:Name="BtnApplyHex" Grid.Column="2" Content="Apply" Width="70" Height="30" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnApplyHex_Click"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -360,7 +385,7 @@
                         <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
                             <StackPanel>
                                 <Grid Margin="0,0,0,6">
-                                    <TextBlock Text="⭐ Custom User Presets" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="LblCustomPresets" Text="⭐ Custom User Presets" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
                                     <Button x:Name="BtnSavePreset" Content="➕ Save Current" Width="105" Height="24" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnSavePreset_Click" ToolTip="Save current brightness, temp &amp; color as a custom preset"/>
                                 </Grid>
 
@@ -373,14 +398,14 @@
                         <!-- Lighting Scenes Card -->
                         <Border Background="#161626" CornerRadius="12" Padding="14">
                             <StackPanel>
-                                <TextBlock Text="✨ Lighting Scenes" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="LblLightingScenes" Text="✨ Lighting Scenes" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
                                 <UniformGrid Columns="3">
-                                    <Button Content="🌙 Night" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Night" Click="BtnScene_Click"/>
-                                    <Button Content="📖 Read" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Reading" Click="BtnScene_Click"/>
-                                    <Button Content="💻 Focus" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Working" Click="BtnScene_Click"/>
-                                    <Button Content="🛋️ Relax" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Relax" Click="BtnScene_Click"/>
-                                    <Button Content="🎉 Party" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Party" Click="BtnScene_Click"/>
-                                    <Button Content="🌈 Cycle" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Rainbow" Click="BtnScene_Click"/>
+                                    <Button x:Name="SceneNight" Content="🌙 Night" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Night" Click="BtnScene_Click"/>
+                                    <Button x:Name="SceneRead" Content="📖 Read" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Reading" Click="BtnScene_Click"/>
+                                    <Button x:Name="SceneFocus" Content="💻 Focus" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Working" Click="BtnScene_Click"/>
+                                    <Button x:Name="SceneRelax" Content="🛋️ Relax" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Relax" Click="BtnScene_Click"/>
+                                    <Button x:Name="SceneParty" Content="🎉 Party" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Party" Click="BtnScene_Click"/>
+                                    <Button x:Name="SceneCycle" Content="🌈 Cycle" Height="32" Margin="2" Style="{StaticResource GlassBtn}" Background="#222236" Tag="Rainbow" Click="BtnScene_Click"/>
                                 </UniformGrid>
                             </StackPanel>
                         </Border>
@@ -394,24 +419,41 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- LEFT COLUMN: Credentials, Save/Delete Device & Exit Behavior -->
+                    <!-- LEFT COLUMN: Language, Credentials, Save/Delete Device & Exit Behavior -->
                     <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                        <!-- Language Switcher Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                            <StackPanel>
+                                <TextBlock x:Name="LblLanguageSettings" Text="🌐 Interface Language" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,8"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnLangEn" Grid.Column="0" Content="🇬🇧 English" Height="30" Margin="0,0,3,0" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold"/>
+                                    <Button x:Name="BtnLangDe" Grid.Column="1" Content="🇩🇪 Deutsch" Height="30" Margin="3,0,3,0" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#8888AA"/>
+                                    <Button x:Name="BtnLangRu" Grid.Column="2" Content="🇷🇺 Русский" Height="30" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#8888AA"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Device Credentials Card -->
                         <Border Background="#161626" CornerRadius="12" Padding="14" Margin="0,0,0,6">
                             <StackPanel>
-                                <TextBlock Text="📌 Device Credentials &amp; Group" FontSize="14" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,10"/>
+                                <TextBlock x:Name="LblDevCreds" Text="📌 Device Credentials &amp; Group" FontSize="14" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,10"/>
 
-                                <TextBlock Text="Device Name:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,2,0,1"/>
+                                <TextBlock x:Name="LblDevName" Text="Device Name:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,2,0,1"/>
                                 <TextBox x:Name="TxtName" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
 
-                                <TextBlock Text="IP Address:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
+                                <TextBlock x:Name="LblDevIp" Text="IP Address:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
                                 <TextBox x:Name="TxtIp" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
 
-                                <TextBlock Text="Device ID:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
+                                <TextBlock x:Name="LblDevId" Text="Device ID:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
                                 <TextBox x:Name="TxtDevId" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
 
                                 <!-- MASKED LOCAL KEY WITH EYE TOGGLE BUTTON -->
-                                <TextBlock Text="Local Key (16 Chars):" FontSize="11" FontWeight="Bold" Foreground="#FFEA00" Margin="0,4,0,1"/>
+                                <TextBlock x:Name="LblLocalKey" Text="Local Key (16 Chars):" FontSize="11" FontWeight="Bold" Foreground="#FFEA00" Margin="0,4,0,1"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -422,7 +464,7 @@
                                     <Button x:Name="BtnToggleKeyVisibility" Grid.Column="1" Content="👁️" Width="34" Height="26" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnToggleKeyVisibility_Click"/>
                                 </Grid>
 
-                                <TextBlock Text="Group Name (e.g. Living Room):" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
+                                <TextBlock x:Name="LblGroupName" Text="Group Name (e.g. Living Room):" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
                                 <TextBox x:Name="TxtGroup" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
 
                                 <!-- Save Device & Delete Device Buttons Grid -->
@@ -500,7 +542,7 @@
                         <!-- Auto Discovery Card -->
                         <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
                             <StackPanel>
-                                <TextBlock Text="🔍 Wi-Fi Auto-Discovery" FontSize="13" FontWeight="Bold" Foreground="#10B981" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="LblWifiDiscovery" Text="🔍 Wi-Fi Auto-Discovery" FontSize="13" FontWeight="Bold" Foreground="#10B981" Margin="0,0,0,4"/>
                                 <Button x:Name="BtnAutoDiscover" Content="⚡ Scan Local Wi-Fi Subnet" Height="26" Style="{StaticResource GlassBtn}" Background="#10B981" Click="BtnAutoDiscover_Click"/>
                                 
                                 <ListBox x:Name="LstDiscovered" Height="65" Margin="0,4,0,0" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"
@@ -677,7 +719,8 @@
             <Border Grid.Row="4" Background="#12121E" CornerRadius="0,0,16,16" Padding="14,0">
                 <Grid VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <Button Content="🔄 Refresh" Width="90" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnRefresh_Click"/>
+                        <Button x:Name="BtnRefresh" Content="🔄 Refresh" Width="90" Height="24" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnRefresh_Click"/>
+                        <Button x:Name="BtnSwitchToCompactFooter" Content="🗗 Compact Mode" Height="24" Margin="6,0,0,0" Padding="8,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnToggleModeFull_Click"/>
                         <Border Background="#1F1F30" CornerRadius="6" Padding="8,2" Margin="8,0,0,0">
                             <TextBlock x:Name="TxtFooterHotkey" Text="⌨️ Hotkey: Ctrl+Alt+L" FontSize="11" Foreground="#00F0FF" VerticalAlignment="Center"/>
                         </Border>
@@ -826,6 +869,97 @@
                             <Button x:Name="BtnInstallUpdate" Grid.Column="2" Content="⚡ Update Now" Height="34" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnInstallUpdate_Click"/>
                         </Grid>
                     </StackPanel>
+                </Border>
+            </Grid>
+            </Grid> <!-- Closes ViewFullRoot -->
+
+            <!-- COMPACT / ESSENTIALS MODE ROOT -->
+            <Grid x:Name="ViewCompactRoot" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="38"/> <!-- Title Bar -->
+                    <RowDefinition Height="*"/>  <!-- Main Controls -->
+                    <RowDefinition Height="36"/> <!-- Footer -->
+                </Grid.RowDefinitions>
+
+                <!-- 1. Compact Title Bar -->
+                <Border Grid.Row="0" Background="#12121E" CornerRadius="16,16,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid Margin="12,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="💡" FontSize="14" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="TxtCompactTitle" Text="SmartLamp Studio" FontSize="12" FontWeight="Bold" Foreground="#8888AA"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button x:Name="BtnCompactExpand" Content="🗖" Width="28" Height="24" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#00F0FF" ToolTip="Full Studio Mode" Margin="0,0,4,0" Click="BtnCompactExpand_Click"/>
+                            <Button x:Name="BtnCompactMinimize" Content="—" Width="28" Height="24" Style="{StaticResource GlassBtn}" Background="Transparent" Foreground="#AAAAAA" Click="BtnMinimize_Click"/>
+                            <Button x:Name="BtnCompactClose" Content="✕" Width="28" Height="24" Style="{StaticResource GlassBtn}" Background="Transparent" Foreground="#AAAAAA" Click="BtnClose_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 2. Compact Content Body -->
+                <StackPanel Grid.Row="1" Margin="14,10,14,6">
+                    <!-- Status & Active Device Row -->
+                    <Border Background="#161626" CornerRadius="10" Padding="10,6" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" x:Name="CompactBulbGlow" Width="28" Height="28" CornerRadius="14" Background="#2A2A3E" Margin="0,0,8,0">
+                                <TextBlock Text="💡" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" x:Name="TxtCompactDevice" Text="Smart Lamp 1" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                            <Border Grid.Column="2" x:Name="PillCompactStatus" Background="#10B981" CornerRadius="8" Padding="8,3" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtCompactStatus" Text="🟢 ONLINE" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Hero Power Button -->
+                    <Button x:Name="BtnCompactPower" Content="⚡ POWERED OFF" Height="44" Style="{StaticResource PowerBtnStyle}" Background="#FF1744" Margin="0,0,0,8" Click="BtnPower_Click"/>
+
+                    <!-- Brightness Card -->
+                    <Border Background="#161626" CornerRadius="10" Padding="10,8" Margin="0,0,0,8">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock x:Name="LblCompactBrightness" Text="☀️ Brightness Level" FontSize="11" FontWeight="Bold" Foreground="#A0AEC0"/>
+                                <TextBlock x:Name="TxtCompactBrightVal" Text="50%" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Slider x:Name="SliderCompactBright" Minimum="1" Maximum="100" Value="50" Margin="0,4" ValueChanged="SliderCompactBright_ValueChanged"/>
+                            <UniformGrid Columns="3">
+                                <Button x:Name="BtnCompactB1" Content="1%" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" FontSize="10" Margin="1" Click="BtnB1_Click"/>
+                                <Button x:Name="BtnCompactB50" Content="50%" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" FontSize="10" Margin="1" Click="BtnB50_Click"/>
+                                <Button x:Name="BtnCompactB100" Content="100%" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" FontSize="10" Margin="1" Click="BtnB100_Click"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Color Temperature Card -->
+                    <Border Background="#161626" CornerRadius="10" Padding="10,8">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock x:Name="LblCompactTemp" Text="🌡️ Color Temperature" FontSize="11" FontWeight="Bold" Foreground="#A0AEC0"/>
+                                <TextBlock x:Name="TxtCompactTempVal" Text="4000K" FontSize="11" FontWeight="Bold" Foreground="#FFB347" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Slider x:Name="SliderCompactTemp" Minimum="2700" Maximum="6500" Value="4000" Margin="0,4" ValueChanged="SliderCompactTemp_ValueChanged"/>
+                            <UniformGrid Columns="3">
+                                <Button x:Name="BtnCompactT2700" Content="2700K" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" FontSize="10" Margin="1" Click="BtnT2700_Click"/>
+                                <Button x:Name="BtnCompactT4000" Content="4000K" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" FontSize="10" Margin="1" Click="BtnT4000_Click"/>
+                                <Button x:Name="BtnCompactT6500" Content="6500K" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" FontSize="10" Margin="1" Click="BtnT6500_Click"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 3. Compact Footer -->
+                <Border Grid.Row="2" Background="#12121E" CornerRadius="0,0,16,16" Padding="12,0">
+                    <Grid VerticalAlignment="Center">
+                        <Button x:Name="BtnCompactRefresh" Content="🔄" Width="28" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" FontSize="10" HorizontalAlignment="Left" Click="BtnRefresh_Click"/>
+                        <TextBlock x:Name="TxtCompactLatency" Text="⚡ Ready" FontSize="10" Foreground="#00F0FF" Margin="36,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <Button x:Name="BtnCompactSwitchFull" Content="🗖 Full Mode" Height="22" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#00F0FF" FontSize="10" Padding="6,2" HorizontalAlignment="Right" Click="BtnCompactExpand_Click"/>
+                    </Grid>
                 </Border>
             </Grid>
         </Grid>

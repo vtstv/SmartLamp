@@ -1,0 +1,593 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SmartLamp.Desktop.MainWindow"
+        Title="Smart Lamp Studio by Murr"
+        Width="960" Height="820"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        SystemDecorations="None"
+        Background="Transparent"
+        Icon="/Assets/app_icon.ico"
+        FontFamily="Inter, Segoe UI, sans-serif">
+
+    <Window.Styles>
+        <Style Selector="Button.GlassBtn">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.LangBtn">
+            <Setter Property="Foreground" Value="#8888AA"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Background" Value="#1F1F30"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.LangBtn.Active">
+            <Setter Property="Foreground" Value="#000000"/>
+            <Setter Property="Background" Value="#00F0FF"/>
+        </Style>
+
+        <Style Selector="Button.PowerBtn">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.ColorSwatch">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="CornerRadius" Value="22"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#44FFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.ColorSwatch:pointerover">
+            <Setter Property="BorderBrush" Value="#FFFFFFFF"/>
+        </Style>
+    </Window.Styles>
+
+    <!-- Outer Window Border Frame -->
+    <Border Background="#0C0C14" CornerRadius="16" BorderBrush="#222234" BorderThickness="1" ClipToBounds="True">
+        <Grid>
+            <!-- ================= FULL STUDIO MODE ================= -->
+            <Grid x:Name="ViewFullRoot" RowDefinitions="38, Auto, Auto, *, 36" IsVisible="True">
+
+                <!-- 1. Custom Title Bar -->
+                <Border Grid.Row="0" x:Name="TitleBar" Background="#12121E" CornerRadius="16,16,0,0">
+                    <Grid Margin="14,0" ColumnDefinitions="Auto, *, Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="💡" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtAppTitle" Text="SmartLamp Studio v3.0" FontSize="12" FontWeight="Bold" Foreground="#8888AA" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+                            <!-- Mode Toggle (Switch to Compact) -->
+                            <Button x:Name="BtnToggleModeFull" Content="🗗" Width="30" Height="24" Classes="GlassBtn" Background="#1F1F30" Foreground="#00F0FF" ToolTip.Tip="Compact Mode"/>
+
+                            <!-- Window Controls -->
+                            <Button x:Name="BtnMinimize" Content="—" Width="30" Height="24" Classes="GlassBtn" Background="Transparent" Foreground="#AAAAAA"/>
+                            <Button x:Name="BtnClose" Content="✕" Width="30" Height="24" Classes="GlassBtn" Background="Transparent" Foreground="#AAAAAA"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 2. Main App Header & Multi-Device Selector -->
+                <Border Grid.Row="1" Background="#161626" Margin="14,8,14,6" CornerRadius="12" Padding="14,10">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <!-- Dynamic Ambient Light Bulb Icon -->
+                        <Border Grid.Column="0" x:Name="BulbGlowFrame" Width="44" Height="44" CornerRadius="22" Background="#2A2A3E" Margin="0,0,12,0">
+                            <TextBlock x:Name="TxtBulbIcon" Text="💡" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="LblActiveDevice" Text="Active Device:" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbDeviceSelector" Width="260" Height="28" Margin="10,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtDeviceInfo" Text="IP: Select or Add Device  |  ID: --" FontSize="11" Foreground="#AAAAAA" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Connecting / Online Status Pill -->
+                        <Border Grid.Column="2" x:Name="PillStatus" Background="#0284C7" CornerRadius="10" Padding="12,5" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtStatus" Text="⏳ CONNECTING..." FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- 3. Navigation Bar (Pill Buttons) -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="14,0,14,6">
+                    <Button x:Name="NavDash" Content="💡 Control Dashboard" Width="170" Height="34" Classes="GlassBtn" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Margin="0,0,6,0"/>
+                    <Button x:Name="NavSettings" Content="⚙️ Settings &amp; Hotkeys" Width="170" Height="34" Classes="GlassBtn" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0"/>
+                    <Button x:Name="NavGoogleHome" Content="🌐 Google Home" Width="140" Height="34" Classes="GlassBtn" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" IsVisible="False"/>
+                    <Button x:Name="NavMqtt" Content="🤖 Home Assistant &amp; MQTT" Width="190" Height="34" Classes="GlassBtn" Background="#1F1F30" Foreground="#AAAAAA" IsVisible="False"/>
+                </StackPanel>
+
+                <!-- 4. Content Area -->
+                <Grid Grid.Row="3" Margin="14,0,14,0">
+                    <!-- VIEW 1: CONTROL DASHBOARD -->
+                    <Grid x:Name="ViewDashboard" ColumnDefinitions="*, *" IsVisible="True">
+                        <!-- LEFT COLUMN -->
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <!-- Hero Power Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                                <Button x:Name="BtnPower" Content="⚡ POWERED OFF" Height="48" Classes="PowerBtn"
+                                        Background="#FF1744" HorizontalAlignment="Stretch"/>
+                            </Border>
+
+                            <!-- Sleep Timer Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,6">
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock x:Name="LblSleepTimer" Text="⏳ Sleep Timer (Auto Off)" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        <TextBlock Grid.Column="1" x:Name="TxtTimerStatus" Text="Off" FontSize="11" FontWeight="Bold" Foreground="#00F0FF"/>
+                                    </Grid>
+
+                                    <!-- Preset Buttons -->
+                                    <UniformGrid Columns="5" Margin="0,6,0,0">
+                                        <Button x:Name="BtnTimer15" Content="15m" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnTimer30" Content="30m" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnTimer45" Content="45m" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnTimer60" Content="60m" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnTimerOff" Content="✕ Off" Margin="1" Height="24" Classes="GlassBtn" Background="#DC3545"/>
+                                    </UniformGrid>
+
+                                    <!-- Custom Duration Input -->
+                                    <Grid Margin="0,6,0,0" ColumnDefinitions="*, Auto">
+                                        <TextBox x:Name="TxtCustomTimerMins" Text="20" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#00F0FF" FontWeight="Bold" BorderBrush="#222236" Padding="6,0"/>
+                                        <Button Grid.Column="1" x:Name="BtnSetCustomTimer" Content="⚡ Set Custom Mins" Width="130" Height="24" Margin="4,0,0,0" Classes="GlassBtn" Background="#0066CC"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Brightness Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock x:Name="LblBrightness" Text="☀️ Brightness Level" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        <TextBlock Grid.Column="1" x:Name="TxtBrightVal" Text="50%" FontSize="12" FontWeight="Bold" Foreground="#00F0FF"/>
+                                    </Grid>
+                                    <Slider x:Name="SliderBright" Minimum="1" Maximum="100" Value="50" Margin="0,6,0,6"/>
+                                    <UniformGrid Columns="5">
+                                        <Button x:Name="BtnB1" Content="1%" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnB25" Content="25%" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnB50" Content="50%" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnB75" Content="75%" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnB100" Content="100%" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Color Temp Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12">
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock x:Name="LblColorTemp" Text="🌡️ Color Temperature" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        <TextBlock Grid.Column="1" x:Name="TxtTempVal" Text="4000K" FontSize="12" FontWeight="Bold" Foreground="#FFB347"/>
+                                    </Grid>
+                                    <Slider x:Name="SliderTemp" Minimum="2700" Maximum="6500" Value="4000" Margin="0,6,0,6"/>
+                                    <UniformGrid Columns="3">
+                                        <Button x:Name="BtnT2700" Content="Warm 2700K" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnT4000" Content="Neutral 4000K" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                        <Button x:Name="BtnT6500" Content="Cool 6500K" Margin="1" Height="24" Classes="GlassBtn" Background="#222236"/>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- RIGHT COLUMN -->
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <!-- RGB Color Palette Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="14" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblRgbPalette" Text="🎨 RGB Color Palette" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                    <WrapPanel x:Name="PnlColorSwatches" HorizontalAlignment="Center">
+                                        <Button Classes="ColorSwatch" Background="#FF1744" Tag="#FF1744" ToolTip.Tip="Red"/>
+                                        <Button Classes="ColorSwatch" Background="#FF5252" Tag="#FF5252" ToolTip.Tip="Coral"/>
+                                        <Button Classes="ColorSwatch" Background="#FF9100" Tag="#FF9100" ToolTip.Tip="Orange"/>
+                                        <Button Classes="ColorSwatch" Background="#FFC400" Tag="#FFC400" ToolTip.Tip="Amber"/>
+                                        <Button Classes="ColorSwatch" Background="#FFEA00" Tag="#FFEA00" ToolTip.Tip="Yellow"/>
+                                        <Button Classes="ColorSwatch" Background="#76FF03" Tag="#76FF03" ToolTip.Tip="Lime"/>
+                                        <Button Classes="ColorSwatch" Background="#10B981" Tag="#10B981" ToolTip.Tip="Emerald"/>
+                                        <Button Classes="ColorSwatch" Background="#00E676" Tag="#00E676" ToolTip.Tip="Mint"/>
+                                        <Button Classes="ColorSwatch" Background="#1DE9B6" Tag="#1DE9B6" ToolTip.Tip="Teal"/>
+
+                                        <Button Classes="ColorSwatch" Background="#00E5FF" Tag="#00E5FF" ToolTip.Tip="Cyan"/>
+                                        <Button Classes="ColorSwatch" Background="#00B0FF" Tag="#00B0FF" ToolTip.Tip="Sky Blue"/>
+                                        <Button Classes="ColorSwatch" Background="#2979FF" Tag="#2979FF" ToolTip.Tip="Royal Blue"/>
+                                        <Button Classes="ColorSwatch" Background="#3D5AFE" Tag="#3D5AFE" ToolTip.Tip="Indigo"/>
+                                        <Button Classes="ColorSwatch" Background="#651FFF" Tag="#651FFF" ToolTip.Tip="Deep Purple"/>
+                                        <Button Classes="ColorSwatch" Background="#D500F9" Tag="#D500F9" ToolTip.Tip="Magenta"/>
+                                        <Button Classes="ColorSwatch" Background="#F50057" Tag="#F50057" ToolTip.Tip="Hot Pink"/>
+                                        <Button Classes="ColorSwatch" Background="#FFE0B2" Tag="#FFE0B2" ToolTip.Tip="Warm Soft White"/>
+                                        <Button Classes="ColorSwatch" Background="#FFFFFF" Tag="#FFFFFF" ToolTip.Tip="Pure White"/>
+                                    </WrapPanel>
+
+                                    <Grid Margin="0,8,0,0" ColumnDefinitions="*, Auto, Auto">
+                                        <TextBox x:Name="TxtHexCode" Text="#00E5FF" FontSize="13" Height="30" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#00F0FF" FontWeight="Bold" BorderBrush="#222236" Padding="8,0"/>
+                                        <Button Grid.Column="1" x:Name="BtnColorStudio" Content="🎨 Random" Width="105" Height="30" Margin="6,0,0,0" Classes="GlassBtn" Background="#651FFF"/>
+                                        <Button Grid.Column="2" x:Name="BtnApplyHex" Content="Apply" Width="70" Height="30" Margin="6,0,0,0" Classes="GlassBtn" Background="#0066CC"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Custom User Presets Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,6" ColumnDefinitions="*, Auto">
+                                        <TextBlock x:Name="LblCustomPresets" Text="⭐ Custom User Presets" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" x:Name="BtnSavePreset" Content="➕ Save Current" Width="105" Height="24" Classes="GlassBtn" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" ToolTip.Tip="Save current preset"/>
+                                    </Grid>
+
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="90">
+                                        <WrapPanel x:Name="PnlCustomPresets" Orientation="Horizontal"/>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Lighting Scenes Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="14">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblLightingScenes" Text="✨ Lighting Scenes" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                    <UniformGrid Columns="3">
+                                        <Button x:Name="SceneNight" Content="🌙 Night" Height="32" Margin="2" Classes="GlassBtn" Background="#222236" Tag="Night"/>
+                                        <Button x:Name="SceneRead" Content="📖 Read" Height="32" Margin="2" Classes="GlassBtn" Background="#222236" Tag="Reading"/>
+                                        <Button x:Name="SceneFocus" Content="💻 Focus" Height="32" Margin="2" Classes="GlassBtn" Background="#222236" Tag="Working"/>
+                                        <Button x:Name="SceneRelax" Content="🛋️ Relax" Height="32" Margin="2" Classes="GlassBtn" Background="#222236" Tag="Relax"/>
+                                        <Button x:Name="SceneParty" Content="🎉 Party" Height="32" Margin="2" Classes="GlassBtn" Background="#222236" Tag="Party"/>
+                                        <Button x:Name="SceneCycle" Content="🌈 Cycle" Height="32" Margin="2" Classes="GlassBtn" Background="#222236" Tag="Rainbow"/>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- VIEW 2: DEVICE SETTINGS -->
+                    <ScrollViewer x:Name="ViewSettings" VerticalScrollBarVisibility="Auto" IsVisible="False">
+                        <Grid ColumnDefinitions="*, *" Margin="0,0,4,0">
+                        <!-- LEFT COLUMN -->
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <!-- 1. Language Switcher Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblLanguageSettings" Text="🌐 Interface Language" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,8"/>
+                                    <Grid ColumnDefinitions="*, *, *">
+                                        <Button Grid.Column="0" x:Name="BtnLangEn" Content="🇬🇧 English" Height="30" Margin="0,0,3,0" Classes="GlassBtn" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Column="1" x:Name="BtnLangDe" Content="🇩🇪 Deutsch" Height="30" Margin="3,0,3,0" Classes="GlassBtn" Background="#1F1F30" Foreground="#8888AA" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Column="2" x:Name="BtnLangRu" Content="🇷🇺 Русский" Height="30" Margin="3,0,0,0" Classes="GlassBtn" Background="#1F1F30" Foreground="#8888AA" HorizontalAlignment="Stretch"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 2. Device Credentials Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="14" Margin="0,0,0,6">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblDevCreds" Text="📌 Device Credentials &amp; Group" FontSize="14" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,8"/>
+
+                                    <TextBlock x:Name="LblDevName" Text="Device Name:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,2,0,1"/>
+                                    <TextBox x:Name="TxtName" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+
+                                    <TextBlock x:Name="LblDevIp" Text="IP Address:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
+                                    <TextBox x:Name="TxtIp" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+
+                                    <TextBlock x:Name="LblDevId" Text="Device ID:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
+                                    <TextBox x:Name="TxtDevId" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+
+                                    <TextBlock x:Name="LblLocalKey" Text="Local Key (16 Chars):" FontSize="11" FontWeight="Bold" Foreground="#FFEA00" Margin="0,4,0,1"/>
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBox x:Name="TxtLocalKey" PasswordChar="●" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#FFEA00" Padding="6,0"/>
+                                        <Button Grid.Column="1" x:Name="BtnToggleKeyVisibility" Content="👁️" Width="34" Height="26" Margin="4,0,0,0" Classes="GlassBtn" Background="#222236"/>
+                                    </Grid>
+
+                                    <TextBlock x:Name="LblGroupName" Text="Group Name (e.g. Living Room):" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,4,0,1"/>
+                                    <TextBox x:Name="TxtGroup" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+
+                                    <Grid Margin="0,8,0,0" ColumnDefinitions="*, Auto">
+                                        <Button x:Name="BtnSaveDevice" Content="💾 Save Device" Height="28" Classes="GlassBtn" Background="#0066CC" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Column="1" x:Name="BtnDeleteDevice" Content="🗑️ Delete" Width="90" Height="28" Margin="6,0,0,0" Classes="GlassBtn" Background="#DC3545"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 3. App Behavior Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock x:Name="LblAppBehavior" Text="⚙️ App Behavior &amp; Integrations" FontSize="13" FontWeight="Bold" Foreground="#FF9100" Margin="0,0,0,2"/>
+                                    <CheckBox x:Name="ChkCloseToTray" Content="Minimize to System Tray on window close (✕)" Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"/>
+                                    <CheckBox x:Name="ChkTimerNotifications" Content="Show Desktop notifications for Sleep Timer" Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"/>
+                                    <CheckBox x:Name="ChkEnableGoogle" Content="Enable Google Home Bridge Integration" Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"/>
+                                    <CheckBox x:Name="ChkEnableMqtt" Content="Enable Home Assistant &amp; MQTT Bridge" Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"/>
+                                    <CheckBox x:Name="ChkCheckUpdates" Content="Automatically check for updates on startup" Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"/>
+                                    <Grid ColumnDefinitions="*, *" Margin="0,4,0,0">
+                                        <Button Grid.Column="0" x:Name="BtnCheckUpdates" Content="🔍 Check for Updates" Height="26" Margin="0,0,3,0" Classes="GlassBtn" Background="#0066CC" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Column="1" x:Name="BtnCreateShortcut" Content="⚡ Desktop Shortcut" Height="26" Margin="3,0,0,0" Classes="GlassBtn" Background="#651FFF" HorizontalAlignment="Stretch"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- RIGHT COLUMN -->
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <!-- 1. Wi-Fi Auto-Discovery Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblWifiDiscovery" Text="🔍 Wi-Fi Auto-Discovery" FontSize="13" FontWeight="Bold" Foreground="#10B981" Margin="0,0,0,4"/>
+                                    <Button x:Name="BtnAutoDiscover" Content="⚡ Scan Local Wi-Fi Subnet" Height="26" Classes="GlassBtn" Background="#10B981" HorizontalAlignment="Stretch"/>
+                                    <ListBox x:Name="LstDiscovered" Height="75" Margin="0,4,0,0" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 2. Tuya Cloud Sync Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblCloudSync" Text="☁️ Auto-Fetch Key from Tuya Cloud" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,4"/>
+                                    <Grid ColumnDefinitions="*, *">
+                                        <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                            <TextBlock x:Name="LblAccId" Text="Access ID:" FontSize="10" Foreground="#AAAAAA"/>
+                                            <TextBox x:Name="TxtAccId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="3,0,0,0">
+                                            <TextBlock x:Name="LblAccKey" Text="Access Key (Secret):" FontSize="10" Foreground="#AAAAAA"/>
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBox x:Name="TxtAccKey" PasswordChar="●" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236"/>
+                                                <Button Grid.Column="1" x:Name="BtnToggleAccKeyVisibility" Content="👁️" Width="28" Height="24" Margin="3,0,0,0" Classes="GlassBtn" Background="#222236"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,0" ColumnDefinitions="*, Auto">
+                                        <Button Grid.Column="0" x:Name="BtnCloudFetch" Content="⚡ Fetch Key from Cloud" Height="26" Classes="GlassBtn" Background="#0066CC" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Column="1" x:Name="BtnTuyaGuide" Content="❓ Instructions" Width="95" Height="26" Margin="4,0,0,0" Classes="GlassBtn" Background="#222236"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 3. Control Mode & Fallback Priority Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblControlModeTitle" Text="🎮 Control Mode &amp; Fallback Priority" FontSize="13" FontWeight="Bold" Foreground="#FFD700" Margin="0,0,0,6"/>
+                                    <Grid ColumnDefinitions="*, *">
+                                        <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                            <TextBlock x:Name="LblControlMode" Text="Control Mode:" FontSize="10" Foreground="#AAAAAA"/>
+                                            <ComboBox x:Name="CmbControlMode" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" HorizontalAlignment="Stretch">
+                                                <ComboBoxItem Content="🔄 Auto (Hybrid Fallback)" Tag="auto"/>
+                                                <ComboBoxItem Content="⚡ Local LAN Only" Tag="local"/>
+                                                <ComboBoxItem Content="☁️ Tuya Cloud API Only" Tag="cloud"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel x:Name="PanelAutoPriority" Grid.Column="1" Margin="3,0,0,0">
+                                            <TextBlock x:Name="LblAutoPriority" Text="Auto Priority Order:" FontSize="10" Foreground="#AAAAAA"/>
+                                            <ComboBox x:Name="CmbAutoPriority" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" HorizontalAlignment="Stretch">
+                                                <ComboBoxItem Content="☁️ Tuya Cloud ➔ Local" Tag="cloud_first"/>
+                                                <ComboBoxItem Content="⚡ Local LAN ➔ Cloud" Tag="local_first"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+
+                    <!-- VIEW 3: GOOGLE SMART HOME INTEGRATION -->
+                    <Grid x:Name="ViewGoogleHome" ColumnDefinitions="*, *" IsVisible="False">
+                        <Border Grid.Column="0" Background="#161626" CornerRadius="12" Padding="16" Margin="0,0,6,0">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="🌐 Google Smart Home Local Bridge" FontSize="14" FontWeight="Bold" Foreground="#4285F4"/>
+                                <TextBlock Text="Integrate your Smart Lamp with Google Home &amp; Assistant ecosystem via Local Home SDK / REST Webhook Bridge." FontSize="11" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                                <Border x:Name="PillGoogleStatus" Background="#10B981" CornerRadius="8" Padding="10,6">
+                                    <TextBlock x:Name="TxtGoogleStatus" Text="🟢 Bridge Active on Port 8088" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                </Border>
+                                <TextBlock Text="Local Webhook URL:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                <TextBox Text="http://localhost:8088/google-smart-home/" IsReadOnly="True" Height="28" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#00F0FF" BorderBrush="#222236"/>
+                                <Button x:Name="BtnStartGoogleBridge" Content="⚡ Restart Google Home Bridge" Height="34" Classes="GlassBtn" Background="#4285F4" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="#161626" CornerRadius="12" Padding="16" Margin="6,0,0,0">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="🗣️ Google Assistant Voice Simulator" FontSize="14" FontWeight="Bold" Foreground="#EA4335"/>
+                                <UniformGrid Columns="2">
+                                    <Button x:Name="BtnGoogleTestOn" Content="🗣️ 'Turn On Lamp'" Height="32" Margin="2" Classes="GlassBtn" Background="#10B981"/>
+                                    <Button x:Name="BtnGoogleTestOff" Content="🗣️ 'Turn Off Lamp'" Height="32" Margin="2" Classes="GlassBtn" Background="#DC3545"/>
+                                </UniformGrid>
+                                <TextBlock Text="Google Assistant Event Log:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                <TextBox x:Name="TxtGoogleLog" Height="140" IsReadOnly="True" Background="#0C0C14" Foreground="#10B981" FontFamily="Consolas,monospace" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- VIEW 4: HOME ASSISTANT & MQTT INTEGRATION -->
+                    <Grid x:Name="ViewMqtt" ColumnDefinitions="*, *" IsVisible="False">
+                        <Border Grid.Column="0" Background="#161626" CornerRadius="12" Padding="16" Margin="0,0,6,0">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="🤖 Home Assistant &amp; MQTT Bridge" FontSize="14" FontWeight="Bold" Foreground="#03A9F4"/>
+                                <TextBlock Text="Native Home Assistant MQTT Auto-Discovery &amp; REST Bridge Server on Port 1883." FontSize="11" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                                <Border x:Name="PillMqttStatus" Background="#10B981" CornerRadius="8" Padding="10,6">
+                                    <TextBlock x:Name="TxtMqttStatus" Text="🟢 HA Bridge Active on Port 1883" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                </Border>
+                                <TextBlock Text="Home Assistant Webhook Endpoint:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                <TextBox Text="http://localhost:1883/mqtt/" IsReadOnly="True" Height="28" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#00F0FF" BorderBrush="#222236"/>
+                                <Grid ColumnDefinitions="*, *">
+                                    <Button Grid.Column="0" x:Name="BtnStartMqttBridge" Content="⚡ Restart HA Bridge" Height="34" Margin="0,0,3,0" Classes="GlassBtn" Background="#03A9F4" HorizontalAlignment="Stretch"/>
+                                    <Button Grid.Column="1" x:Name="BtnCopyMqttDiscovery" Content="📋 Copy HA Discovery JSON" Height="34" Margin="3,0,0,0" Classes="GlassBtn" Background="#651FFF" HorizontalAlignment="Stretch"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="#161626" CornerRadius="12" Padding="16" Margin="6,0,0,0">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="🤖 Home Assistant Event Simulator" FontSize="14" FontWeight="Bold" Foreground="#FF9800"/>
+                                <UniformGrid Columns="2">
+                                    <Button x:Name="BtnMqttTestOn" Content="🤖 HA: 'Turn ON'" Height="32" Margin="2" Classes="GlassBtn" Background="#10B981"/>
+                                    <Button x:Name="BtnMqttTestOff" Content="🤖 HA: 'Turn OFF'" Height="32" Margin="2" Classes="GlassBtn" Background="#DC3545"/>
+                                </UniformGrid>
+                                <TextBlock Text="Home Assistant &amp; MQTT Log:" FontSize="11" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                <TextBox x:Name="TxtMqttLog" Height="140" IsReadOnly="True" Background="#0C0C14" Foreground="#10B981" FontFamily="Consolas,monospace" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- 5. Footer -->
+                <Border Grid.Row="4" Background="#12121E" CornerRadius="0,0,16,16" Padding="14,0">
+                    <Grid VerticalAlignment="Center" ColumnDefinitions="Auto, *, Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="BtnRefresh" Content="🔄 Refresh" Width="90" Height="24" Classes="GlassBtn" Background="#222236"/>
+                            <Border Background="#1F1F30" CornerRadius="6" Padding="8,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtLatency" Text="⚡ Ready (Local LAN)" FontSize="11" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <Button x:Name="BtnSwitchToCompactFooter" Content="🗗 Compact Mode" Height="24" Classes="GlassBtn" Background="#1F1F30" Foreground="#00F0FF" Padding="8,2"/>
+                            <Button x:Name="BtnAuthor" Content="© 2026 Murr (https://github.com/vtstv)" Background="Transparent" Foreground="#777799" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ================= COMPACT / SIMPLIFIED MODE ================= -->
+            <Grid x:Name="ViewCompactRoot" RowDefinitions="38, *, 36" IsVisible="False">
+                <!-- 1. Compact Title Bar -->
+                <Border Grid.Row="0" x:Name="CompactTitleBar" Background="#12121E" CornerRadius="16,16,0,0">
+                    <Grid Margin="12,0" ColumnDefinitions="Auto, *, Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="💡" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtCompactTitle" Text="SmartLamp" FontSize="12" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                            <Button x:Name="BtnCompactExpand" Content="🗖" Width="28" Height="24" Classes="GlassBtn" Background="#1F1F30" Foreground="#00F0FF" ToolTip.Tip="Full Studio Mode"/>
+                            <Button x:Name="BtnCompactMinimize" Content="—" Width="28" Height="24" Classes="GlassBtn" Background="Transparent" Foreground="#AAAAAA"/>
+                            <Button x:Name="BtnCompactClose" Content="✕" Width="28" Height="24" Classes="GlassBtn" Background="Transparent" Foreground="#AAAAAA"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 2. Compact Content Body -->
+                <StackPanel Grid.Row="1" Margin="14,10,14,6" Spacing="8">
+                    <!-- Status & Active Device Row -->
+                    <Border Background="#161626" CornerRadius="10" Padding="10,6">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <Border Grid.Column="0" x:Name="CompactBulbGlow" Width="28" Height="28" CornerRadius="14" Background="#2A2A3E" Margin="0,0,8,0">
+                                <TextBlock Text="💡" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" x:Name="TxtCompactDevice" Text="Smart Lamp 1" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                            <Border Grid.Column="2" x:Name="PillCompactStatus" Background="#10B981" CornerRadius="8" Padding="8,3" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtCompactStatus" Text="🟢 ONLINE" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Hero Power Button -->
+                    <Button x:Name="BtnCompactPower" Content="⚡ POWERED OFF" Height="44" Classes="PowerBtn" Background="#FF1744" HorizontalAlignment="Stretch"/>
+
+                    <!-- Brightness Card -->
+                    <Border Background="#161626" CornerRadius="10" Padding="10,8">
+                        <StackPanel Spacing="4">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock x:Name="LblCompactBrightness" Text="☀️ Brightness" FontSize="11" FontWeight="Bold" Foreground="#A0AEC0"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtCompactBrightVal" Text="50%" FontSize="11" FontWeight="Bold" Foreground="#00F0FF"/>
+                            </Grid>
+                            <Slider x:Name="SliderCompactBright" Minimum="1" Maximum="100" Value="50" Margin="0,2"/>
+                            <UniformGrid Columns="3">
+                                <Button x:Name="BtnCompactB1" Content="1%" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                                <Button x:Name="BtnCompactB50" Content="50%" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                                <Button x:Name="BtnCompactB100" Content="100%" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Color Temperature Card -->
+                    <Border Background="#161626" CornerRadius="10" Padding="10,8">
+                        <StackPanel Spacing="4">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock x:Name="LblCompactTemp" Text="🌡️ Temperature" FontSize="11" FontWeight="Bold" Foreground="#A0AEC0"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtCompactTempVal" Text="4000K" FontSize="11" FontWeight="Bold" Foreground="#FFB347"/>
+                            </Grid>
+                            <Slider x:Name="SliderCompactTemp" Minimum="2700" Maximum="6500" Value="4000" Margin="0,2"/>
+                            <UniformGrid Columns="3">
+                                <Button x:Name="BtnCompactT2700" Content="2700K" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                                <Button x:Name="BtnCompactT4000" Content="4000K" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                                <Button x:Name="BtnCompactT6500" Content="6500K" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 3. Compact Footer -->
+                <Border Grid.Row="2" Background="#12121E" CornerRadius="0,0,16,16" Padding="12,0">
+                    <Grid VerticalAlignment="Center" ColumnDefinitions="Auto, *, Auto">
+                        <Button Grid.Column="0" x:Name="BtnCompactRefresh" Content="🔄" Width="28" Height="22" Classes="GlassBtn" Background="#222236" FontSize="10"/>
+                        <TextBlock Grid.Column="1" x:Name="TxtCompactLatency" Text="⚡ Ready" FontSize="10" Foreground="#00F0FF" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        <Button Grid.Column="2" x:Name="BtnCompactSwitchFull" Content="🗖 Full Mode" Height="22" Classes="GlassBtn" Background="#1F1F30" Foreground="#00F0FF" FontSize="10" Padding="6,2"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ================= MODAL: SAVE PRESET ================= -->
+            <Grid x:Name="OverlaySavePreset" IsVisible="False" Background="#E50A0A14">
+                <Border Width="380" Background="#161626" BorderBrush="#00F0FF" BorderThickness="1" CornerRadius="16" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock x:Name="LblSavePresetTitle" Text="⭐ Save Custom Preset" FontSize="16" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,12"/>
+
+                        <TextBlock x:Name="LblPresetName" Text="Preset Name:" FontSize="12" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+                        <TextBox x:Name="TxtPresetName" Text="My Preset" Height="30" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" FontWeight="Bold" BorderBrush="#222236" Padding="8,0" Margin="0,0,0,12"/>
+
+                        <Border Background="#0C0C14" CornerRadius="8" Padding="10" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Current Settings to Save:" FontSize="11" FontWeight="Bold" Foreground="#8888AA" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TxtPresetSummary" Text="Mode: White | Brightness: 50% | Temp: 4000K" FontSize="12" Foreground="#00E5FF"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*, *">
+                            <Button x:Name="BtnCancelSavePreset" Content="Cancel" Height="34" Margin="0,0,4,0" Classes="GlassBtn" Background="#222236" Foreground="#AAAAAA" HorizontalAlignment="Stretch"/>
+                            <Button Grid.Column="1" x:Name="BtnConfirmSavePreset" Content="💾 Save Preset" Height="34" Margin="4,0,0,0" Classes="GlassBtn" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" HorizontalAlignment="Stretch"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ================= MODAL: TUYA GUIDE ================= -->
+            <Grid x:Name="OverlayTuyaGuide" IsVisible="False" Background="#E50A0A14">
+                <Border Width="520" Background="#161626" BorderBrush="#00F0FF" BorderThickness="1" CornerRadius="16" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Text="🔑 How to Get Tuya Cloud Access ID &amp; Key" FontSize="15" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Name="BtnCloseTuyaGuide" Content="✕" Width="26" Height="26" Classes="GlassBtn" Background="#222236" Foreground="#AAAAAA"/>
+                        </Grid>
+                        <Border Background="#0C0C14" CornerRadius="8" Padding="10">
+                            <TextBlock Text="1. Register at iot.tuya.com and create a free Cloud Project." Foreground="#DDDDDD" FontSize="11.5"/>
+                        </Border>
+                        <Border Background="#0C0C14" CornerRadius="8" Padding="10">
+                            <TextBlock Text="2. Go to Service API tab and subscribe to IoT Core API." Foreground="#DDDDDD" FontSize="11.5"/>
+                        </Border>
+                        <Border Background="#0C0C14" CornerRadius="8" Padding="10">
+                            <TextBlock Text="3. In Devices tab, link your Smart Life mobile app account via QR code." Foreground="#DDDDDD" FontSize="11.5"/>
+                        </Border>
+                        <Border Background="#0C0C14" CornerRadius="8" Padding="10">
+                            <TextBlock Text="4. From Project Overview copy Client ID (Access ID) and Client Secret (Access Key)." Foreground="#DDDDDD" FontSize="11.5"/>
+                        </Border>
+                        <Button x:Name="BtnGotItTuyaGuide" Content="Got it!" Height="32" Classes="GlassBtn" Background="#0066CC" FontWeight="Bold" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

@@ -75,6 +75,14 @@ namespace SmartLampApp
             PopulateDeviceSelector();
             RenderCustomPresets();
             UpdatePowerButtonUi();
+
+            InitializeLocalization();
+            SetLanguage(_config.language ?? "en");
+            if (_config.compact_mode)
+            {
+                SetCompactMode(true);
+            }
+
             _ = RefreshStatusAsync();
         }
 

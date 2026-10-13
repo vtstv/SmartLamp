@@ -22,6 +22,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="SmartLamp.Cli\**" />
+    <Compile Remove="SmartLamp.Desktop\**" />
+    <None Remove="SmartLamp.Cli\**" />
+    <None Remove="SmartLamp.Desktop\**" />
+    <Page Remove="SmartLamp.Desktop\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\libs\TuyaNet.Native\TuyaNet.Native.csproj" />
   </ItemGroup>
 
