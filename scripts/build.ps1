@@ -51,14 +51,12 @@ if ($Clean) {
     & (Join-Path $PSScriptRoot "clean.ps1")
 }
 
-# 2. Extract Version from src/AppVersion.cs
-$appVersion = "3.1.0"
-$versionFile = Join-Path $rootDir "src\AppVersion.cs"
+# 2. Extract Version from root VERSION file
+$versionFile = Join-Path $rootDir "VERSION"
 if (Test-Path $versionFile) {
-    $content = Get-Content $versionFile -Raw
-    if ($content -match 'Version = "([^"]+)"') {
-        $appVersion = $matches[1]
-    }
+    $appVersion = (Get-Content $versionFile -Raw).Trim()
+} else {
+    $appVersion = "3.1.0"
 }
 
 Write-Host "================================================================" -ForegroundColor Cyan

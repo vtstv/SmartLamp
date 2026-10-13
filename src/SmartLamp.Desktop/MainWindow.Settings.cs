@@ -105,7 +105,7 @@ namespace SmartLamp.Desktop
 
             BtnCheckUpdates.Click += (s, e) =>
             {
-                TxtLatency.Text = "✨ SmartLamp Studio is up to date (v3.0)!";
+                TxtLatency.Text = $"✨ SmartLamp Studio is up to date (v{SmartLampApp.AppVersion.Version})!";
             };
 
             BtnCreateShortcut.Click += (s, e) => CreateDesktopShortcut();

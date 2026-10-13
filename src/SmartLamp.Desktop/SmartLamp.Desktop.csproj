@@ -4,10 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>SmartLampDesktop</AssemblyName>
     <RootNamespace>SmartLamp.Desktop</RootNamespace>
-    <Version>3.1.0</Version>
+
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
@@ -17,6 +16,10 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.2.5" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.5" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AppVersion.cs" Link="AppVersion.cs" />
   </ItemGroup>
 
   <ItemGroup>

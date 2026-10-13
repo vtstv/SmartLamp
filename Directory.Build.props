@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <!-- Central Application Versioning - Single Source of Truth from root VERSION file -->
+    <VersionFilePath>$([MSBuild]::NormalizePath($(MSBuildThisFileDirectory), "VERSION"))</VersionFilePath>
+    <AppVersionText Condition="Exists('$(VersionFilePath)')">$([System.IO.File]::ReadAllText('$(VersionFilePath)').Trim())</AppVersionText>
+    <AppVersionText Condition="'$(AppVersionText)' == ''">3.1.0</AppVersionText>
+    
+    <Version Condition="'$(PackageId)' != 'TuyaNet.Native'">$(AppVersionText)</Version>
+    <AssemblyVersion Condition="'$(PackageId)' != 'TuyaNet.Native'">$(AppVersionText).0</AssemblyVersion>
+    <FileVersion Condition="'$(PackageId)' != 'TuyaNet.Native'">$(AppVersionText).0</FileVersion>
+    <InformationalVersion Condition="'$(PackageId)' != 'TuyaNet.Native'">$(AppVersionText)</InformationalVersion>
+
+    <Authors>Murr</Authors>
+    <Company>Murr</Company>
+    <Product>SmartLamp Studio</Product>
+    <Copyright>Copyright © 2026 Murr. All rights reserved.</Copyright>
+    <RepositoryUrl>https://github.com/vtstv</RepositoryUrl>
+  </PropertyGroup>
+</Project>

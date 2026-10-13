@@ -131,6 +131,9 @@ namespace SmartLampApp
             BtnDeleteDevice.Content = LocalizationService.T("Delete");
             LblWifiDiscovery.Text = LocalizationService.T("WifiDiscovery");
             BtnAutoDiscover.Content = LocalizationService.T("ScanWifi");
+            LblSystemUpdates.Text = LocalizationService.T("SystemUpdates");
+            BtnCheckUpdates.Content = LocalizationService.T("CheckUpdatesBtn");
+            BtnCreateShortcut.Content = LocalizationService.T("CreateShortcut");
 
             // Compact mode labels
             TxtCompactTitle.Text = LocalizationService.T("AppTitle");

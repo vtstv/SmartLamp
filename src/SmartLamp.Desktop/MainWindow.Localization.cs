@@ -103,6 +103,7 @@ namespace SmartLamp.Desktop
             ChkEnableGoogle.Content = LocalizationService.T("EnableGoogle");
             ChkEnableMqtt.Content = LocalizationService.T("EnableMqtt");
             ChkCheckUpdates.Content = LocalizationService.T("CheckUpdates");
+            LblSystemUpdates.Text = LocalizationService.T("SystemUpdates");
             BtnCheckUpdates.Content = LocalizationService.T("CheckUpdatesBtn");
             BtnCreateShortcut.Content = LocalizationService.T("CreateShortcut");
 

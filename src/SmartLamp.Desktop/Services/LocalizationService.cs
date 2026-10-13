@@ -37,9 +37,9 @@ namespace SmartLamp.Desktop.Services
         {
             ["AppTitle"] = new()
             {
-                ["en"] = "SmartLamp Studio v3.0",
-                ["de"] = "SmartLamp Studio v3.0",
-                ["ru"] = "SmartLamp Studio v3.0"
+                ["en"] = $"SmartLamp Studio v{SmartLampApp.AppVersion.Version}",
+                ["de"] = $"SmartLamp Studio v{SmartLampApp.AppVersion.Version}",
+                ["ru"] = $"SmartLamp Studio v{SmartLampApp.AppVersion.Version}"
             },
             ["ActiveDevice"] = new()
             {
@@ -358,6 +358,12 @@ namespace SmartLamp.Desktop.Services
                 ["en"] = "Automatically check for updates on startup",
                 ["de"] = "Beim Start automatisch nach Updates suchen",
                 ["ru"] = "Проверять обновления при запуске"
+            },
+            ["SystemUpdates"] = new()
+            {
+                ["en"] = "⚡ Shortcuts & Updates",
+                ["de"] = "⚡ Verknüpfungen & Updates",
+                ["ru"] = "⚡ Ярлыки и обновления"
             },
             ["CheckUpdatesBtn"] = new()
             {

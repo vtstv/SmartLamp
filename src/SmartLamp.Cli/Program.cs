@@ -310,7 +310,7 @@ namespace SmartLamp.Cli
 
         private static void PrintHelp()
         {
-            Console.WriteLine(@"SmartLamp CLI v3.0.1 - Cross-Platform Tuya Controller
+            Console.WriteLine($@"SmartLamp CLI v{SmartLampApp.AppVersion.Version} - Cross-Platform Tuya Controller
 Usage:
   smartlamp --toggle                       Toggle lamp power
   smartlamp --on                           Turn lamp ON

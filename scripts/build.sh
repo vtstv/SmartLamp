@@ -52,8 +52,8 @@ fi
 
 # Extract Version
 VERSION="3.1.0"
-if [ -f "$ROOT_DIR/src/AppVersion.cs" ]; then
-    VERSION=$(grep 'public const string Version' "$ROOT_DIR/src/AppVersion.cs" | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -f "$ROOT_DIR/VERSION" ]; then
+    VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '\r\n')
 fi
 
 echo "================================================================"

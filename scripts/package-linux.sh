@@ -15,8 +15,8 @@ PKG_TEMPLATES="$ROOT_DIR/packaging"
 
 # Detect version
 VERSION="3.1.0"
-if [ -f "$ROOT_DIR/src/AppVersion.cs" ]; then
-    VERSION=$(grep 'public const string Version' "$ROOT_DIR/src/AppVersion.cs" | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -f "$ROOT_DIR/VERSION" ]; then
+    VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '\r\n')
 fi
 echo "==> Packaging SmartLamp Studio v$VERSION for Linux (x64 and arm64)..."
 

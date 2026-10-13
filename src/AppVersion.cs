@@ -3,15 +3,40 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // ============================================================================
 
+using System;
+using System.Reflection;
+
 namespace SmartLampApp
 {
     public static class AppVersion
     {
         // ====================================================================
-        // CENTRAL APPLICATION VERSION & BRANDING CONFIGURATION
-        // Edit the constants below to update the version across the entire app.
+        // CENTRAL APPLICATION VERSION & BRANDING
+        // Version is resolved dynamically at runtime from Assembly metadata,
+        // which is set centrally in Directory.Build.props from the root VERSION file.
         // ====================================================================
-        public const string Version = "3.1.0";
+        private static readonly Lazy<string> _lazyVersion = new(() =>
+        {
+            try
+            {
+                var asm = Assembly.GetEntryAssembly() ?? typeof(AppVersion).Assembly;
+                var infoAttr = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+                if (!string.IsNullOrWhiteSpace(infoAttr?.InformationalVersion))
+                {
+                    int plusIdx = infoAttr.InformationalVersion.IndexOf('+');
+                    return plusIdx > 0 ? infoAttr.InformationalVersion.Substring(0, plusIdx).Trim() : infoAttr.InformationalVersion.Trim();
+                }
+                var ver = asm.GetName().Version;
+                if (ver != null)
+                {
+                    return $"{ver.Major}.{ver.Minor}.{ver.Build}";
+                }
+            }
+            catch { }
+            return "3.1.0";
+        });
+
+        public static string Version => _lazyVersion.Value;
         public const string AppName = "SmartLamp Studio";
         public const string Author = "Murr";
         public const string GitHubUrl = "https://github.com/vtstv";
