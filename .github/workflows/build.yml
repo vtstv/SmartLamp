@@ -38,21 +38,18 @@ jobs:
         run: |
           dotnet publish src/SmartLamp.Cli/SmartLamp.Cli.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o dist/cli-linux-x64
 
-      - name: Compile Cross-Platform Avalonia Desktop App (.NET 9 linux-x64)
-        run: |
-          dotnet publish src/SmartLamp.Desktop/SmartLamp.Desktop.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o dist/desktop-linux-x64
-
       - name: Create Release Package (Zip, Tar & Standalone Executables)
         shell: powershell
         run: |
           $versionFile = "src/AppVersion.cs"
-          $appVersion = "3.0"
+          $appVersion = "3.1.0"
           if (Test-Path $versionFile) {
               $content = Get-Content $versionFile -Raw
               if ($content -match 'Version = "([^"]+)"') {
                   $appVersion = $matches[1]
               }
           }
+          "APP_VERSION=$appVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           New-Item -ItemType Directory -Path releases -Force
 
           # Package Windows WPF Application
@@ -74,10 +71,11 @@ jobs:
           path: |
             releases/*
 
-      - name: Create GitHub Release (On Tag Push)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', env.APP_VERSION) }}
           files: |
             releases/*.zip
             releases/*.tar.gz

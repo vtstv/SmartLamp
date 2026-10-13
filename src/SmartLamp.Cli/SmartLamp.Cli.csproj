@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>smartlamp</AssemblyName>
     <RootNamespace>SmartLamp.Cli</RootNamespace>
-    <Version>3.0.1</Version>
+    <Version>3.1.0</Version>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
