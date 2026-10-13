@@ -232,6 +232,8 @@ namespace SmartLamp.Desktop
                     break;
                 }
             }
+
+            UpdateLanguageDropdown(_config.language);
             _isUpdatingUi = false;
         }
 
@@ -336,8 +338,40 @@ namespace SmartLamp.Desktop
                 if (OperatingSystem.IsLinux())
                 {
                     string exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "SmartLampDesktop";
+                    string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    string iconDir = Path.Combine(home, ".local", "share", "icons");
+                    Directory.CreateDirectory(iconDir);
+                    string iconFile = Path.Combine(iconDir, "smartlamp.png");
+
+                    try
+                    {
+                        var uri = new Uri("avares://SmartLampDesktop/Assets/app_icon.png");
+                        if (!Avalonia.Platform.AssetLoader.Exists(uri))
+                        {
+                            uri = new Uri("avares://SmartLamp.Desktop/Assets/app_icon.png");
+                        }
+                        if (Avalonia.Platform.AssetLoader.Exists(uri))
+                        {
+                            using var stream = Avalonia.Platform.AssetLoader.Open(uri);
+                            using var fs = File.Create(iconFile);
+                            stream.CopyTo(fs);
+                        }
+                    }
+                    catch { }
+
+                    if (!File.Exists(iconFile))
+                    {
+                        string appDir = Path.GetDirectoryName(exePath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                        string localIcon = Path.Combine(appDir, "Assets", "app_icon.png");
+                        if (File.Exists(localIcon))
+                        {
+                            File.Copy(localIcon, iconFile, true);
+                        }
+                    }
+
+                    string iconProp = File.Exists(iconFile) ? iconFile : "smartlamp";
                     string desktopFile = Path.Combine(desktopPath, "SmartLamp.desktop");
-                    string content = $"[Desktop Entry]\nType=Application\nName=SmartLamp Studio\nExec=\"{exePath}\"\nIcon=accessories-character-map\nTerminal=false\nCategories=Utility;\n";
+                    string content = $"[Desktop Entry]\nType=Application\nName=SmartLamp Studio\nComment=Control Tuya Smart Lamps Locally with Sub-35ms Latency\nExec=\"{exePath}\"\nIcon={iconProp}\nTerminal=false\nCategories=Utility;HardwareSettings;\nKeywords=tuya;smartlamp;light;lamp;\nStartupNotify=true\n";
                     File.WriteAllText(desktopFile, content);
                     try { Process.Start("chmod", $"+x \"{desktopFile}\""); } catch { }
                     TxtLatency.Text = "⚡ Desktop shortcut created: SmartLamp.desktop";

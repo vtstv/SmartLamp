@@ -4,7 +4,6 @@
 // ============================================================================
 
 using Avalonia.Controls;
-using Avalonia.Media;
 using SmartLamp.Desktop.Models;
 using SmartLamp.Desktop.Services;
 
@@ -14,9 +13,14 @@ namespace SmartLamp.Desktop
     {
         private void InitializeLocalization()
         {
-            BtnLangEn.Click += (s, e) => SetLanguage("en");
-            BtnLangDe.Click += (s, e) => SetLanguage("de");
-            BtnLangRu.Click += (s, e) => SetLanguage("ru");
+            CmbLanguage.SelectionChanged += (s, e) =>
+            {
+                if (_isUpdatingUi) return;
+                if (CmbLanguage.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+                {
+                    SetLanguage(tag);
+                }
+            };
 
             LocalizationService.LanguageChanged += ApplyLocalization;
         }
@@ -27,31 +31,22 @@ namespace SmartLamp.Desktop
             _config.language = lang;
             ConfigManager.Save(_config);
 
-            UpdateLanguageButtons(lang);
+            UpdateLanguageDropdown(lang);
             ApplyLocalization();
         }
 
-        private void UpdateLanguageButtons(string lang)
+        private void UpdateLanguageDropdown(string lang)
         {
-            UpdateBtnLang(BtnLangEn, lang == "en");
-            UpdateBtnLang(BtnLangDe, lang == "de");
-            UpdateBtnLang(BtnLangRu, lang == "ru");
-        }
-
-        private static void UpdateBtnLang(Button btn, bool isActive)
-        {
-            if (isActive)
+            _isUpdatingUi = true;
+            for (int i = 0; i < CmbLanguage.Items.Count; i++)
             {
-                btn.Background = Brush.Parse("#00F0FF");
-                btn.Foreground = Brush.Parse("#000000");
-                btn.FontWeight = FontWeight.Bold;
+                if (CmbLanguage.Items[i] is ComboBoxItem item && (string?)item.Tag == lang)
+                {
+                    CmbLanguage.SelectedIndex = i;
+                    break;
+                }
             }
-            else
-            {
-                btn.Background = Brush.Parse("#1F1F30");
-                btn.Foreground = Brush.Parse("#8888AA");
-                btn.FontWeight = FontWeight.Normal;
-            }
+            _isUpdatingUi = false;
         }
 
         private void ApplyLocalization()
@@ -90,9 +85,6 @@ namespace SmartLamp.Desktop
 
             // Settings tab - Language Card
             LblLanguageSettings.Text = LocalizationService.T("LanguageSettings");
-            BtnLangEn.Content = "🇬🇧 " + LocalizationService.T("LangEn");
-            BtnLangDe.Content = "🇩🇪 " + LocalizationService.T("LangDe");
-            BtnLangRu.Content = "🇷🇺 " + LocalizationService.T("LangRu");
 
             // Settings tab - Device Credentials Card
             LblDevCreds.Text = LocalizationService.T("DeviceCredentials");

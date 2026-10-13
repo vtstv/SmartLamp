@@ -30,9 +30,14 @@ namespace SmartLampApp
 
         private void InitializeLocalization()
         {
-            BtnLangEn.Click += (s, e) => SetLanguage("en");
-            BtnLangDe.Click += (s, e) => SetLanguage("de");
-            BtnLangRu.Click += (s, e) => SetLanguage("ru");
+            CmbLanguage.SelectionChanged += (s, e) =>
+            {
+                if (_isUpdatingUi) return;
+                if (CmbLanguage.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+                {
+                    SetLanguage(tag);
+                }
+            };
 
             LocalizationService.LanguageChanged += ApplyLocalization;
         }
@@ -43,29 +48,22 @@ namespace SmartLampApp
             _config.language = lang;
             ConfigManager.Save(_config);
 
-            UpdateLanguageButtons(lang);
+            UpdateLanguageDropdown(lang);
             ApplyLocalization();
         }
 
-        private void UpdateLanguageButtons(string lang)
+        private void UpdateLanguageDropdown(string lang)
         {
-            SetLangBtnState(BtnLangEn, lang == "en");
-            SetLangBtnState(BtnLangDe, lang == "de");
-            SetLangBtnState(BtnLangRu, lang == "ru");
-        }
-
-        private static void SetLangBtnState(Button btn, bool isActive)
-        {
-            if (isActive)
+            _isUpdatingUi = true;
+            for (int i = 0; i < CmbLanguage.Items.Count; i++)
             {
-                btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00F0FF"));
-                btn.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#000000"));
+                if (CmbLanguage.Items[i] is ComboBoxItem item && (string?)item.Tag == lang)
+                {
+                    CmbLanguage.SelectedIndex = i;
+                    break;
+                }
             }
-            else
-            {
-                btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F1F30"));
-                btn.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8888AA"));
-            }
+            _isUpdatingUi = false;
         }
 
         public void SetCompactMode(bool compact)
@@ -76,8 +74,8 @@ namespace SmartLampApp
 
             if (compact)
             {
-                Width = 420;
-                Height = 380;
+                Width = 430;
+                Height = 440;
                 ViewFullRoot.Visibility = Visibility.Collapsed;
                 ViewCompactRoot.Visibility = Visibility.Visible;
             }

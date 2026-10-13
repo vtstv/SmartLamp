@@ -262,15 +262,15 @@
                         <Grid ColumnDefinitions="*, *" Margin="0,0,4,0">
                         <!-- LEFT COLUMN -->
                         <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                            <!-- 1. Language Switcher Card -->
+                            <!-- 1. Language Switcher Card (Dropdown Menu) -->
                             <Border Background="#161626" CornerRadius="12" Padding="12" Margin="0,0,0,6">
                                 <StackPanel>
-                                    <TextBlock x:Name="LblLanguageSettings" Text="🌐 Interface Language" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,8"/>
-                                    <Grid ColumnDefinitions="*, *, *">
-                                        <Button Grid.Column="0" x:Name="BtnLangEn" Content="🇬🇧 English" Height="30" Margin="0,0,3,0" Classes="GlassBtn" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" HorizontalAlignment="Stretch"/>
-                                        <Button Grid.Column="1" x:Name="BtnLangDe" Content="🇩🇪 Deutsch" Height="30" Margin="3,0,3,0" Classes="GlassBtn" Background="#1F1F30" Foreground="#8888AA" HorizontalAlignment="Stretch"/>
-                                        <Button Grid.Column="2" x:Name="BtnLangRu" Content="🇷🇺 Русский" Height="30" Margin="3,0,0,0" Classes="GlassBtn" Background="#1F1F30" Foreground="#8888AA" HorizontalAlignment="Stretch"/>
-                                    </Grid>
+                                    <TextBlock x:Name="LblLanguageSettings" Text="🌐 Interface Language" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,6"/>
+                                    <ComboBox x:Name="CmbLanguage" Height="32" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="🇬🇧 English" Tag="en"/>
+                                        <ComboBoxItem Content="🇩🇪 Deutsch" Tag="de"/>
+                                        <ComboBoxItem Content="🇷🇺 Русский" Tag="ru"/>
+                                    </ComboBox>
                                 </StackPanel>
                             </Border>
 
@@ -462,7 +462,7 @@
             </Grid>
 
             <!-- ================= COMPACT / SIMPLIFIED MODE ================= -->
-            <Grid x:Name="ViewCompactRoot" RowDefinitions="38, *, 36" IsVisible="False">
+            <Grid x:Name="ViewCompactRoot" RowDefinitions="40, *, 40" IsVisible="False">
                 <!-- 1. Compact Title Bar -->
                 <Border Grid.Row="0" x:Name="CompactTitleBar" Background="#12121E" CornerRadius="16,16,0,0">
                     <Grid Margin="12,0" ColumnDefinitions="Auto, *, Auto">
@@ -501,14 +501,14 @@
                     <Border Background="#161626" CornerRadius="10" Padding="10,8">
                         <StackPanel Spacing="4">
                             <Grid ColumnDefinitions="*, Auto">
-                                <TextBlock x:Name="LblCompactBrightness" Text="☀️ Brightness" FontSize="11" FontWeight="Bold" Foreground="#A0AEC0"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtCompactBrightVal" Text="50%" FontSize="11" FontWeight="Bold" Foreground="#00F0FF"/>
+                                <TextBlock x:Name="LblCompactBrightness" Text="☀️ Brightness" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtCompactBrightVal" Text="50%" FontSize="12" FontWeight="Bold" Foreground="#00F0FF"/>
                             </Grid>
                             <Slider x:Name="SliderCompactBright" Minimum="1" Maximum="100" Value="50" Margin="0,2"/>
                             <UniformGrid Columns="3">
-                                <Button x:Name="BtnCompactB1" Content="1%" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
-                                <Button x:Name="BtnCompactB50" Content="50%" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
-                                <Button x:Name="BtnCompactB100" Content="100%" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                                <Button x:Name="BtnCompactB1" Content="1%" Height="26" Classes="GlassBtn" Background="#222236" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11" Margin="1"/>
+                                <Button x:Name="BtnCompactB50" Content="50%" Height="26" Classes="GlassBtn" Background="#222236" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11" Margin="1"/>
+                                <Button x:Name="BtnCompactB100" Content="100%" Height="26" Classes="GlassBtn" Background="#222236" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11" Margin="1"/>
                             </UniformGrid>
                         </StackPanel>
                     </Border>
@@ -517,14 +517,14 @@
                     <Border Background="#161626" CornerRadius="10" Padding="10,8">
                         <StackPanel Spacing="4">
                             <Grid ColumnDefinitions="*, Auto">
-                                <TextBlock x:Name="LblCompactTemp" Text="🌡️ Temperature" FontSize="11" FontWeight="Bold" Foreground="#A0AEC0"/>
-                                <TextBlock Grid.Column="1" x:Name="TxtCompactTempVal" Text="4000K" FontSize="11" FontWeight="Bold" Foreground="#FFB347"/>
+                                <TextBlock x:Name="LblCompactTemp" Text="🌡️ Temperature" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtCompactTempVal" Text="4000K" FontSize="12" FontWeight="Bold" Foreground="#FFB347"/>
                             </Grid>
                             <Slider x:Name="SliderCompactTemp" Minimum="2700" Maximum="6500" Value="4000" Margin="0,2"/>
                             <UniformGrid Columns="3">
-                                <Button x:Name="BtnCompactT2700" Content="2700K" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
-                                <Button x:Name="BtnCompactT4000" Content="4000K" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
-                                <Button x:Name="BtnCompactT6500" Content="6500K" Height="20" Classes="GlassBtn" Background="#222236" FontSize="10" Margin="1"/>
+                                <Button x:Name="BtnCompactT2700" Content="2700K" Height="26" Classes="GlassBtn" Background="#222236" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11" Margin="1"/>
+                                <Button x:Name="BtnCompactT4000" Content="4000K" Height="26" Classes="GlassBtn" Background="#222236" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11" Margin="1"/>
+                                <Button x:Name="BtnCompactT6500" Content="6500K" Height="26" Classes="GlassBtn" Background="#222236" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11" Margin="1"/>
                             </UniformGrid>
                         </StackPanel>
                     </Border>
@@ -533,9 +533,9 @@
                 <!-- 3. Compact Footer -->
                 <Border Grid.Row="2" Background="#12121E" CornerRadius="0,0,16,16" Padding="12,0">
                     <Grid VerticalAlignment="Center" ColumnDefinitions="Auto, *, Auto">
-                        <Button Grid.Column="0" x:Name="BtnCompactRefresh" Content="🔄" Width="28" Height="22" Classes="GlassBtn" Background="#222236" FontSize="10"/>
-                        <TextBlock Grid.Column="1" x:Name="TxtCompactLatency" Text="⚡ Ready" FontSize="10" Foreground="#00F0FF" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                        <Button Grid.Column="2" x:Name="BtnCompactSwitchFull" Content="🗖 Full Mode" Height="22" Classes="GlassBtn" Background="#1F1F30" Foreground="#00F0FF" FontSize="10" Padding="6,2"/>
+                        <Button Grid.Column="0" x:Name="BtnCompactRefresh" Content="🔄" Width="32" Height="26" Classes="GlassBtn" Background="#222236" FontSize="11"/>
+                        <TextBlock Grid.Column="1" x:Name="TxtCompactLatency" Text="⚡ Ready" FontSize="11" Foreground="#00F0FF" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        <Button Grid.Column="2" x:Name="BtnCompactSwitchFull" Content="🗖 Full Mode" Height="26" Classes="GlassBtn" Background="#1F1F30" Foreground="#00F0FF" FontSize="11" FontWeight="SemiBold" Padding="8,2"/>
                     </Grid>
                 </Border>
             </Grid>

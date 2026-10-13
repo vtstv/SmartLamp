@@ -87,8 +87,8 @@ namespace SmartLamp.Desktop
 
             if (compact)
             {
-                Width = 420;
-                Height = 380;
+                Width = 430;
+                Height = 440;
                 ViewFullRoot.IsVisible = false;
                 ViewCompactRoot.IsVisible = true;
             }
@@ -184,6 +184,7 @@ namespace SmartLamp.Desktop
 
             if (Array.Exists(args, a => a.Equals("--settings", StringComparison.OrdinalIgnoreCase)))
             {
+                SetCompactMode(false);
                 ShowTab(1);
             }
         }

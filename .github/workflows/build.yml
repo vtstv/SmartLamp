@@ -63,8 +63,9 @@ jobs:
           # Package Linux CLI
           tar -czvf "releases/SmartLamp_CLI_v${appVersion}_linux-x64.tar.gz" -C dist/cli-linux-x64 smartlamp
 
-          # Package Linux Desktop Application
-          tar -czvf "releases/SmartLampStudio_v${appVersion}_linux-x64.tar.gz" -C dist/desktop-linux-x64 SmartLampDesktop
+          # Package Linux Desktop Application (Full bundle with installer & icon)
+          & .\scripts\publish-linux.ps1
+          Copy-Item -Path "dist/SmartLampStudio-linux-x64.tar.gz" -Destination "releases/SmartLampStudio_v${appVersion}_linux-x64.tar.gz" -Force
 
       - name: Upload Build Artifacts to GitHub Actions
         uses: actions/upload-artifact@v4
