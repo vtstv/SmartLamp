@@ -121,8 +121,10 @@ if ($Target -in @("All", "Windows")) {
         $possiblePaths = @(
             "iscc",
             "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
-            "$env:ProgramFiles (x86)\Inno Setup 6\ISCC.exe",
-            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+            "C:\Program Files\Inno Setup 6\ISCC.exe"
         )
         foreach ($p in $possiblePaths) {
             if ($p -eq "iscc" -and (Get-Command iscc -ErrorAction SilentlyContinue)) {
