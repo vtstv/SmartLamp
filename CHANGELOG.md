@@ -2,6 +2,13 @@
 
 All notable changes to **SmartLamp Studio** will be documented in this file.
 
+## [3.3.3] - 2026-10-13
+
+### Improved
+- **Responsive Layout & Adaptive Sizing**: Removed rigid fixed-width buttons across Dashboard, Rooms, and Settings tabs in favor of flexible grid columns and auto-sizing `MinWidth` with balanced padding.
+- **Compact UI Microcopy**: Streamlined Russian and German button labels and dropdown options to completely eliminate text clipping and awkward word wraps.
+- **Informative ToolTips**: Added localized tooltips (EN / DE / RU) to all action buttons for instant guidance on hover.
+
 ## [3.3.2] - 2026-10-13
 
 ### Fixed

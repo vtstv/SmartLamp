@@ -213,9 +213,15 @@ namespace SmartLampApp.Services
             };
             dict["SaveCurrent"] = new()
             {
-                ["en"] = "➕ Save Current",
-                ["de"] = "➕ Aktuelle speichern",
-                ["ru"] = "➕ Сохранить текущий"
+                ["en"] = "➕ Save",
+                ["de"] = "➕ Speichern",
+                ["ru"] = "➕ Сохранить"
+            };
+            dict["TooltipSavePreset"] = new()
+            {
+                ["en"] = "Save current brightness, temp & color as a custom preset",
+                ["de"] = "Aktuelle Helligkeit, Farbtemperatur & Farbe als Preset speichern",
+                ["ru"] = "Сохранить текущую яркость, температуру и цвет как пресет"
             };
             dict["LightingScenes"] = new()
             {

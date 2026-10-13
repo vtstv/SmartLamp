@@ -21,8 +21,14 @@ namespace SmartLampApp.Services
             dict["AddRoom"] = new()
             {
                 ["en"] = "➕ Add Room",
-                ["de"] = "➕ Raum hinzufügen",
-                ["ru"] = "➕ Добавить комнату"
+                ["de"] = "➕ Neuer Raum",
+                ["ru"] = "➕ Новая комната"
+            };
+            dict["TooltipAddRoom"] = new()
+            {
+                ["en"] = "Create a new room or device group for unified lighting control",
+                ["de"] = "Neuen Raum oder Lampengruppe für gemeinsame Steuerung erstellen",
+                ["ru"] = "Создать новую комнату или группу устройств для совместного управления"
             };
             dict["NoGroupsCreated"] = new()
             {
@@ -92,15 +98,15 @@ namespace SmartLampApp.Services
             };
             dict["SyncModeSynchronized"] = new()
             {
-                ["en"] = "🔄 Synchronized (1:1 identical brightness & color)",
-                ["de"] = "🔄 Synchronisiert (1:1 identische Helligkeit & Farbe)",
-                ["ru"] = "🔄 Синхронный (1:1 одинаковая яркость и цвет)"
+                ["en"] = "🔄 Synchronized (1:1 Brightness & Color)",
+                ["de"] = "🔄 Synchron (Gleiche Helligkeit & Farbe)",
+                ["ru"] = "🔄 Синхронный (Одинаковая яркость и цвет)"
             };
             dict["SyncModeProportional"] = new()
             {
-                ["en"] = "⚖️ Proportional (Keep relative brightness offsets)",
-                ["de"] = "⚖️ Proportional (Relative Helligkeitsunterschiede beibehalten)",
-                ["ru"] = "⚖️ Пропорциональный (Сохранять разницу яркости)"
+                ["en"] = "⚖️ Proportional (Keep Relative Offsets)",
+                ["de"] = "⚖️ Proportional (Relative Abstufung)",
+                ["ru"] = "⚖️ Пропорциональный (Относительная яркость)"
             };
             dict["TurnOffAllLamps"] = new()
             {
@@ -122,9 +128,15 @@ namespace SmartLampApp.Services
             };
             dict["TestToggle"] = new()
             {
-                ["en"] = "⚡ Test Toggle",
-                ["de"] = "⚡ Umschalten testen",
-                ["ru"] = "⚡ Тест переключения"
+                ["en"] = "⚡ Test",
+                ["de"] = "⚡ Testen",
+                ["ru"] = "⚡ Тест"
+            };
+            dict["TooltipTestToggle"] = new()
+            {
+                ["en"] = "Send a test power toggle command to all lamps in this room",
+                ["de"] = "Testbefehl zum Umschalten an alle Lampen im Raum senden",
+                ["ru"] = "Отправить тестовую команду переключения всем лампам в комнате"
             };
             dict["NoDevicesInRoomHint"] = new()
             {

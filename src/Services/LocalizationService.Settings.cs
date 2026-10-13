@@ -26,9 +26,15 @@ namespace SmartLampApp.Services
             };
             dict["AddNewLamp"] = new()
             {
-                ["en"] = "➕ Add New Lamp",
-                ["de"] = "➕ Neue Lampe hinzufügen",
-                ["ru"] = "➕ Добавить новую лампу"
+                ["en"] = "➕ New Lamp",
+                ["de"] = "➕ Neue Lampe",
+                ["ru"] = "➕ Новая лампа"
+            };
+            dict["TooltipNewLamp"] = new()
+            {
+                ["en"] = "Add a new smart lamp or device",
+                ["de"] = "Neue smarte Lampe oder Gerät hinzufügen",
+                ["ru"] = "Добавить новую смарт-лампу или устройство"
             };
             dict["DeviceName"] = new()
             {
@@ -122,9 +128,15 @@ namespace SmartLampApp.Services
             };
             dict["CheckUpdatesBtn"] = new()
             {
-                ["en"] = "🔍 Check for Updates",
-                ["de"] = "🔍 Nach Updates suchen",
-                ["ru"] = "🔍 Проверить обновления"
+                ["en"] = "🔍 Check Updates",
+                ["de"] = "🔍 Updates prüfen",
+                ["ru"] = "🔍 Обновления"
+            };
+            dict["TooltipCheckUpdates"] = new()
+            {
+                ["en"] = "Check GitHub for the latest application updates",
+                ["de"] = "Auf GitHub nach den neuesten Anwendungsupdates suchen",
+                ["ru"] = "Проверить наличие обновлений на GitHub"
             };
             dict["InstallApp"] = new()
             {
@@ -194,15 +206,27 @@ namespace SmartLampApp.Services
             };
             dict["CloudSyncAll"] = new()
             {
-                ["en"] = "📥 Sync All Devices",
-                ["de"] = "📥 Alle Geräte synchronisieren",
-                ["ru"] = "📥 Синхронизировать все устройства"
+                ["en"] = "📥 Sync All",
+                ["de"] = "📥 Alle Geräte",
+                ["ru"] = "📥 Все устройства"
+            };
+            dict["TooltipSyncAll"] = new()
+            {
+                ["en"] = "Fetch credentials and synchronize all devices from your Tuya Cloud account",
+                ["de"] = "Zugangsdaten abrufen und alle Geräte aus dem Tuya Cloud-Konto synchronisieren",
+                ["ru"] = "Получить данные и синхронизировать все устройства из аккаунта Tuya Cloud"
             };
             dict["Instructions"] = new()
             {
-                ["en"] = "❓ Instructions",
-                ["de"] = "❓ Anleitung",
-                ["ru"] = "❓ Инструкция"
+                ["en"] = "❓ Guide",
+                ["de"] = "❓ Hilfe",
+                ["ru"] = "❓ Справка"
+            };
+            dict["TooltipGuide"] = new()
+            {
+                ["en"] = "Open step-by-step setup guide for obtaining Tuya IoT API credentials",
+                ["de"] = "Schritt-für-Schritt-Anleitung für Tuya IoT API-Zugangsdaten öffnen",
+                ["ru"] = "Открыть пошаговую инструкцию по получению API-ключей Tuya IoT"
             };
             dict["ControlModeTitle"] = new()
             {
@@ -242,15 +266,15 @@ namespace SmartLampApp.Services
             };
             dict["PriorityCloudFirst"] = new()
             {
-                ["en"] = "☁️ Tuya Cloud ➔ Fallback: Local",
-                ["de"] = "☁️ Tuya Cloud ➔ Fallback: Lokal",
-                ["ru"] = "☁️ Tuya Cloud ➔ Резерв: Локально"
+                ["en"] = "☁️ Cloud ➔ Local LAN",
+                ["de"] = "☁️ Cloud ➔ Lokales LAN",
+                ["ru"] = "☁️ Облако ➔ Резерв: LAN"
             };
             dict["PriorityLocalFirst"] = new()
             {
-                ["en"] = "⚡ Local LAN ➔ Fallback: Cloud",
-                ["de"] = "⚡ Lokales LAN ➔ Fallback: Cloud",
-                ["ru"] = "⚡ Локально ➔ Резерв: Cloud"
+                ["en"] = "⚡ Local LAN ➔ Cloud",
+                ["de"] = "⚡ Lokales LAN ➔ Cloud",
+                ["ru"] = "⚡ LAN ➔ Резерв: Облако"
             };
 
             // --- Dialogs & Alerts ---

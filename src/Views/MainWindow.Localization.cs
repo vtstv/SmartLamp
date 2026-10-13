@@ -112,6 +112,7 @@ namespace SmartLampApp
             BtnApplyHex.Content = LocalizationService.T("Apply");
             LblCustomPresets.Text = LocalizationService.T("CustomPresets");
             BtnSavePreset.Content = LocalizationService.T("SaveCurrent");
+            BtnSavePreset.ToolTip = LocalizationService.T("TooltipSavePreset");
             LblLightingScenes.Text = LocalizationService.T("LightingScenes");
 
             SceneNight.Content = LocalizationService.T("SceneNight");
@@ -131,7 +132,11 @@ namespace SmartLampApp
 
             // Groups & Rooms Tab
             if (LblRoomsAndGroups != null) LblRoomsAndGroups.Text = LocalizationService.T("RoomsAndGroups");
-            if (BtnNewGroup != null) BtnNewGroup.Content = LocalizationService.T("AddRoom");
+            if (BtnNewGroup != null)
+            {
+                BtnNewGroup.Content = LocalizationService.T("AddRoom");
+                BtnNewGroup.ToolTip = LocalizationService.T("TooltipAddRoom");
+            }
             if (LblGroupConfigRules != null) LblGroupConfigRules.Text = LocalizationService.T("GroupConfigRules");
             if (LblRoomIcon != null) LblRoomIcon.Text = LocalizationService.T("RoomIcon");
             if (LblGroupNameEdit != null) LblGroupNameEdit.Text = LocalizationService.T("GroupNameEdit");
@@ -143,13 +148,21 @@ namespace SmartLampApp
             if (ChkGroupTurnOffAll != null) ChkGroupTurnOffAll.Content = LocalizationService.T("TurnOffAllLamps");
             if (ChkGroupTurnOnAll != null) ChkGroupTurnOnAll.Content = LocalizationService.T("TurnOnAllLamps");
             if (BtnSaveGroup != null) BtnSaveGroup.Content = LocalizationService.T("SaveRoom");
-            if (BtnToggleGroupTest != null) BtnToggleGroupTest.Content = LocalizationService.T("TestToggle");
+            if (BtnToggleGroupTest != null)
+            {
+                BtnToggleGroupTest.Content = LocalizationService.T("TestToggle");
+                BtnToggleGroupTest.ToolTip = LocalizationService.T("TooltipTestToggle");
+            }
             if (BtnDeleteGroup != null) BtnDeleteGroup.Content = LocalizationService.T("Delete");
 
             // Settings Tab
             LblLanguageSettings.Text = LocalizationService.T("LanguageSettings");
             LblDevCreds.Text = LocalizationService.T("DeviceCredentials");
-            if (BtnNewDevice != null) BtnNewDevice.Content = LocalizationService.T("AddNewLamp");
+            if (BtnNewDevice != null)
+            {
+                BtnNewDevice.Content = LocalizationService.T("AddNewLamp");
+                BtnNewDevice.ToolTip = LocalizationService.T("TooltipNewLamp");
+            }
             LblDevName.Text = LocalizationService.T("DeviceName");
             LblDevIp.Text = LocalizationService.T("IpAddress");
             LblDevId.Text = LocalizationService.T("DeviceId");
@@ -168,6 +181,7 @@ namespace SmartLampApp
 
             LblSystemUpdates.Text = LocalizationService.T("SystemUpdates");
             BtnCheckUpdates.Content = LocalizationService.T("CheckUpdatesBtn");
+            BtnCheckUpdates.ToolTip = LocalizationService.T("TooltipCheckUpdates");
             if (BtnInstallApp != null) BtnInstallApp.Content = LocalizationService.T("InstallApp");
             BtnCreateShortcut.Content = LocalizationService.T("DesktopShortcut");
 
@@ -182,7 +196,9 @@ namespace SmartLampApp
             if (LblAccKey != null) LblAccKey.Text = LocalizationService.T("AccessKey");
             BtnCloudFetch.Content = LocalizationService.T("FetchKeyCloud");
             BtnCloudSyncAll.Content = LocalizationService.T("CloudSyncAll");
+            BtnCloudSyncAll.ToolTip = LocalizationService.T("TooltipSyncAll");
             BtnTuyaGuide.Content = LocalizationService.T("Instructions");
+            BtnTuyaGuide.ToolTip = LocalizationService.T("TooltipGuide");
 
             if (LblControlModeTitle != null) LblControlModeTitle.Text = LocalizationService.T("ControlModeTitle");
             if (LblControlMode != null) LblControlMode.Text = LocalizationService.T("ControlMode");
