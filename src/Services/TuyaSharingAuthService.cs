@@ -16,142 +16,6 @@ using System.Threading.Tasks;
 
 namespace SmartLampApp.Services
 {
-    public class TuyaQrCodeToken
-    {
-        public bool Success { get; set; }
-        public string Token { get; set; } = "";
-        public string QrCodeContent { get; set; } = "";
-        public string ErrorCode { get; set; } = "";
-        public string ErrorMsg { get; set; } = "";
-    }
-
-    public class TuyaSharingSession
-    {
-        public string ClientId { get; set; } = "HA_3y9q4ak7g4ephrvke";
-        public string UserCode { get; set; } = "";
-        public string AccessToken { get; set; } = "";
-        public string RefreshToken { get; set; } = "";
-        public long ExpireTime { get; set; }
-        public string Uid { get; set; } = "";
-        public string Endpoint { get; set; } = "https://openapi.tuyaeu.com";
-    }
-
-    public class TuyaSharingDiscoveredDevice
-    {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string LocalKey { get; set; } = "";
-        public string Category { get; set; } = "";
-        public string ProductId { get; set; } = "";
-        public string ProductName { get; set; } = "";
-        public string Ip { get; set; } = "";
-        public bool Online { get; set; }
-        public string HomeName { get; set; } = "";
-    }
-
-    public static class TuyaSharingCrypto
-    {
-        private const string Chars = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678";
-
-        public static string GenerateRandomNonce(int length = 12)
-        {
-            var sb = new StringBuilder(length);
-            for (int i = 0; i < length; i++)
-            {
-                int idx = RandomNumberGenerator.GetInt32(Chars.Length);
-                sb.Append(Chars[idx]);
-            }
-            return sb.ToString();
-        }
-
-        public static string ComputeSecret(string rid, string sid, string hashKey)
-        {
-            string message = hashKey;
-            const int mod = 16;
-            if (!string.IsNullOrEmpty(sid))
-            {
-                int len = Math.Min(sid.Length, mod);
-                var ecode = new StringBuilder();
-                for (int i = 0; i < len; i++)
-                {
-                    int idx = sid[i] % mod;
-                    ecode.Append(sid[idx % sid.Length]);
-                }
-                message += "_" + ecode.ToString();
-            }
-
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(rid));
-            byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
-            string hex = Convert.ToHexStringLower(hash);
-            return hex.Length >= 16 ? hex.Substring(0, 16) : hex;
-        }
-
-        public static string ComputeRestfulSign(string hashKey, string queryEncData, string bodyEncData, Dictionary<string, string> headers)
-        {
-            string[] headerKeys = { "X-appKey", "X-requestId", "X-sid", "X-time", "X-token" };
-            var sb = new StringBuilder();
-            foreach (var key in headerKeys)
-            {
-                if (headers.TryGetValue(key, out var val) && !string.IsNullOrEmpty(val))
-                {
-                    sb.Append(key).Append('=').Append(val).Append("||");
-                }
-            }
-
-            string signStr = sb.Length >= 2 ? sb.ToString(0, sb.Length - 2) : "";
-            if (!string.IsNullOrEmpty(queryEncData)) signStr += queryEncData;
-            if (!string.IsNullOrEmpty(bodyEncData)) signStr += bodyEncData;
-
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(hashKey));
-            byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(signStr));
-            return Convert.ToHexStringLower(hash);
-        }
-
-        public static string DecryptAesGcm(string base64CipherData, string secret)
-        {
-            if (string.IsNullOrWhiteSpace(base64CipherData)) return string.Empty;
-            try
-            {
-                byte[] raw = Convert.FromBase64String(base64CipherData);
-                if (raw.Length < 28) return string.Empty; // 12 nonce + at least 16 tag
-
-                byte[] nonce = raw[0..12];
-                byte[] ciphertext = raw[12..^16];
-                byte[] tag = raw[^16..];
-
-                byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
-                byte[] plaintext = new byte[ciphertext.Length];
-
-                using var aesGcm = new AesGcm(keyBytes, 16);
-                aesGcm.Decrypt(nonce, ciphertext, tag, plaintext, null);
-                return Encoding.UTF8.GetString(plaintext);
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
-
-        public static string EncryptAesGcm(string rawData, string secret)
-        {
-            string nonceStr = GenerateRandomNonce(12);
-            byte[] nonce = Encoding.UTF8.GetBytes(nonceStr);
-            byte[] plaintext = Encoding.UTF8.GetBytes(rawData);
-            byte[] ciphertext = new byte[plaintext.Length];
-            byte[] tag = new byte[16];
-            byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
-
-            using var aesGcm = new AesGcm(keyBytes, 16);
-            aesGcm.Encrypt(nonce, plaintext, ciphertext, tag, null);
-
-            byte[] combinedCipherAndTag = new byte[ciphertext.Length + 16];
-            Buffer.BlockCopy(ciphertext, 0, combinedCipherAndTag, 0, ciphertext.Length);
-            Buffer.BlockCopy(tag, 0, combinedCipherAndTag, ciphertext.Length, 16);
-
-            return Convert.ToBase64String(nonce) + Convert.ToBase64String(combinedCipherAndTag);
-        }
-    }
-
     public class TuyaSharingAuthService
     {
         private const string GatewayHost = "https://apigw.iotbing.com";
@@ -254,23 +118,55 @@ namespace SmartLampApp.Services
             }
         }
 
-        public async Task<List<TuyaSharingDiscoveredDevice>> QueryUserDevicesAsync(TuyaSharingSession session, CancellationToken ct = default)
+        public async Task<List<TuyaSharingDiscoveredDevice>> QueryUserDevicesAsync(
+            TuyaSharingSession session, IEnumerable<string>? knownDeviceIds = null, CancellationToken ct = default)
         {
             var devices = new List<TuyaSharingDiscoveredDevice>();
 
             // 1. Get Homes
             var homes = await QueryHomesAsync(session, ct).ConfigureAwait(false);
-            if (homes.Count == 0)
-            {
-                // Fallback to default home query if homes list empty
-                homes.Add(new KeyValuePair<string, string>("", "My Home"));
-            }
 
             // 2. Query devices per home
             foreach (var home in homes)
             {
                 var homeDevices = await QueryDevicesByHomeAsync(session, home.Key, home.Value, ct).ConfigureAwait(false);
-                devices.AddRange(homeDevices);
+                foreach (var d in homeDevices)
+                {
+                    if (!devices.Any(x => x.Id == d.Id))
+                    {
+                        devices.Add(d);
+                    }
+                }
+            }
+
+            // 3. Fallback: query without homeId if homes returned nothing
+            if (devices.Count == 0)
+            {
+                var directDevices = await QueryDevicesByHomeAsync(session, "", "My Home", ct).ConfigureAwait(false);
+                foreach (var d in directDevices)
+                {
+                    if (!devices.Any(x => x.Id == d.Id))
+                    {
+                        devices.Add(d);
+                    }
+                }
+            }
+
+            // 4. Fallback: if knownDeviceIds specified, query /v1.0/m/life/ha/devices/detail
+            if (knownDeviceIds != null)
+            {
+                var missingIds = knownDeviceIds.Where(id => !string.IsNullOrWhiteSpace(id) && !devices.Any(d => d.Id == id)).ToList();
+                if (missingIds.Count > 0)
+                {
+                    var idDevices = await QueryDevicesByIdsAsync(session, missingIds, "Default", ct).ConfigureAwait(false);
+                    foreach (var d in idDevices)
+                    {
+                        if (!devices.Any(x => x.Id == d.Id))
+                        {
+                            devices.Add(d);
+                        }
+                    }
+                }
             }
 
             return devices;
@@ -278,60 +174,163 @@ namespace SmartLampApp.Services
 
         public async Task<List<KeyValuePair<string, string>>> QueryHomesAsync(TuyaSharingSession session, CancellationToken ct = default)
         {
-            var homes = new List<KeyValuePair<string, string>>();
             try
             {
                 string jsonResp = await ExecuteSignedRequestAsync(session, HttpMethod.Get, "/v1.0/m/life/users/homes", null, null, ct).ConfigureAwait(false);
-                using var doc = JsonDocument.Parse(jsonResp);
-                if (doc.RootElement.TryGetProperty("result", out var resElem) && resElem.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var h in resElem.EnumerateArray())
-                    {
-                        string ownerId = h.TryGetProperty("ownerId", out var oid) ? oid.ToString() : "";
-                        string name = h.TryGetProperty("name", out var n) ? n.GetString() ?? "Home" : "Home";
-                        homes.Add(new KeyValuePair<string, string>(ownerId, name));
-                    }
-                }
+                return ParseHomesArray(jsonResp);
             }
-            catch { }
-            return homes;
+            catch
+            {
+                return new List<KeyValuePair<string, string>>();
+            }
         }
 
         public async Task<List<TuyaSharingDiscoveredDevice>> QueryDevicesByHomeAsync(
             TuyaSharingSession session, string homeId, string homeName, CancellationToken ct = default)
         {
-            var list = new List<TuyaSharingDiscoveredDevice>();
             try
             {
                 var queryParams = !string.IsNullOrEmpty(homeId) ? new Dictionary<string, string> { { "homeId", homeId } } : null;
                 string jsonResp = await ExecuteSignedRequestAsync(session, HttpMethod.Get, "/v1.0/m/life/ha/home/devices", queryParams, null, ct).ConfigureAwait(false);
+                return ParseDevicesArray(jsonResp, homeName);
+            }
+            catch
+            {
+                return new List<TuyaSharingDiscoveredDevice>();
+            }
+        }
 
+        public async Task<List<TuyaSharingDiscoveredDevice>> QueryDevicesByIdsAsync(
+            TuyaSharingSession session, IEnumerable<string> deviceIds, string homeName = "Imported", CancellationToken ct = default)
+        {
+            var list = new List<TuyaSharingDiscoveredDevice>();
+            var ids = deviceIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+            if (ids.Count == 0) return list;
+
+            try
+            {
+                var queryParams = new Dictionary<string, string> { { "devIds", string.Join(",", ids) } };
+                string jsonResp = await ExecuteSignedRequestAsync(session, HttpMethod.Get, "/v1.0/m/life/ha/devices/detail", queryParams, null, ct).ConfigureAwait(false);
+                return ParseDevicesArray(jsonResp, homeName);
+            }
+            catch
+            {
+                return list;
+            }
+        }
+
+        public static List<KeyValuePair<string, string>> ParseHomesArray(string jsonResp)
+        {
+            var homes = new List<KeyValuePair<string, string>>();
+            if (string.IsNullOrWhiteSpace(jsonResp)) return homes;
+
+            try
+            {
                 using var doc = JsonDocument.Parse(jsonResp);
-                if (doc.RootElement.TryGetProperty("result", out var resElem) && resElem.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var d in resElem.EnumerateArray())
-                    {
-                        var dev = new TuyaSharingDiscoveredDevice
-                        {
-                            HomeName = homeName,
-                            Id = d.TryGetProperty("id", out var idProp) ? idProp.GetString() ?? "" : "",
-                            Name = d.TryGetProperty("name", out var nameProp) ? nameProp.GetString() ?? "" : "",
-                            LocalKey = d.TryGetProperty("local_key", out var keyProp) ? keyProp.GetString() ?? "" : "",
-                            Category = d.TryGetProperty("category", out var catProp) ? catProp.GetString() ?? "" : "",
-                            ProductId = d.TryGetProperty("product_id", out var pidProp) ? pidProp.GetString() ?? "" : "",
-                            ProductName = d.TryGetProperty("product_name", out var pnProp) ? pnProp.GetString() ?? "" : "",
-                            Ip = d.TryGetProperty("ip", out var ipProp) ? ipProp.GetString() ?? "" : "",
-                            Online = d.TryGetProperty("online", out var onProp) && onProp.GetBoolean()
-                        };
+                JsonElement arrayElem = default;
 
-                        if (!string.IsNullOrEmpty(dev.Id))
+                if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                {
+                    arrayElem = doc.RootElement;
+                }
+                else if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("result", out var r))
+                {
+                    if (r.ValueKind == JsonValueKind.Array) arrayElem = r;
+                }
+
+                if (arrayElem.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var h in arrayElem.EnumerateArray())
+                    {
+                        string ownerId = "";
+                        if (h.TryGetProperty("ownerId", out var oid)) ownerId = oid.ValueKind == JsonValueKind.String ? oid.GetString() ?? "" : oid.ToString();
+                        if (string.IsNullOrEmpty(ownerId) && h.TryGetProperty("homeId", out var hid)) ownerId = hid.ValueKind == JsonValueKind.String ? hid.GetString() ?? "" : hid.ToString();
+                        if (string.IsNullOrEmpty(ownerId) && h.TryGetProperty("id", out var id)) ownerId = id.ValueKind == JsonValueKind.String ? id.GetString() ?? "" : id.ToString();
+
+                        string name = h.TryGetProperty("name", out var n) ? n.GetString() ?? "Home" : "Home";
+                        if (!string.IsNullOrEmpty(ownerId))
                         {
-                            list.Add(dev);
+                            homes.Add(new KeyValuePair<string, string>(ownerId, name));
                         }
                     }
                 }
             }
             catch { }
+
+            return homes;
+        }
+
+        public static List<TuyaSharingDiscoveredDevice> ParseDevicesArray(string jsonResp, string homeName = "Imported")
+        {
+            var list = new List<TuyaSharingDiscoveredDevice>();
+            if (string.IsNullOrWhiteSpace(jsonResp)) return list;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(jsonResp);
+                JsonElement arrayElem = default;
+
+                if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                {
+                    arrayElem = doc.RootElement;
+                }
+                else if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("result", out var r))
+                {
+                    if (r.ValueKind == JsonValueKind.Array)
+                    {
+                        arrayElem = r;
+                    }
+                    else if (r.ValueKind == JsonValueKind.Object)
+                    {
+                        if (r.TryGetProperty("list", out var l) && l.ValueKind == JsonValueKind.Array) arrayElem = l;
+                        else if (r.TryGetProperty("devices", out var d) && d.ValueKind == JsonValueKind.Array) arrayElem = d;
+                    }
+                }
+
+                if (arrayElem.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var d in arrayElem.EnumerateArray())
+                    {
+                        string id = "";
+                        if (d.TryGetProperty("id", out var idProp)) id = idProp.GetString() ?? "";
+                        else if (d.TryGetProperty("devId", out var idProp2)) id = idProp2.GetString() ?? "";
+                        else if (d.TryGetProperty("dev_id", out var idProp3)) id = idProp3.GetString() ?? "";
+
+                        string name = "";
+                        if (d.TryGetProperty("name", out var nameProp)) name = nameProp.GetString() ?? "";
+                        else if (d.TryGetProperty("dev_name", out var nameProp2)) name = nameProp2.GetString() ?? "";
+
+                        string localKey = "";
+                        if (d.TryGetProperty("local_key", out var keyProp)) localKey = keyProp.GetString() ?? "";
+                        else if (d.TryGetProperty("localKey", out var keyProp2)) localKey = keyProp2.GetString() ?? "";
+                        else if (d.TryGetProperty("key", out var keyProp3)) localKey = keyProp3.GetString() ?? "";
+
+                        string cat = d.TryGetProperty("category", out var catProp) ? catProp.GetString() ?? "" : "";
+                        string pid = d.TryGetProperty("product_id", out var pidProp) ? pidProp.GetString() ?? "" : "";
+                        string pname = d.TryGetProperty("product_name", out var pnProp) ? pnProp.GetString() ?? "" : "";
+                        string ip = d.TryGetProperty("ip", out var ipProp) ? ipProp.GetString() ?? "" : "";
+                        bool online = d.TryGetProperty("online", out var onProp) && onProp.GetBoolean();
+
+                        if (!string.IsNullOrEmpty(id))
+                        {
+                            list.Add(new TuyaSharingDiscoveredDevice
+                            {
+                                HomeName = homeName,
+                                Id = id,
+                                Name = string.IsNullOrWhiteSpace(name) ? "Smart Lamp" : name,
+                                LocalKey = localKey,
+                                Category = cat,
+                                ProductId = pid,
+                                ProductName = pname,
+                                Ip = ip,
+                                Online = online
+                            });
+                        }
+                    }
+                }
+            }
+            catch { }
+
             return list;
         }
 
@@ -397,15 +396,25 @@ namespace SmartLampApp.Services
             using var res = await _http.SendAsync(req, ct).ConfigureAwait(false);
             string rawContent = await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
-            using var doc = JsonDocument.Parse(rawContent);
-            if (doc.RootElement.TryGetProperty("result", out var resElem) && resElem.ValueKind == JsonValueKind.String)
+            try
             {
-                string cipherBase64 = resElem.GetString() ?? "";
-                if (!string.IsNullOrEmpty(cipherBase64))
+                using var doc = JsonDocument.Parse(rawContent);
+                if (doc.RootElement.TryGetProperty("result", out var resElem) && resElem.ValueKind == JsonValueKind.String)
                 {
-                    string decrypted = TuyaSharingCrypto.DecryptAesGcm(cipherBase64, secret);
-                    return decrypted;
+                    string cipherBase64 = resElem.GetString() ?? "";
+                    if (!string.IsNullOrEmpty(cipherBase64))
+                    {
+                        string decrypted = TuyaSharingCrypto.DecryptAesGcm(cipherBase64, secret);
+                        if (!string.IsNullOrWhiteSpace(decrypted))
+                        {
+                            return $"{{\"success\":true,\"result\":{decrypted}}}";
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TuyaSharing] Error processing decrypted response: {ex.Message}");
             }
 
             return rawContent;

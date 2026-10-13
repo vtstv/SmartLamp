@@ -123,6 +123,45 @@ namespace SmartLamp.Tests
             Assert.Equal("ref_456", session.RefreshToken);
             Assert.Equal("https://openapi.tuyaeu.com", session.Endpoint);
         }
+
+        [Fact]
+        public void ParseHomesArray_HandlesDirectArrayAndEnvelope()
+        {
+            string directArray = "[{\"ownerId\":12345,\"name\":\"Living Room Home\"},{\"ownerId\":67890,\"name\":\"Office Home\"}]";
+            var directResult = TuyaSharingAuthService.ParseHomesArray(directArray);
+            Assert.Equal(2, directResult.Count);
+            Assert.Equal("12345", directResult[0].Key);
+            Assert.Equal("Living Room Home", directResult[0].Value);
+
+            string envelope = "{\"success\":true,\"result\":[{\"ownerId\":\"99999\",\"name\":\"Villa\"}]}";
+            var envResult = TuyaSharingAuthService.ParseHomesArray(envelope);
+            Assert.Single(envResult);
+            Assert.Equal("99999", envResult[0].Key);
+            Assert.Equal("Villa", envResult[0].Value);
+        }
+
+        [Fact]
+        public void ParseDevicesArray_HandlesBothFormatsAndAlternativeProperties()
+        {
+            string json = "[{\"id\":\"dev_abc\",\"name\":\"Desk Lamp\",\"local_key\":\"key123456789012\",\"ip\":\"192.168.0.68\",\"online\":true}]";
+            var devs = TuyaSharingAuthService.ParseDevicesArray(json, "Home A");
+            Assert.Single(devs);
+            Assert.Equal("dev_abc", devs[0].Id);
+            Assert.Equal("Desk Lamp", devs[0].Name);
+            Assert.Equal("key123456789012", devs[0].LocalKey);
+            Assert.Equal("192.168.0.68", devs[0].Ip);
+            Assert.True(devs[0].Online);
+            Assert.Equal("Home A", devs[0].HomeName);
+
+            // Test alternative casing (localKey, devId, dev_name) and envelope
+            string envelopeJson = "{\"success\":true,\"result\":[{\"devId\":\"dev_xyz\",\"dev_name\":\"Floor Lamp\",\"localKey\":\"key987654321098\",\"online\":false}]}";
+            var envDevs = TuyaSharingAuthService.ParseDevicesArray(envelopeJson, "Home B");
+            Assert.Single(envDevs);
+            Assert.Equal("dev_xyz", envDevs[0].Id);
+            Assert.Equal("Floor Lamp", envDevs[0].Name);
+            Assert.Equal("key987654321098", envDevs[0].LocalKey);
+            Assert.False(envDevs[0].Online);
+        }
     }
 
     public class MockHttpMessageHandler : System.Net.Http.HttpMessageHandler

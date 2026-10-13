@@ -138,15 +138,43 @@ namespace SmartLampApp
                                 TxtWizQrStatus.Text = LocalizationService.T("QrAuthorized");
                                 TxtWizQrStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
 
-                                _sharingDevices = await _sharingAuthService.QueryUserDevicesAsync(session);
+                                var knownIds = new List<string>();
+                                if (_config?.devices != null) knownIds.AddRange(_config.devices.Select(x => x.DevId));
+                                if (_protocol?.DiscoveredDevices != null) knownIds.AddRange(_protocol.DiscoveredDevices.Select(x => x.DevId));
+                                if (!string.IsNullOrEmpty(_config?.dev_id)) knownIds.Add(_config.dev_id);
+
+                                _sharingDevices = await _sharingAuthService.QueryUserDevicesAsync(session, knownIds);
                                 if (_sharingDevices != null && _sharingDevices.Count > 0)
                                 {
                                     LstWizQrDevices.Items.Clear();
                                     int added = 0;
                                     foreach (var d in _sharingDevices)
                                     {
+                                        string devIp = d.Ip ?? "";
+                                        if (string.IsNullOrEmpty(devIp))
+                                        {
+                                            var disc = _protocol?.DiscoveredDevices?.Find(x => x.DevId == d.Id);
+                                            if (disc != null && !string.IsNullOrEmpty(disc.Ip))
+                                            {
+                                                devIp = disc.Ip;
+                                            }
+                                            else
+                                            {
+                                                var existingDev = _config?.devices?.Find(x => x.DevId == d.Id);
+                                                if (existingDev != null && !string.IsNullOrEmpty(existingDev.Ip))
+                                                {
+                                                    devIp = existingDev.Ip;
+                                                }
+                                                else if (_config?.dev_id == d.Id && !string.IsNullOrEmpty(_config.ip))
+                                                {
+                                                    devIp = _config.ip;
+                                                }
+                                            }
+                                        }
+
                                         string keyState = !string.IsNullOrEmpty(d.LocalKey) ? "🔑 Key OK" : "No Key";
-                                        LstWizQrDevices.Items.Add($"💡 {d.Name} ({d.Id}) • {keyState}");
+                                        string ipState = !string.IsNullOrEmpty(devIp) ? $" • {devIp}" : "";
+                                        LstWizQrDevices.Items.Add($"💡 {d.Name} ({d.Id}){ipState} • {keyState}");
 
                                         var existing = _config.devices.Find(x => x.DevId == d.Id);
                                         if (existing == null)
@@ -156,15 +184,23 @@ namespace SmartLampApp
                                                 Name = string.IsNullOrWhiteSpace(d.Name) ? "Smart Lamp" : d.Name,
                                                 DevId = d.Id,
                                                 LocalKey = d.LocalKey,
-                                                Ip = d.Ip ?? "",
+                                                Ip = devIp,
                                                 Version = "3.5",
                                                 GroupName = string.IsNullOrWhiteSpace(d.HomeName) ? "Living Room" : d.HomeName
                                             });
                                             added++;
                                         }
-                                        else if (!string.IsNullOrEmpty(d.LocalKey))
+                                        else
                                         {
-                                            existing.LocalKey = d.LocalKey;
+                                            if (!string.IsNullOrEmpty(d.LocalKey)) existing.LocalKey = d.LocalKey;
+                                            if (string.IsNullOrEmpty(existing.Ip) && !string.IsNullOrEmpty(devIp)) existing.Ip = devIp;
+                                        }
+
+                                        if (_config.dev_id == d.Id || string.IsNullOrEmpty(_config.local_key))
+                                        {
+                                            if (!string.IsNullOrEmpty(d.LocalKey)) _config.local_key = d.LocalKey;
+                                            if (string.IsNullOrEmpty(_config.ip) && !string.IsNullOrEmpty(devIp)) _config.ip = devIp;
+                                            if (string.IsNullOrEmpty(_config.dev_id)) _config.dev_id = d.Id;
                                         }
                                     }
 

@@ -34,6 +34,7 @@
     <Compile Include="..\..\src\Services\TuyaProtocol.Color.cs" Link="Services\TuyaProtocol.Color.cs" />
     <Compile Include="..\..\src\Services\BackupService.cs" Link="Services\BackupService.cs" />
     <Compile Include="..\..\src\Services\TuyaSharingAuthService.cs" Link="Services\TuyaSharingAuthService.cs" />
+    <Compile Include="..\..\src\Services\TuyaSharingCrypto.cs" Link="Services\TuyaSharingCrypto.cs" />
   </ItemGroup>
 
 </Project>
