@@ -43,8 +43,8 @@ $releasesDir = Join-Path $rootDir "releases"
 $packagingDir = Join-Path $rootDir "packaging"
 
 # 1. Stop any running instances to avoid file locks
-Get-Process -Name "SmartLampApp", "SmartLampDesktop", "smartlamp" -ErrorAction SilentlyContinue | Stop-Process -Force
-Start-Sleep -Milliseconds 200
+Get-Process | Where-Object { $_.ProcessName -like "SmartLamp*" -or $_.ProcessName -eq "smartlamp" } | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 300
 
 # 2. Clean if requested
 if ($Clean) {
@@ -117,6 +117,35 @@ if ($Target -in @("All", "Windows")) {
         Compress-Archive -Path $exePath, $readmePath, $licensePath -DestinationPath $zipPath -Force
         Copy-Item -Path $exePath -Destination (Join-Path $releasesDir "SmartLampApp_v${appVersion}.exe") -Force
         Write-Host "  --> Created: $zipPath" -ForegroundColor DarkCyan
+
+        # Build Inno Setup Installer (.exe)
+        $isccPath = $null
+        $possiblePaths = @(
+            "iscc",
+            "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles (x86)\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+        )
+        foreach ($p in $possiblePaths) {
+            if ($p -eq "iscc" -and (Get-Command iscc -ErrorAction SilentlyContinue)) {
+                $isccPath = "iscc"
+                break
+            }
+            elseif (Test-Path $p) {
+                $isccPath = $p
+                break
+            }
+        }
+
+        if ($isccPath) {
+            Write-Host "  --> Building Windows Inno Setup Installer..." -ForegroundColor Green
+            $issFile = Join-Path $packagingDir "windows\setup.iss"
+            & $isccPath "/DAppVersion=$appVersion" $issFile
+            Write-Host "  --> Created Inno Setup Installer in releases/" -ForegroundColor DarkCyan
+        }
+        else {
+            Write-Host "  [!] Inno Setup (iscc.exe) not found. Skipping installer. (Install with: winget install JRSoftware.InnoSetup)" -ForegroundColor Yellow
+        }
     }
 }
 

@@ -31,7 +31,11 @@ A high-performance desktop application and CLI suite for instant local control o
 
 ## Installation & Downloads
 
-Pre-built binaries and native packages for all major operating systems and architectures are available on the **[GitHub Releases](https://github.com/vtstv/SmartLamp/releases)** page:
+Pre-built binaries, installers, and native packages for all major operating systems and architectures are available on the **[GitHub Releases](https://github.com/vtstv/SmartLamp/releases)** page:
+
+### Windows 10 / 11 (x64)
+- **Installer (Recommended)**: Download and run `SmartLampStudio_Setup_v3.1.0_win-x64.exe` (automatic wizard, Start Menu, Desktop shortcuts, autostart toggle, and uninstallation).
+- **Portable (Standalone)**: Download `SmartLampApp_v3.1.0.exe` or `SmartLampStudio_v3.1.0_win-x64.zip` (single executable, no installation needed).
 
 ### Debian / Ubuntu (x86_64 & ARM64)
 ```bash

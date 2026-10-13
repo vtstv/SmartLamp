@@ -146,7 +146,7 @@ namespace SmartLampApp
                             }
                             catch (Exception ex)
                             {
-                                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] IPC Toggle Error: {ex.Message}\n"); } catch { }
+                                LogCli($"IPC Toggle Error: {ex.Message}");
                             }
                         }));
                     }
@@ -176,7 +176,7 @@ namespace SmartLampApp
                             }
                             catch (Exception ex)
                             {
-                                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] IPC On Error: {ex.Message}\n"); } catch { }
+                                LogCli($"IPC On Error: {ex.Message}");
                             }
                         }));
                     }
@@ -206,7 +206,7 @@ namespace SmartLampApp
                             }
                             catch (Exception ex)
                             {
-                                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] IPC Off Error: {ex.Message}\n"); } catch { }
+                                LogCli($"IPC Off Error: {ex.Message}");
                             }
                         }));
                     }
@@ -246,8 +246,21 @@ namespace SmartLampApp
         {
             try
             {
+                string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartLampStudio");
+                Directory.CreateDirectory(dir);
                 string log = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Unhandled Exception: {ex}\n----------------------------------------\n";
-                File.AppendAllText("crash.log", log);
+                File.AppendAllText(Path.Combine(dir, "crash.log"), log);
+            }
+            catch { }
+        }
+
+        private static void LogCli(string message)
+        {
+            try
+            {
+                string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartLampStudio");
+                Directory.CreateDirectory(dir);
+                File.AppendAllText(Path.Combine(dir, "cli.log"), $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\n");
             }
             catch { }
         }
@@ -258,7 +271,7 @@ namespace SmartLampApp
         private bool HandleCommandLineArgs(string[] args)
         {
             string argStr = string.Join(" ", args).ToLowerInvariant();
-            try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Args: '{argStr}'\n"); } catch { }
+            LogCli($"Args: '{argStr}'");
 
             if (argStr.Contains("--install"))
             {
@@ -289,12 +302,12 @@ namespace SmartLampApp
                     {
                         string status = client.GetStatusJsonAsync().GetAwaiter().GetResult();
                         Console.WriteLine($"STATUS SUCCESS: {status}");
-                        File.AppendAllText("cli.log", $"[{DateTime.Now}] TestLocal Result: {status}\n");
+                        LogCli($"TestLocal Result: {status}");
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"STATUS ERROR: {ex}");
-                        File.AppendAllText("cli.log", $"[{DateTime.Now}] TestLocal Error: {ex}\n");
+                        LogCli($"TestLocal Error: {ex}");
                     }
                 }
                 return true;
@@ -335,7 +348,7 @@ namespace SmartLampApp
                 {
                     using var evt = EventWaitHandle.OpenExisting("SmartLampApp_ToggleEvent");
                     evt.Set();
-                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Delegated --toggle to active instance.\n"); } catch { }
+                    LogCli("Delegated --toggle to active instance.");
                     return true;
                 }
                 catch { }
@@ -346,7 +359,7 @@ namespace SmartLampApp
                 {
                     using var evt = EventWaitHandle.OpenExisting("SmartLampApp_OnEvent");
                     evt.Set();
-                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Delegated --on to active instance.\n"); } catch { }
+                    LogCli("Delegated --on to active instance.");
                     return true;
                 }
                 catch { }
@@ -357,7 +370,7 @@ namespace SmartLampApp
                 {
                     using var evt = EventWaitHandle.OpenExisting("SmartLampApp_OffEvent");
                     evt.Set();
-                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Delegated --off to active instance.\n"); } catch { }
+                    LogCli("Delegated --off to active instance.");
                     return true;
                 }
                 catch { }
@@ -374,7 +387,7 @@ namespace SmartLampApp
 
                 if (!hasCloud && !hasLocal)
                 {
-                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Device not configured (missing keys)\n"); } catch { }
+                    LogCli("Device not configured (missing keys)");
                     return true;
                 }
 
@@ -394,7 +407,7 @@ namespace SmartLampApp
                         success = await protocol.TogglePowerAsync();
                     }
 
-                    try { File.AppendAllText("cli.log", $"[{DateTime.Now}] Command '{argStr}' executed. Success: {success}\n"); } catch { }
+                    LogCli($"Command '{argStr}' executed. Success: {success}");
 
                     for (int i = 0; i < args.Length; i++)
                     {
@@ -421,7 +434,7 @@ namespace SmartLampApp
             }
             catch (Exception ex)
             {
-                try { File.AppendAllText("cli.log", $"[{DateTime.Now}] CLI Error: {ex.Message}\n"); } catch { }
+                LogCli($"CLI Error: {ex.Message}");
             }
 
             return true;

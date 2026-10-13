@@ -26,7 +26,11 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Build and Package Windows App & Library
+      - name: Install Inno Setup Compiler
+        run: |
+          choco install innosetup --no-progress
+
+      - name: Build and Package Windows App, Library & Installer
         shell: powershell
         run: |
           .\scripts\build.ps1 -Target Windows -Pack
