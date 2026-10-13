@@ -563,7 +563,10 @@
                             <!-- Device Credentials Card -->
                             <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
                                 <StackPanel>
-                                    <TextBlock x:Name="LblDevCreds" Text="📌 Device Credentials &amp; Group" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,6"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <TextBlock x:Name="LblDevCreds" Text="📌 Device Credentials &amp; Group" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                                        <Button x:Name="BtnNewDevice" Content="➕ Add New Lamp" HorizontalAlignment="Right" Width="118" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#00F0FF" FontSize="11" Click="BtnNewDevice_Click"/>
+                                    </Grid>
 
                                     <TextBlock x:Name="LblDevName" Text="Device Name:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,1,0,1"/>
                                     <TextBox x:Name="TxtName" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
@@ -712,10 +715,12 @@
                                     <Grid Margin="0,5,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Button x:Name="BtnCloudFetch" Grid.Column="0" Content="⚡ Fetch Key from Cloud" Height="26" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnCloudFetch_Click"/>
-                                        <Button x:Name="BtnTuyaGuide" Grid.Column="1" Content="❓ Instructions" Width="95" Height="26" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnTuyaGuide_Click"/>
+                                        <Button x:Name="BtnCloudFetch" Grid.Column="0" Content="⚡ Fetch Key" Height="26" Style="{StaticResource GlassBtn}" Background="#0066CC" Margin="0,0,3,0" Click="BtnCloudFetch_Click"/>
+                                        <Button x:Name="BtnCloudSyncAll" Grid.Column="1" Content="📥 Sync All Devices" Height="26" Style="{StaticResource GlassBtn}" Background="#10B981" Margin="3,0,3,0" Click="BtnCloudSyncAll_Click"/>
+                                        <Button x:Name="BtnTuyaGuide" Grid.Column="2" Content="❓ Instructions" Width="90" Height="26" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnTuyaGuide_Click"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>

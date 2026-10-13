@@ -309,6 +309,7 @@ namespace SmartLampApp
             _protocol.UpdateConfig(_config);
 
             PopulateDeviceSelector();
+            BtnSaveDevice.Content = "💾 Save Device";
             _ = RefreshStatusAsync();
             System.Windows.MessageBox.Show("Device saved successfully!", "Device Saved", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -333,103 +334,6 @@ namespace SmartLampApp
                 PopulateDeviceSelector();
                 _ = RefreshStatusAsync();
                 System.Windows.MessageBox.Show("Device deleted successfully.", "Device Removed", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
-        private async void BtnAutoDiscover_Click(object sender, RoutedEventArgs e)
-        {
-            BtnAutoDiscover.Content = "Scanning Wi-Fi subnet...";
-            BtnAutoDiscover.IsEnabled = false;
-            LstDiscovered.Items.Clear();
-
-            _discoveredList = await _protocol.AutoDiscoverDevicesAsync();
-
-            BtnAutoDiscover.Content = "⚡ Scan Local Wi-Fi Subnet";
-            BtnAutoDiscover.IsEnabled = true;
-
-            if (_discoveredList.Count == 0)
-            {
-                LstDiscovered.Items.Add("No Tuya devices found on local Wi-Fi.");
-            }
-            else
-            {
-                foreach (var dev in _discoveredList)
-                {
-                    var known = _config.devices.FirstOrDefault(d => d.Ip == dev.Ip);
-                    if (known != null)
-                    {
-                        if (dev.DevId.StartsWith("lan_") || string.IsNullOrWhiteSpace(dev.DevId))
-                            dev.DevId = known.DevId;
-                        if (dev.ProductName == "Tuya Device" || dev.ProductName.StartsWith("Tuya Device ("))
-                            dev.ProductName = known.Name;
-                    }
-
-                    string idDisplay = dev.DevId.StartsWith("lan_") ? "Port 6668" : $"ID: {dev.DevId}";
-                    LstDiscovered.Items.Add($"💡 {dev.ProductName} - IP: {dev.Ip} ({idDisplay})");
-                }
-            }
-        }
-
-        private void LstDiscovered_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            int idx = LstDiscovered.SelectedIndex;
-            if (idx >= 0 && idx < _discoveredList.Count)
-            {
-                var sel = _discoveredList[idx];
-                var known = _config.devices.FirstOrDefault(d => d.Ip == sel.Ip);
-                if (known != null)
-                {
-                    TxtName.Text = known.Name;
-                    TxtIp.Text = known.Ip;
-                    TxtDevId.Text = known.DevId;
-                    PassLocalKey.Password = known.LocalKey;
-                    TxtLocalKeyVisible.Text = known.LocalKey;
-                    TxtGroup.Text = known.GroupName;
-                }
-                else
-                {
-                    TxtName.Text = sel.ProductName;
-                    TxtIp.Text = sel.Ip;
-                    if (!sel.DevId.StartsWith("lan_"))
-                    {
-                        TxtDevId.Text = sel.DevId;
-                    }
-                }
-            }
-        }
-
-        private async void BtnCloudFetch_Click(object sender, RoutedEventArgs e)
-        {
-            string accId = TxtAccId.Text.Trim();
-            string accKey = GetEnteredAccessKey();
-
-            if (string.IsNullOrWhiteSpace(accId) || string.IsNullOrWhiteSpace(accKey))
-            {
-                System.Windows.MessageBox.Show("Please enter your Tuya Access ID and Access Key (Secret).", "Missing Credentials", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            BtnCloudFetch.Content = "Fetching keys from Tuya Cloud...";
-            BtnCloudFetch.IsEnabled = false;
-
-            var (key, err) = await _protocol.AutoFetchKeyFromCloudAsync(accId, accKey, _config.region);
-
-            BtnCloudFetch.Content = "⚡ Fetch Key from Cloud";
-            BtnCloudFetch.IsEnabled = true;
-
-            if (!string.IsNullOrEmpty(key))
-            {
-                PassLocalKey.Password = key;
-                TxtLocalKeyVisible.Text = key;
-                _config.access_id = accId;
-                _config.access_key = accKey;
-
-                ConfigManager.Save(_config);
-                System.Windows.MessageBox.Show($"Retrieved Local Key from Tuya Cloud!\n\nLocal Key: {key}", "Cloud Sync Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                System.Windows.MessageBox.Show($"Cloud Sync Error: {err}", "Tuya Cloud Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
