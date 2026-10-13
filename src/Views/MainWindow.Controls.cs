@@ -26,6 +26,22 @@ namespace SmartLampApp
 
         private async Task RefreshStatusAsync()
         {
+            if (_config.is_group_control_active)
+            {
+                var grp = _protocol.GetActiveGroup();
+                if (grp != null)
+                {
+                    PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                    TxtStatus.Text = "👥 GROUP ACTIVE";
+                    if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+                    if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
+                    if (TxtCompactDevice != null) TxtCompactDevice.Text = $"{grp.Icon} {grp.Name}";
+                    _isPowerOn = grp.MasterPowerOn;
+                    UpdatePowerButtonUi();
+                    return;
+                }
+            }
+
             if (!_protocol.IsConfigured)
             {
                 PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9100"));
@@ -195,10 +211,17 @@ namespace SmartLampApp
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
 
-            if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
+            if (_config.is_group_control_active)
             {
-                await _protocol.SetGroupPowerAsync(_config.devices, _isPowerOn);
-                return true;
+                var grp = _protocol.GetActiveGroup();
+                if (grp != null)
+                {
+                    grp.MasterPowerOn = _isPowerOn;
+                    ConfigManager.Save(_config);
+                    var devices = _protocol.GetDevicesForGroup(grp);
+                    await _protocol.SetGroupPowerAsync(devices, _isPowerOn);
+                    return true;
+                }
             }
 
             return await _protocol.SetPowerAsync(_isPowerOn);
@@ -210,10 +233,17 @@ namespace SmartLampApp
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
 
-            if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
+            if (_config.is_group_control_active)
             {
-                await _protocol.SetGroupPowerAsync(_config.devices, _isPowerOn);
-                return true;
+                var grp = _protocol.GetActiveGroup();
+                if (grp != null)
+                {
+                    grp.MasterPowerOn = _isPowerOn;
+                    ConfigManager.Save(_config);
+                    var devices = _protocol.GetDevicesForGroup(grp);
+                    await _protocol.SetGroupPowerAsync(devices, _isPowerOn);
+                    return true;
+                }
             }
 
             return await _protocol.SetPowerAsync(_isPowerOn);
@@ -237,19 +267,26 @@ namespace SmartLampApp
                 if (_isUpdatingUi || _protocol == null) return;
                 int val = (int)SliderBright.Value;
 
+                if (_config.is_group_control_active)
+                {
+                    var grp = _protocol.GetActiveGroup();
+                    if (grp != null)
+                    {
+                        int baseMaster = grp.MasterBrightness > 0 ? grp.MasterBrightness : 50;
+                        grp.MasterBrightness = val;
+                        ConfigManager.Save(_config);
+                        var devices = _protocol.GetDevicesForGroup(grp);
+                        await _protocol.SetGroupBrightnessAsync(devices, val, grp.SyncMode, baseMaster);
+                        return;
+                    }
+                }
+
                 var active = _protocol.GetActiveDevice();
                 if (active != null) active.last_brightness = val;
                 _config.last_brightness = val;
                 ConfigManager.Save(_config);
 
-                if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
-                {
-                    await _protocol.SetGroupBrightnessAsync(_config.devices, val);
-                }
-                else
-                {
-                    await _protocol.SetBrightnessAsync(val);
-                }
+                await _protocol.SetBrightnessAsync(val);
             };
 
             _tempDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
@@ -261,6 +298,20 @@ namespace SmartLampApp
 
                 _currentMode = "white";
                 UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
+
+                if (_config.is_group_control_active)
+                {
+                    var grp = _protocol.GetActiveGroup();
+                    if (grp != null)
+                    {
+                        grp.MasterTempK = kVal;
+                        grp.MasterMode = "white";
+                        ConfigManager.Save(_config);
+                        var devices = _protocol.GetDevicesForGroup(grp);
+                        await _protocol.SetGroupColorTempAsync(devices, kVal);
+                        return;
+                    }
+                }
 
                 var active = _protocol.GetActiveDevice();
                 if (active != null) active.last_temp = kVal;
@@ -355,64 +406,71 @@ namespace SmartLampApp
             UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
         }
 
+        private async Task ApplyColorHexAsync(string hex)
+        {
+            _currentMode = "colour";
+            TxtHexCode.Text = hex;
+            UpdateBulbGlow(hex, _isPowerOn);
+
+            if (_config.is_group_control_active)
+            {
+                var grp = _protocol.GetActiveGroup();
+                if (grp != null)
+                {
+                    grp.MasterColorHex = hex;
+                    grp.MasterMode = "colour";
+                    ConfigManager.Save(_config);
+                    var devices = _protocol.GetDevicesForGroup(grp);
+                    await _protocol.SetGroupColorHexAsync(devices, hex);
+                    return;
+                }
+            }
+
+            var active = _protocol.GetActiveDevice();
+            if (active != null) active.last_color_hex = hex;
+            _config.last_color_hex = hex;
+            ConfigManager.Save(_config);
+            await _protocol.SetColorHexAsync(hex);
+        }
+
         private async void BtnColor_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string hex)
             {
-                _currentMode = "colour";
-                TxtHexCode.Text = hex;
-                UpdateBulbGlow(hex, _isPowerOn);
-
-                if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
-                {
-                    await _protocol.SetGroupColorHexAsync(_config.devices, hex);
-                    return;
-                }
-                await _protocol.SetColorHexAsync(hex);
+                await ApplyColorHexAsync(hex);
             }
         }
 
         private async void BtnColorPicker_Click(object sender, RoutedEventArgs e)
         {
-            var pickerWin = new ColorPickerWindow(TxtHexCode.Text)
-            {
-                Owner = this
-            };
-
+            var pickerWin = new ColorPickerWindow(TxtHexCode.Text) { Owner = this };
             if (pickerWin.ShowDialog() == true)
             {
-                string hex = pickerWin.SelectedHex;
-                _currentMode = "colour";
-                TxtHexCode.Text = hex;
-                UpdateBulbGlow(hex, _isPowerOn);
-
-                if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
-                {
-                    await _protocol.SetGroupColorHexAsync(_config.devices, hex);
-                    return;
-                }
-                await _protocol.SetColorHexAsync(hex);
+                await ApplyColorHexAsync(pickerWin.SelectedHex);
             }
         }
 
         private async void BtnApplyHex_Click(object sender, RoutedEventArgs e)
         {
-            string hex = TxtHexCode.Text.Trim();
-            _currentMode = "colour";
-            UpdateBulbGlow(hex, _isPowerOn);
-
-            if (CmbDeviceSelector.SelectedItem != null && CmbDeviceSelector.SelectedItem.ToString()!.Contains("Group"))
-            {
-                await _protocol.SetGroupColorHexAsync(_config.devices, hex);
-                return;
-            }
-            await _protocol.SetColorHexAsync(hex);
+            await ApplyColorHexAsync(TxtHexCode.Text.Trim());
         }
 
         private async void BtnScene_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string sceneKey)
             {
+                if (_config.is_group_control_active)
+                {
+                    var grp = _protocol.GetActiveGroup();
+                    if (grp != null)
+                    {
+                        var devices = _protocol.GetDevicesForGroup(grp);
+                        var tasks = new System.Collections.Generic.List<Task>();
+                        foreach (var d in devices) tasks.Add(_protocol.SetSceneAsync(sceneKey, d));
+                        await Task.WhenAll(tasks);
+                        return;
+                    }
+                }
                 await _protocol.SetSceneAsync(sceneKey);
             }
         }

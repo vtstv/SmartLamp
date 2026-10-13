@@ -4,10 +4,15 @@
 // ============================================================================
 
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 using SmartLampApp.Models;
+
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
 
 namespace SmartLampApp
 {
@@ -18,9 +23,9 @@ namespace SmartLampApp
             _isUpdatingUi = true;
             CmbDeviceSelector.Items.Clear();
 
-            if (_config.devices.Count == 0)
+            if (_config.devices.Count == 0 && (_config.groups == null || _config.groups.Count == 0))
             {
-                CmbDeviceSelector.Items.Add("➕ Add Device in Settings");
+                CmbDeviceSelector.Items.Add(new ComboBoxItem { Content = "➕ Add Device in Settings", Tag = "none" });
                 CmbDeviceSelector.SelectedIndex = 0;
                 TxtDeviceInfo.Text = "No devices configured yet. Switch to Settings tab to add one.";
                 _isUpdatingUi = false;
@@ -29,18 +34,58 @@ namespace SmartLampApp
 
             foreach (var dev in _config.devices)
             {
-                CmbDeviceSelector.Items.Add($"{dev.Name} ({dev.Ip})");
+                CmbDeviceSelector.Items.Add(new ComboBoxItem
+                {
+                    Content = $"💡 {dev.Name} ({dev.Ip})",
+                    Tag = $"dev:{dev.DevId}"
+                });
             }
 
-            if (_config.devices.Count > 1)
+            if (_config.groups != null && _config.groups.Count > 0)
             {
-                CmbDeviceSelector.Items.Add("👥 All Devices (Group Control)");
+                foreach (var grp in _config.groups)
+                {
+                    int devCount = grp.DeviceIds?.Count ?? 0;
+                    CmbDeviceSelector.Items.Add(new ComboBoxItem
+                    {
+                        Content = $"👥 {grp.Icon} {grp.Name} ({devCount} lamps)",
+                        Tag = $"grp:{grp.Id}"
+                    });
+                }
             }
 
-            int selectedIndex = _config.devices.FindIndex(d => d.DevId == _config.selected_dev_id);
-            CmbDeviceSelector.SelectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+            int selectedIndex = -1;
+            if (_config.is_group_control_active && !string.IsNullOrEmpty(_config.selected_group_id))
+            {
+                for (int i = 0; i < CmbDeviceSelector.Items.Count; i++)
+                {
+                    if (CmbDeviceSelector.Items[i] is ComboBoxItem cbi && (cbi.Tag as string) == $"grp:{_config.selected_group_id}")
+                    {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
 
-            PopulateDeviceForm();
+            if (selectedIndex < 0 && !string.IsNullOrEmpty(_config.selected_dev_id))
+            {
+                for (int i = 0; i < CmbDeviceSelector.Items.Count; i++)
+                {
+                    if (CmbDeviceSelector.Items[i] is ComboBoxItem cbi && (cbi.Tag as string) == $"dev:{_config.selected_dev_id}")
+                    {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (selectedIndex < 0 && CmbDeviceSelector.Items.Count > 0)
+            {
+                selectedIndex = 0;
+            }
+
+            CmbDeviceSelector.SelectedIndex = selectedIndex;
+            ApplySelectionFromSelector();
             _isUpdatingUi = false;
         }
 
@@ -57,19 +102,22 @@ namespace SmartLampApp
                 TxtLocalKeyVisible.Text = active.LocalKey;
 
                 TxtGroup.Text = active.GroupName;
-                TxtDeviceInfo.Text = $"IP: {active.Ip}  |  ID: {active.DevId}";
+                if (!_config.is_group_control_active)
+                {
+                    TxtDeviceInfo.Text = $"IP: {active.Ip}  |  ID: {active.DevId}";
 
-                // Restore saved brightness, temperature, and color hex
-                int bVal = active.last_brightness > 0 ? active.last_brightness : (_config.last_brightness > 0 ? _config.last_brightness : 50);
-                SliderBright.Value = bVal;
-                TxtBrightVal.Text = $"{bVal}%";
+                    // Restore saved brightness, temperature, and color hex
+                    int bVal = active.last_brightness > 0 ? active.last_brightness : (_config.last_brightness > 0 ? _config.last_brightness : 50);
+                    SliderBright.Value = bVal;
+                    TxtBrightVal.Text = $"{bVal}%";
 
-                int tVal = active.last_temp >= 2700 ? active.last_temp : (_config.last_temp >= 2700 ? _config.last_temp : 4000);
-                SliderTemp.Value = tVal;
-                TxtTempVal.Text = $"{tVal}K";
+                    int tVal = active.last_temp >= 2700 ? active.last_temp : (_config.last_temp >= 2700 ? _config.last_temp : 4000);
+                    SliderTemp.Value = tVal;
+                    TxtTempVal.Text = $"{tVal}K";
 
-                string hexVal = !string.IsNullOrWhiteSpace(active.last_color_hex) ? active.last_color_hex : (_config.last_color_hex ?? "#00E5FF");
-                TxtHexCode.Text = hexVal;
+                    string hexVal = !string.IsNullOrWhiteSpace(active.last_color_hex) ? active.last_color_hex : (_config.last_color_hex ?? "#00E5FF");
+                    TxtHexCode.Text = hexVal;
+                }
             }
 
             TxtAccId.Text = _config.access_id;
@@ -160,13 +208,62 @@ namespace SmartLampApp
         private void CmbDeviceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_isUpdatingUi || CmbDeviceSelector.SelectedIndex < 0) return;
+            ApplySelectionFromSelector();
+        }
 
-            int idx = CmbDeviceSelector.SelectedIndex;
-            if (idx < _config.devices.Count)
+        private void ApplySelectionFromSelector()
+        {
+            if (CmbDeviceSelector.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string tag)
             {
-                _config.selected_dev_id = _config.devices[idx].DevId;
+                return;
+            }
+
+            if (tag.StartsWith("grp:"))
+            {
+                string grpId = tag.Substring(4);
+                _config.is_group_control_active = true;
+                _config.selected_group_id = grpId;
+                ConfigManager.Save(_config);
+
+                var grp = _config.groups?.Find(g => g.Id == grpId);
+                if (grp != null)
+                {
+                    int devCount = grp.DeviceIds?.Count ?? 0;
+                    LblActiveDevice.Text = "Active Room / Group:";
+                    TxtDeviceInfo.Text = $"{grp.Icon} {grp.Name}  |  {devCount} synchronized lamps ({grp.SyncMode})";
+
+                    _isPowerOn = grp.MasterPowerOn;
+                    _currentMode = grp.MasterMode ?? "white";
+
+                    int bVal = grp.MasterBrightness > 0 ? grp.MasterBrightness : 80;
+                    SliderBright.Value = bVal;
+                    TxtBrightVal.Text = $"{bVal}%";
+
+                    int tVal = grp.MasterTempK >= 2700 ? grp.MasterTempK : 4000;
+                    SliderTemp.Value = tVal;
+                    TxtTempVal.Text = $"{tVal}K";
+
+                    string hexVal = !string.IsNullOrWhiteSpace(grp.MasterColorHex) ? grp.MasterColorHex : "#00E5FF";
+                    TxtHexCode.Text = hexVal;
+
+                    PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                    TxtStatus.Text = "👥 GROUP ACTIVE";
+                    if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+                    if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
+                    if (TxtCompactDevice != null) TxtCompactDevice.Text = $"{grp.Icon} {grp.Name}";
+
+                    UpdatePowerButtonUi();
+                }
+            }
+            else if (tag.StartsWith("dev:"))
+            {
+                string devId = tag.Substring(4);
+                _config.is_group_control_active = false;
+                _config.selected_dev_id = devId;
                 ConfigManager.Save(_config);
                 _protocol.UpdateConfig(_config);
+
+                LblActiveDevice.Text = "Active Device:";
                 PopulateDeviceForm();
                 _ = RefreshStatusAsync();
             }

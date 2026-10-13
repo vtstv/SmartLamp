@@ -259,10 +259,11 @@
 
             <!-- 3. Navigation Bar (Pill Buttons) -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="14,0,14,6">
-                <Button x:Name="NavDash" Content="💡 Control Dashboard" Width="170" Height="34" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Margin="0,0,6,0" Click="NavDash_Click"/>
-                <Button x:Name="NavSettings" Content="⚙️ Settings &amp; Hotkeys" Width="170" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavSettings_Click"/>
-                <Button x:Name="NavGoogleHome" Content="🌐 Google Home" Width="140" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGoogleHome_Click"/>
-                <Button x:Name="NavMqtt" Content="🤖 Home Assistant &amp; MQTT" Width="190" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Click="NavMqtt_Click"/>
+                <Button x:Name="NavDash" Content="💡 Control Dashboard" Width="160" Height="34" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Margin="0,0,6,0" Click="NavDash_Click"/>
+                <Button x:Name="NavGroups" Content="👥 Groups &amp; Rooms" Width="150" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGroups_Click"/>
+                <Button x:Name="NavSettings" Content="⚙️ Settings &amp; Hotkeys" Width="160" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavSettings_Click"/>
+                <Button x:Name="NavGoogleHome" Content="🌐 Google Home" Width="130" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGoogleHome_Click"/>
+                <Button x:Name="NavMqtt" Content="🤖 Home Assistant &amp; MQTT" Width="180" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Click="NavMqtt_Click"/>
             </StackPanel>
 
             <!-- 4. Content Area (2-Column Grid, ZERO SCROLLING!) -->
@@ -439,7 +440,105 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- VIEW 2: DEVICE SETTINGS & WINDOW EXIT BEHAVIOR -->
+                <!-- VIEW 2: GROUPS & ROOMS MANAGEMENT -->
+                <Grid x:Name="ViewGroups" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- LEFT COLUMN: Groups List & Quick Controls -->
+                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                        <Border Background="#161626" CornerRadius="12" Padding="12,8" Margin="0,0,0,6">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="👥" FontSize="15" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Rooms &amp; Lamp Groups" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button x:Name="BtnNewGroup" Content="➕ Add Room" Width="105" Height="26" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Click="BtnNewGroup_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Groups Scrollable Card List -->
+                        <ScrollViewer Height="580" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="PnlGroupsList" Margin="0,0,4,0"/>
+                        </ScrollViewer>
+                    </StackPanel>
+
+                    <!-- RIGHT COLUMN: Selected Group Editor & Rules -->
+                    <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                        <Border Background="#161626" CornerRadius="12" Padding="14,10" Margin="0,0,0,6">
+                            <StackPanel>
+                                <TextBlock Text="⚙️ Group Configuration &amp; Rules" FontSize="13" FontWeight="Bold" Foreground="#FFD700" Margin="0,0,0,8"/>
+
+                                <!-- Group Name and Icon -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Room Icon:" FontSize="10" Foreground="#AAAAAA" Margin="0,0,0,2"/>
+                                        <ComboBox x:Name="CmbGroupIcon" Width="68" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236">
+                                            <ComboBoxItem Content="🛋️" IsSelected="True"/>
+                                            <ComboBoxItem Content="💻"/>
+                                            <ComboBoxItem Content="🛏️"/>
+                                            <ComboBoxItem Content="🍳"/>
+                                            <ComboBoxItem Content="🎨"/>
+                                            <ComboBoxItem Content="💡"/>
+                                            <ComboBoxItem Content="🌟"/>
+                                            <ComboBoxItem Content="🏠"/>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Group / Room Name:" FontSize="10" Foreground="#AAAAAA" Margin="0,0,0,2"/>
+                                        <TextBox x:Name="TxtGroupName" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Devices Checklist -->
+                                <TextBlock Text="Included Lamps in this Room:" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" Margin="0,2,0,4"/>
+                                <Border Background="#0C0C14" CornerRadius="8" BorderBrush="#222236" BorderThickness="1" Padding="8,6" MaxHeight="210">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <StackPanel x:Name="PnlGroupDevicesList"/>
+                                    </ScrollViewer>
+                                </Border>
+
+                                <!-- Synchronization & Behavior Rules -->
+                                <TextBlock Text="Synchronization Rules &amp; Power Policy:" FontSize="11" FontWeight="Bold" Foreground="#FFD700" Margin="0,10,0,4"/>
+                                <Border Background="#0C0C14" CornerRadius="8" BorderBrush="#222236" BorderThickness="1" Padding="10,8">
+                                    <StackPanel>
+                                        <TextBlock Text="Dimming Mode:" FontSize="10" Foreground="#AAAAAA"/>
+                                        <ComboBox x:Name="CmbGroupSyncMode" Height="26" Margin="0,2,0,6" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236">
+                                            <ComboBoxItem Content="🔄 Synchronized (1:1 identical brightness &amp; color)" Tag="sync" IsSelected="True"/>
+                                            <ComboBoxItem Content="⚖️ Proportional (Keep relative brightness offsets)" Tag="prop"/>
+                                        </ComboBox>
+
+                                        <CheckBox x:Name="ChkGroupTurnOffAll" Content="Turn off all lamps when room is turned off" Foreground="#DDDDDD" FontSize="11" IsChecked="True" Margin="0,3,0,3"/>
+                                        <CheckBox x:Name="ChkGroupTurnOnAll" Content="Turn on all lamps when room is turned on" Foreground="#DDDDDD" FontSize="11" IsChecked="True" Margin="0,0,0,1"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Action Buttons -->
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button x:Name="BtnSaveGroup" Grid.Column="0" Content="💾 Save Room" Height="30" Style="{StaticResource GlassBtn}" Background="#10B981" FontWeight="Bold" Click="BtnSaveGroup_Click"/>
+                                    <Button x:Name="BtnToggleGroupTest" Grid.Column="1" Content="⚡ Test Toggle" Width="95" Height="30" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnToggleGroupTest_Click"/>
+                                    <Button x:Name="BtnDeleteGroup" Grid.Column="2" Content="🗑️ Delete" Width="75" Height="30" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#DC3545" Click="BtnDeleteGroup_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- VIEW 3: DEVICE SETTINGS & WINDOW EXIT BEHAVIOR -->
                 <ScrollViewer x:Name="ViewSettings" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
                     <Grid Margin="0,0,4,0">
                         <Grid.ColumnDefinitions>

@@ -66,6 +66,7 @@ namespace SmartLampApp
         private void NavDash_Click(object? sender, RoutedEventArgs? e)
         {
             ViewDashboard.Visibility = Visibility.Visible;
+            if (ViewGroups != null) ViewGroups.Visibility = Visibility.Collapsed;
             ViewSettings.Visibility = Visibility.Collapsed;
             ViewGoogleHome.Visibility = Visibility.Collapsed;
             ViewMqtt.Visibility = Visibility.Collapsed;
@@ -73,9 +74,22 @@ namespace SmartLampApp
             SetNavActive(NavDash);
         }
 
+        private void NavGroups_Click(object sender, RoutedEventArgs e)
+        {
+            ViewDashboard.Visibility = Visibility.Collapsed;
+            if (ViewGroups != null) ViewGroups.Visibility = Visibility.Visible;
+            ViewSettings.Visibility = Visibility.Collapsed;
+            ViewGoogleHome.Visibility = Visibility.Collapsed;
+            ViewMqtt.Visibility = Visibility.Collapsed;
+
+            SetNavActive(NavGroups);
+            RenderGroupsTab();
+        }
+
         private void NavSettings_Click(object sender, RoutedEventArgs e)
         {
             ViewDashboard.Visibility = Visibility.Collapsed;
+            if (ViewGroups != null) ViewGroups.Visibility = Visibility.Collapsed;
             ViewSettings.Visibility = Visibility.Visible;
             ViewGoogleHome.Visibility = Visibility.Collapsed;
             ViewMqtt.Visibility = Visibility.Collapsed;
@@ -86,6 +100,7 @@ namespace SmartLampApp
         private void NavGoogleHome_Click(object sender, RoutedEventArgs e)
         {
             ViewDashboard.Visibility = Visibility.Collapsed;
+            if (ViewGroups != null) ViewGroups.Visibility = Visibility.Collapsed;
             ViewSettings.Visibility = Visibility.Collapsed;
             ViewGoogleHome.Visibility = Visibility.Visible;
             ViewMqtt.Visibility = Visibility.Collapsed;
@@ -96,6 +111,7 @@ namespace SmartLampApp
         private void NavMqtt_Click(object sender, RoutedEventArgs e)
         {
             ViewDashboard.Visibility = Visibility.Collapsed;
+            if (ViewGroups != null) ViewGroups.Visibility = Visibility.Collapsed;
             ViewSettings.Visibility = Visibility.Collapsed;
             ViewGoogleHome.Visibility = Visibility.Collapsed;
             ViewMqtt.Visibility = Visibility.Visible;
@@ -107,6 +123,12 @@ namespace SmartLampApp
         {
             NavDash.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F1F30"));
             NavDash.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
+
+            if (NavGroups != null)
+            {
+                NavGroups.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F1F30"));
+                NavGroups.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
+            }
 
             NavSettings.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F1F30"));
             NavSettings.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));

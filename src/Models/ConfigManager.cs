@@ -28,6 +28,33 @@ namespace SmartLampApp.Models
         public string last_color_hex { get; set; } = "#00E5FF";
     }
 
+    public enum GroupSyncMode
+    {
+        Synchronized = 0,
+        Proportional = 1
+    }
+
+    public class DeviceGroup
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = "Living Room";
+        public string Icon { get; set; } = "🛋️";
+        public int SortOrder { get; set; } = 0;
+        public List<string> DeviceIds { get; set; } = new();
+
+        // Master state
+        public bool MasterPowerOn { get; set; } = false;
+        public int MasterBrightness { get; set; } = 80;
+        public int MasterTempK { get; set; } = 4000;
+        public string MasterColorHex { get; set; } = "#00E5FF";
+        public string MasterMode { get; set; } = "white";
+
+        // Rules
+        public GroupSyncMode SyncMode { get; set; } = GroupSyncMode.Synchronized;
+        public bool TurnOffAllOnPowerOff { get; set; } = true;
+        public bool TurnOnAllOnPowerOn { get; set; } = true;
+    }
+
     public class UserPreset
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -41,6 +68,8 @@ namespace SmartLampApp.Models
     public class LampConfig
     {
         public string selected_dev_id { get; set; } = "";
+        public string selected_group_id { get; set; } = "";
+        public bool is_group_control_active { get; set; } = false;
         public string access_id { get; set; } = "";
         public string access_key { get; set; } = "";
         public string region { get; set; } = "eu";
@@ -83,6 +112,7 @@ namespace SmartLampApp.Models
         public string last_color_hex { get; set; } = "#00E5FF";
 
         public List<DeviceInfo> devices { get; set; } = new List<DeviceInfo>();
+        public List<DeviceGroup> groups { get; set; } = new List<DeviceGroup>();
         public List<UserPreset> custom_presets { get; set; } = new List<UserPreset>();
 
         // Legacy compatibility properties
@@ -167,6 +197,39 @@ namespace SmartLampApp.Models
                                 if ((string.IsNullOrWhiteSpace(dev.DevId) || dev.DevId.Contains(".") || dev.DevId == dev.Ip) && !string.IsNullOrWhiteSpace(cfg.dev_id) && !cfg.dev_id.Contains("."))
                                 {
                                     dev.DevId = cfg.dev_id;
+                                }
+                            }
+                        }
+
+                        if (cfg.groups == null) cfg.groups = new List<DeviceGroup>();
+                        if (cfg.groups.Count == 0 && cfg.devices != null && cfg.devices.Count > 0)
+                        {
+                            var distinctGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                            int sortIdx = 0;
+                            foreach (var d in cfg.devices)
+                            {
+                                string gName = string.IsNullOrWhiteSpace(d.GroupName) ? "Default Group" : d.GroupName.Trim();
+                                if (distinctGroups.Add(gName))
+                                {
+                                    string icon = gName.Contains("Bed", StringComparison.OrdinalIgnoreCase) || gName.Contains("Спальн", StringComparison.OrdinalIgnoreCase) ? "🛏️"
+                                                : gName.Contains("Work", StringComparison.OrdinalIgnoreCase) || gName.Contains("Стол", StringComparison.OrdinalIgnoreCase) ? "💻"
+                                                : gName.Contains("Kit", StringComparison.OrdinalIgnoreCase) || gName.Contains("Кухн", StringComparison.OrdinalIgnoreCase) ? "🍳"
+                                                : "🛋️";
+                                    cfg.groups.Add(new DeviceGroup
+                                    {
+                                        Name = gName,
+                                        Icon = icon,
+                                        SortOrder = sortIdx++,
+                                        DeviceIds = new List<string> { d.DevId }
+                                    });
+                                }
+                                else
+                                {
+                                    var grp = cfg.groups.Find(g => g.Name.Equals(gName, StringComparison.OrdinalIgnoreCase));
+                                    if (grp != null && !grp.DeviceIds.Contains(d.DevId))
+                                    {
+                                        grp.DeviceIds.Add(d.DevId);
+                                    }
                                 }
                             }
                         }
