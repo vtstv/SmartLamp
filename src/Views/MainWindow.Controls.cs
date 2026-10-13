@@ -150,22 +150,22 @@ namespace SmartLampApp
         {
             if (_isPowerOn)
             {
-                BtnPower.Content = "⚡ POWERED ON";
+                BtnPower.Content = LocalizationService.T("PoweredOn");
                 BtnPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
                 if (BtnCompactPower != null)
                 {
-                    BtnCompactPower.Content = "⚡ POWERED ON";
+                    BtnCompactPower.Content = LocalizationService.T("PoweredOn");
                     BtnCompactPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
                 }
                 UpdateBulbGlow(TxtHexCode?.Text ?? "#FFFFFF", true);
             }
             else
             {
-                BtnPower.Content = "⚡ POWERED OFF";
+                BtnPower.Content = LocalizationService.T("PoweredOff");
                 BtnPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
                 if (BtnCompactPower != null)
                 {
-                    BtnCompactPower.Content = "⚡ POWERED OFF";
+                    BtnCompactPower.Content = LocalizationService.T("PoweredOff");
                     BtnCompactPower.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
                 }
                 UpdateBulbGlow("#333344", false);

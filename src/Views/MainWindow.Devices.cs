@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 
 using SmartLampApp.Models;
+using SmartLampApp.Services;
 
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
@@ -25,9 +26,9 @@ namespace SmartLampApp
 
             if (_config.devices.Count == 0 && (_config.groups == null || _config.groups.Count == 0))
             {
-                CmbDeviceSelector.Items.Add(new ComboBoxItem { Content = "➕ Add Device in Settings", Tag = "none" });
+                CmbDeviceSelector.Items.Add(new ComboBoxItem { Content = LocalizationService.T("AddDeviceInSettings"), Tag = "none" });
                 CmbDeviceSelector.SelectedIndex = 0;
-                TxtDeviceInfo.Text = "No devices configured yet. Switch to Settings tab to add one.";
+                TxtDeviceInfo.Text = LocalizationService.T("NoDevicesConfigured");
                 _isUpdatingUi = false;
                 return;
             }
@@ -46,9 +47,10 @@ namespace SmartLampApp
                 foreach (var grp in _config.groups)
                 {
                     int devCount = grp.DeviceIds?.Count ?? 0;
+                    string unit = LocalizationService.T(devCount == 1 ? "LampUnit" : "LampsUnit");
                     CmbDeviceSelector.Items.Add(new ComboBoxItem
                     {
-                        Content = $"👥 {grp.Icon} {grp.Name} ({devCount} lamps)",
+                        Content = $"👥 {grp.Icon} {grp.Name} ({devCount} {unit})",
                         Tag = $"grp:{grp.Id}"
                     });
                 }
@@ -229,8 +231,8 @@ namespace SmartLampApp
                 if (grp != null)
                 {
                     int devCount = grp.DeviceIds?.Count ?? 0;
-                    LblActiveDevice.Text = "Active Room / Group:";
-                    TxtDeviceInfo.Text = $"{grp.Icon} {grp.Name}  |  {devCount} synchronized lamps ({grp.SyncMode})";
+                    LblActiveDevice.Text = LocalizationService.T("ActiveRoomGroup");
+                    TxtDeviceInfo.Text = $"{grp.Icon} {grp.Name}  |  " + LocalizationService.T("SynchronizedLamps", devCount, grp.SyncMode);
 
                     _isPowerOn = grp.MasterPowerOn;
                     _currentMode = grp.MasterMode ?? "white";
@@ -247,7 +249,7 @@ namespace SmartLampApp
                     TxtHexCode.Text = hexVal;
 
                     PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
-                    TxtStatus.Text = "👥 GROUP ACTIVE";
+                    TxtStatus.Text = LocalizationService.T("GroupActive");
                     if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
                     if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
                     if (TxtCompactDevice != null) TxtCompactDevice.Text = $"{grp.Icon} {grp.Name}";
@@ -263,7 +265,7 @@ namespace SmartLampApp
                 ConfigManager.Save(_config);
                 _protocol.UpdateConfig(_config);
 
-                LblActiveDevice.Text = "Active Device:";
+                LblActiveDevice.Text = LocalizationService.T("ActiveDevice");
                 PopulateDeviceForm();
                 _ = RefreshStatusAsync();
             }
@@ -309,9 +311,9 @@ namespace SmartLampApp
             _protocol.UpdateConfig(_config);
 
             PopulateDeviceSelector();
-            BtnSaveDevice.Content = "💾 Save Device";
+            BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
             _ = RefreshStatusAsync();
-            System.Windows.MessageBox.Show("Device saved successfully!", "Device Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(LocalizationService.T("DeviceSavedMsg"), "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnDeleteDevice_Click(object sender, RoutedEventArgs e)
@@ -319,11 +321,10 @@ namespace SmartLampApp
             var active = _protocol.GetActiveDevice();
             if (active == null || string.IsNullOrWhiteSpace(active.DevId))
             {
-                System.Windows.MessageBox.Show("No active device selected to delete.", "Delete Device", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var result = System.Windows.MessageBox.Show($"Are you sure you want to delete '{active.Name}' ({active.Ip})?", "Delete Device", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var result = System.Windows.MessageBox.Show(LocalizationService.T("ConfirmDeleteDevice", active.Name, active.Ip), "SmartLamp", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
                 _config.devices.RemoveAll(d => d.DevId == active.DevId);
@@ -333,7 +334,7 @@ namespace SmartLampApp
 
                 PopulateDeviceSelector();
                 _ = RefreshStatusAsync();
-                System.Windows.MessageBox.Show("Device deleted successfully.", "Device Removed", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show(LocalizationService.T("DeviceDeletedMsg"), "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
     }

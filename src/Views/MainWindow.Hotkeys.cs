@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Interop;
 
 using SmartLampApp.Models;
+using SmartLampApp.Services;
 
 namespace SmartLampApp
 {
@@ -71,7 +72,7 @@ namespace SmartLampApp
                 source?.AddHook(HwndHook);
 
                 string hotkeyDisplay = GetHotkeyDisplayText();
-                TxtFooterHotkey.Text = $"⌨️ Hotkey: {hotkeyDisplay}";
+                TxtFooterHotkey.Text = LocalizationService.T("FooterHotkey", hotkeyDisplay);
             }
             catch { }
         }

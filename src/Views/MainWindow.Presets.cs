@@ -11,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 
 using SmartLampApp.Models;
+using SmartLampApp.Services;
 
 using ColorConverter = System.Windows.Media.ColorConverter;
 using Button = System.Windows.Controls.Button;
@@ -34,7 +35,7 @@ namespace SmartLampApp
             {
                 var txtPlaceholder = new TextBlock
                 {
-                    Text = "No custom presets saved yet. Click '+ Save Current' to add one!",
+                    Text = LocalizationService.T("NoPresets"),
                     FontSize = 11,
                     Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#666688")),
                     Margin = new Thickness(4, 6, 4, 6),

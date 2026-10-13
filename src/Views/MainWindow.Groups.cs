@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 
 using SmartLampApp.Models;
+using SmartLampApp.Services;
 
 using ColorConverter = System.Windows.Media.ColorConverter;
 using Button = System.Windows.Controls.Button;
@@ -51,8 +52,8 @@ namespace SmartLampApp
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Children =
                         {
-                            new TextBlock { Text = "👥 No groups or rooms created yet", FontSize = 13, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA")), HorizontalAlignment = HorizontalAlignment.Center },
-                            new TextBlock { Text = "Click '+ Add Room' above to group your lamps for simultaneous control.", FontSize = 11, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#666688")), Margin = new Thickness(0, 4, 0, 0), HorizontalAlignment = HorizontalAlignment.Center }
+                            new TextBlock { Text = LocalizationService.T("NoGroupsCreated"), FontSize = 13, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA")), HorizontalAlignment = HorizontalAlignment.Center },
+                            new TextBlock { Text = LocalizationService.T("NoGroupsHint"), FontSize = 11, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#666688")), Margin = new Thickness(0, 4, 0, 0), HorizontalAlignment = HorizontalAlignment.Center }
                         }
                     }
                 };
@@ -117,7 +118,7 @@ namespace SmartLampApp
             };
             countPill.Child = new TextBlock
             {
-                Text = $"{lampCount} {(lampCount == 1 ? "lamp" : "lamps")}",
+                Text = $"{lampCount} " + LocalizationService.T(lampCount == 1 ? "LampUnit" : "LampsUnit"),
                 FontSize = 10,
                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00F0FF"))
             };
@@ -217,7 +218,7 @@ namespace SmartLampApp
 
             var btnEdit = new Button
             {
-                Content = "✏️ Edit Room & Rules",
+                Content = LocalizationService.T("EditRoomAndRules"),
                 Height = 22,
                 Width = 140,
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -310,7 +311,7 @@ namespace SmartLampApp
             {
                 PnlGroupDevicesList.Children.Add(new TextBlock
                 {
-                    Text = "No devices configured yet. Add lamps in Settings tab first.",
+                    Text = LocalizationService.T("NoDevicesInRoomHint"),
                     FontSize = 11,
                     FontStyle = FontStyles.Italic,
                     Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8888AA"))
@@ -425,7 +426,7 @@ namespace SmartLampApp
             ConfigManager.Save(_config);
             PopulateDeviceSelector();
             RenderGroupsTab();
-            System.Windows.MessageBox.Show($"Room '{grp.Name}' saved successfully with {grp.DeviceIds.Count} lamp(s)!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(LocalizationService.T("RoomSavedMsg", grp.Name, grp.DeviceIds.Count), "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnDeleteGroup_Click(object sender, RoutedEventArgs e)
@@ -433,7 +434,7 @@ namespace SmartLampApp
             var grp = _config.groups.Find(g => g.Id == _selectedEditingGroupId);
             if (grp == null) return;
 
-            var res = System.Windows.MessageBox.Show($"Are you sure you want to delete room '{grp.Name}'?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var res = System.Windows.MessageBox.Show(LocalizationService.T("ConfirmDeleteRoom", grp.Name), "SmartLamp", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (res == MessageBoxResult.Yes)
             {
                 _config.groups.Remove(grp);

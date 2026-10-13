@@ -90,11 +90,20 @@ namespace SmartLampApp
 
         private void ApplyLocalization()
         {
+            // Navigation Bar & Top Header
             TxtAppTitle.Text = LocalizationService.T("AppTitle");
-            LblActiveDevice.Text = LocalizationService.T("ActiveDevice");
+            LblActiveDevice.Text = _config.is_group_control_active
+                ? LocalizationService.T("ActiveRoomGroup")
+                : LocalizationService.T("ActiveDevice");
             NavDash.Content = LocalizationService.T("NavDash");
+            NavGroups.Content = LocalizationService.T("NavGroups");
             NavSettings.Content = LocalizationService.T("NavSettings");
+            NavGoogleHome.Content = LocalizationService.T("NavGoogleHome");
+            NavMqtt.Content = LocalizationService.T("NavMqtt");
+
+            // Dashboard Controls
             LblSleepTimer.Text = LocalizationService.T("SleepTimer");
+            if (BtnCancelTimer != null) BtnCancelTimer.Content = LocalizationService.T("TimerOff");
             BtnSetCustomTimer.Content = LocalizationService.T("SetCustomMins");
             LblBrightness.Text = LocalizationService.T("BrightnessLevel");
             LblColorTemp.Text = LocalizationService.T("ColorTemperature");
@@ -118,10 +127,29 @@ namespace SmartLampApp
 
             BtnRefresh.Content = LocalizationService.T("Refresh");
             BtnSwitchToCompactFooter.Content = LocalizationService.T("CompactMode");
+            if (TxtFooterHotkey != null) TxtFooterHotkey.Text = LocalizationService.T("FooterHotkey", GetHotkeyDisplayText());
 
-            // Settings tab
+            // Groups & Rooms Tab
+            if (LblRoomsAndGroups != null) LblRoomsAndGroups.Text = LocalizationService.T("RoomsAndGroups");
+            if (BtnNewGroup != null) BtnNewGroup.Content = LocalizationService.T("AddRoom");
+            if (LblGroupConfigRules != null) LblGroupConfigRules.Text = LocalizationService.T("GroupConfigRules");
+            if (LblRoomIcon != null) LblRoomIcon.Text = LocalizationService.T("RoomIcon");
+            if (LblGroupNameEdit != null) LblGroupNameEdit.Text = LocalizationService.T("GroupNameEdit");
+            if (LblIncludedLamps != null) LblIncludedLamps.Text = LocalizationService.T("IncludedLamps");
+            if (LblSyncRules != null) LblSyncRules.Text = LocalizationService.T("SyncRules");
+            if (LblDimmingMode != null) LblDimmingMode.Text = LocalizationService.T("DimmingMode");
+            if (CmbItemSync != null) CmbItemSync.Content = LocalizationService.T("SyncModeSynchronized");
+            if (CmbItemProp != null) CmbItemProp.Content = LocalizationService.T("SyncModeProportional");
+            if (ChkGroupTurnOffAll != null) ChkGroupTurnOffAll.Content = LocalizationService.T("TurnOffAllLamps");
+            if (ChkGroupTurnOnAll != null) ChkGroupTurnOnAll.Content = LocalizationService.T("TurnOnAllLamps");
+            if (BtnSaveGroup != null) BtnSaveGroup.Content = LocalizationService.T("SaveRoom");
+            if (BtnToggleGroupTest != null) BtnToggleGroupTest.Content = LocalizationService.T("TestToggle");
+            if (BtnDeleteGroup != null) BtnDeleteGroup.Content = LocalizationService.T("Delete");
+
+            // Settings Tab
             LblLanguageSettings.Text = LocalizationService.T("LanguageSettings");
             LblDevCreds.Text = LocalizationService.T("DeviceCredentials");
+            if (BtnNewDevice != null) BtnNewDevice.Content = LocalizationService.T("AddNewLamp");
             LblDevName.Text = LocalizationService.T("DeviceName");
             LblDevIp.Text = LocalizationService.T("IpAddress");
             LblDevId.Text = LocalizationService.T("DeviceId");
@@ -129,11 +157,74 @@ namespace SmartLampApp
             LblGroupName.Text = LocalizationService.T("GroupName");
             BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
             BtnDeleteDevice.Content = LocalizationService.T("Delete");
-            LblWifiDiscovery.Text = LocalizationService.T("WifiDiscovery");
-            BtnAutoDiscover.Content = LocalizationService.T("ScanWifi");
+
+            if (LblAppBehavior != null) LblAppBehavior.Text = LocalizationService.T("AppBehavior");
+            ChkAutostart.Content = LocalizationService.T("Autostart");
+            ChkCloseToTray.Content = LocalizationService.T("CloseToTray");
+            ChkTimerNotifications.Content = LocalizationService.T("TimerNotifications");
+            ChkEnableGoogle.Content = LocalizationService.T("EnableGoogle");
+            ChkEnableMqtt.Content = LocalizationService.T("EnableMqtt");
+            ChkCheckUpdates.Content = LocalizationService.T("CheckUpdatesStartup");
+
             LblSystemUpdates.Text = LocalizationService.T("SystemUpdates");
             BtnCheckUpdates.Content = LocalizationService.T("CheckUpdatesBtn");
-            BtnCreateShortcut.Content = LocalizationService.T("CreateShortcut");
+            if (BtnInstallApp != null) BtnInstallApp.Content = LocalizationService.T("InstallApp");
+            BtnCreateShortcut.Content = LocalizationService.T("DesktopShortcut");
+
+            if (LblHotkeyTitle != null) LblHotkeyTitle.Text = LocalizationService.T("HotkeyTitle");
+            BtnSaveHotkey.Content = LocalizationService.T("SaveHotkey");
+
+            LblWifiDiscovery.Text = LocalizationService.T("WifiDiscovery");
+            BtnAutoDiscover.Content = LocalizationService.T("ScanWifi");
+
+            if (LblCloudSync != null) LblCloudSync.Text = LocalizationService.T("CloudSync");
+            if (LblAccId != null) LblAccId.Text = LocalizationService.T("AccessId");
+            if (LblAccKey != null) LblAccKey.Text = LocalizationService.T("AccessKey");
+            BtnCloudFetch.Content = LocalizationService.T("FetchKeyCloud");
+            BtnCloudSyncAll.Content = LocalizationService.T("CloudSyncAll");
+            BtnTuyaGuide.Content = LocalizationService.T("Instructions");
+
+            if (LblControlModeTitle != null) LblControlModeTitle.Text = LocalizationService.T("ControlModeTitle");
+            if (LblControlMode != null) LblControlMode.Text = LocalizationService.T("ControlMode");
+            if (CmbItemModeAuto != null) CmbItemModeAuto.Content = LocalizationService.T("ControlModeAuto");
+            if (CmbItemModeLocal != null) CmbItemModeLocal.Content = LocalizationService.T("ControlModeLocal");
+            if (CmbItemModeCloud != null) CmbItemModeCloud.Content = LocalizationService.T("ControlModeCloud");
+            if (LblAutoPriority != null) LblAutoPriority.Text = LocalizationService.T("AutoPriority");
+            if (CmbItemPriCloud != null) CmbItemPriCloud.Content = LocalizationService.T("PriorityCloudFirst");
+            if (CmbItemPriLocal != null) CmbItemPriLocal.Content = LocalizationService.T("PriorityLocalFirst");
+
+            // Google Home & MQTT Bridges
+            if (LblGoogleTitle != null) LblGoogleTitle.Text = LocalizationService.T("GoogleHomeBridgeTitle");
+            if (LblGoogleDesc != null) LblGoogleDesc.Text = LocalizationService.T("GoogleHomeBridgeDesc");
+            if (BtnStartGoogleBridge != null) BtnStartGoogleBridge.Content = LocalizationService.T("RestartGoogleBridge");
+            if (LblGoogleSimTitle != null) LblGoogleSimTitle.Text = LocalizationService.T("GoogleSimTitle");
+            if (BtnGoogleSimOn != null) BtnGoogleSimOn.Content = LocalizationService.T("GoogleSimOn");
+            if (BtnGoogleSimOff != null) BtnGoogleSimOff.Content = LocalizationService.T("GoogleSimOff");
+            if (LblGoogleLog != null) LblGoogleLog.Text = LocalizationService.T("GoogleEventLog");
+
+            if (LblMqttTitle != null) LblMqttTitle.Text = LocalizationService.T("MqttBridgeTitle");
+            if (LblMqttDesc != null) LblMqttDesc.Text = LocalizationService.T("MqttBridgeDesc");
+            if (BtnStartMqttBridge != null) BtnStartMqttBridge.Content = LocalizationService.T("RestartMqttBridge");
+            if (BtnCopyMqttDiscovery != null) BtnCopyMqttDiscovery.Content = LocalizationService.T("CopyMqttJson");
+            if (LblMqttSimTitle != null) LblMqttSimTitle.Text = LocalizationService.T("MqttSimTitle");
+            if (BtnMqttSimOn != null) BtnMqttSimOn.Content = LocalizationService.T("MqttSimOn");
+            if (BtnMqttSimOff != null) BtnMqttSimOff.Content = LocalizationService.T("MqttSimOff");
+            if (LblMqttLog != null) LblMqttLog.Text = LocalizationService.T("MqttEventLog");
+
+            // Modals
+            if (BtnCloseTuyaGuide != null) BtnCloseTuyaGuide.Content = LocalizationService.T("GotIt");
+            if (LblSavePresetTitle != null) LblSavePresetTitle.Text = LocalizationService.T("SavePresetTitle");
+            if (LblPresetNameTitle != null) LblPresetNameTitle.Text = LocalizationService.T("PresetName");
+            if (LblCurrentSettingsTitle != null) LblCurrentSettingsTitle.Text = LocalizationService.T("CurrentSettingsToSave");
+            if (BtnCancelSavePreset != null) BtnCancelSavePreset.Content = LocalizationService.T("Cancel");
+            if (BtnConfirmSavePreset != null) BtnConfirmSavePreset.Content = LocalizationService.T("SavePreset");
+
+            if (LblUpdateAvailableTitle != null) LblUpdateAvailableTitle.Text = LocalizationService.T("UpdateAvailableTitle");
+            if (TxtUpdateSubtitle != null) TxtUpdateSubtitle.Text = LocalizationService.T("UpdateSubtitle");
+            if (LblReleaseNotesTitle != null) LblReleaseNotesTitle.Text = LocalizationService.T("ReleaseNotes");
+            if (BtnSkipUpdate != null) BtnSkipUpdate.Content = LocalizationService.T("SkipUpdate");
+            if (BtnRemindLater != null) BtnRemindLater.Content = LocalizationService.T("RemindLater");
+            if (BtnInstallUpdate != null) BtnInstallUpdate.Content = LocalizationService.T("UpdateNow");
 
             // Compact mode labels
             TxtCompactTitle.Text = LocalizationService.T("AppTitle");
@@ -143,6 +234,10 @@ namespace SmartLampApp
 
             UpdatePowerButtonUi();
             RenderCustomPresets();
+            if (ViewGroups != null && ViewGroups.Visibility == Visibility.Visible)
+            {
+                RenderGroupsTab();
+            }
         }
     }
 }

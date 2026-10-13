@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 
 using SmartLampApp.Models;
+using SmartLampApp.Services;
 
 using ColorConverter = System.Windows.Media.ColorConverter;
 using Button = System.Windows.Controls.Button;
@@ -245,12 +246,12 @@ namespace SmartLampApp
         {
             if (Services.InstallationService.IsInstalledInSystem())
             {
-                BtnInstallApp.Content = "🗑️ Uninstall App";
+                BtnInstallApp.Content = LocalizationService.T("UninstallApp");
                 BtnInstallApp.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#DC3545"));
             }
             else
             {
-                BtnInstallApp.Content = "📦 Install App";
+                BtnInstallApp.Content = LocalizationService.T("InstallApp");
                 BtnInstallApp.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#10B981"));
             }
         }

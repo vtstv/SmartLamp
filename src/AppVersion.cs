@@ -33,7 +33,7 @@ namespace SmartLampApp
                 }
             }
             catch { }
-            return "3.3.0";
+            return "3.3.1";
         });
 
         public static string Version => _lazyVersion.Value;
