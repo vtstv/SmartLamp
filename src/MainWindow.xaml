@@ -241,11 +241,12 @@
                     </Border>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock x:Name="LblActiveDevice" Text="Active Device:" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
                             <ComboBox x:Name="CmbDeviceSelector" Width="260" Height="28" Margin="10,0,0,0"
                                       Template="{StaticResource DarkComboBoxTemplate}"
                                       SelectionChanged="CmbDeviceSelector_SelectionChanged"/>
+                            <Button x:Name="BtnHeaderWizard" Content="🪄 Setup Wizard" Height="28" MinWidth="110" Padding="8,0" Margin="8,0,0,0" Style="{StaticResource GlassBtn}" Background="#651FFF" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnOpenWizard_Click" ToolTip="Launch interactive step-by-step smart lamp setup wizard"/>
                         </StackPanel>
                         <TextBlock x:Name="TxtDeviceInfo" Text="IP: Select or Add Device  |  ID: --" FontSize="11" Foreground="#AAAAAA" Margin="0,4,0,0"/>
                     </StackPanel>
@@ -259,11 +260,12 @@
 
             <!-- 3. Navigation Bar (Pill Buttons) -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="14,0,14,6">
-                <Button x:Name="NavDash" Content="💡 Control Dashboard" Width="160" Height="34" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Margin="0,0,6,0" Click="NavDash_Click"/>
-                <Button x:Name="NavGroups" Content="👥 Groups &amp; Rooms" Width="150" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGroups_Click"/>
-                <Button x:Name="NavSettings" Content="⚙️ Settings &amp; Hotkeys" Width="160" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavSettings_Click"/>
-                <Button x:Name="NavGoogleHome" Visibility="Collapsed" Content="🌐 Google Home" Width="130" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGoogleHome_Click"/>
-                <Button x:Name="NavMqtt" Visibility="Collapsed" Content="🤖 Home Assistant &amp; MQTT" Width="180" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Click="NavMqtt_Click"/>
+                <Button x:Name="NavDash" Content="💡 Control Dashboard" MinWidth="135" Padding="10,0" Height="34" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Margin="0,0,6,0" Click="NavDash_Click"/>
+                <Button x:Name="NavGroups" Content="👥 Groups &amp; Rooms" MinWidth="125" Padding="10,0" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGroups_Click"/>
+                <Button x:Name="NavDevices" Content="🔌 Devices" MinWidth="105" Padding="10,0" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavDevices_Click"/>
+                <Button x:Name="NavSettings" Content="⚙️ Settings" MinWidth="105" Padding="10,0" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavSettings_Click"/>
+                <Button x:Name="NavGoogleHome" Visibility="Collapsed" Content="🌐 Google Home" MinWidth="115" Padding="10,0" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGoogleHome_Click"/>
+                <Button x:Name="NavMqtt" Visibility="Collapsed" Content="🤖 Home Assistant &amp; MQTT" MinWidth="145" Padding="10,0" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Click="NavMqtt_Click"/>
             </StackPanel>
 
             <!-- 4. Content Area (2-Column Grid, ZERO SCROLLING!) -->
@@ -538,7 +540,170 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- VIEW 3: DEVICE SETTINGS & WINDOW EXIT BEHAVIOR -->
+                <!-- VIEW 2.5: DEVICES & HARDWARE HUB -->
+                <Grid x:Name="ViewDevices" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.05*"/>
+                        <ColumnDefinition Width="0.95*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- LEFT COLUMN: Connected Lamps List & Device Editor -->
+                    <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                        <!-- Devices List Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="💡" FontSize="14" Margin="0,0,6,0"/>
+                                        <TextBlock x:Name="LblMyDevicesTitle" Text="My Smart Lamps &amp; Devices" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button x:Name="BtnDeviceTabWizard" Content="🪄 Setup Wizard" Height="24" MinWidth="95" Padding="8,0" Margin="0,0,6,0" Style="{StaticResource GlassBtn}" Background="#651FFF" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnOpenWizard_Click" ToolTip="Launch interactive step-by-step setup wizard"/>
+                                        <Button x:Name="BtnNewDevice" Content="➕ New Lamp" Height="24" MinWidth="85" Padding="8,0" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#00F0FF" FontSize="11" Click="BtnNewDevice_Click"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <ListBox x:Name="LstDevicesMaster" Height="130" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="LstDevicesMaster_SelectionChanged"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Device Credentials Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="10,8">
+                            <StackPanel>
+                                <TextBlock x:Name="LblDevCreds" Text="📌 Device Credentials &amp; Group" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,4"/>
+
+                                <TextBlock x:Name="LblDevName" Text="Device Name:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,1,0,1"/>
+                                <TextBox x:Name="TxtName" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+
+                                <Grid Margin="0,2,0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                        <TextBlock x:Name="LblDevIp" Text="IP Address:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,1"/>
+                                        <TextBox x:Name="TxtIp" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="3,0,0,0">
+                                        <TextBlock x:Name="LblDevId" Text="Device ID:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,1"/>
+                                        <TextBox x:Name="TxtDevId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- MASKED LOCAL KEY WITH EYE TOGGLE BUTTON -->
+                                <TextBlock x:Name="LblLocalKey" Text="Local Key (16 Chars):" FontSize="10.5" FontWeight="Bold" Foreground="#FFEA00" Margin="0,2,0,1"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <PasswordBox x:Name="PassLocalKey" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#FFEA00" Padding="6,0"/>
+                                    <TextBox x:Name="TxtLocalKeyVisible" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#FFEA00" Padding="6,0" Visibility="Collapsed"/>
+                                    <Button x:Name="BtnToggleKeyVisibility" Grid.Column="1" Content="👁️" Width="30" Height="24" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnToggleKeyVisibility_Click"/>
+                                </Grid>
+
+                                <TextBlock x:Name="LblGroupName" Text="Group Name (e.g. Living Room):" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,2,0,1"/>
+                                <TextBox x:Name="TxtGroup" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+
+                                <!-- Save, Test, and Delete Action Buttons -->
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnSaveDevice" Grid.Column="0" Content="💾 Save Device" Height="28" Padding="6,0" Style="{StaticResource GlassBtn}" Background="#0066CC" FontWeight="Bold" Click="BtnSaveDevice_Click"/>
+                                    <Button x:Name="BtnTestDevice" Grid.Column="1" Content="⚡ Test Toggle" Height="28" Padding="6,0" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#10B981" Click="BtnTestDevice_Click"/>
+                                    <Button x:Name="BtnDeleteDevice" Grid.Column="2" Content="🗑️ Delete" Height="28" MinWidth="75" Padding="6,0" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#DC3545" Click="BtnDeleteDevice_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- RIGHT COLUMN: Auto-Discovery, Tuya Cloud Hub, Control Mode -->
+                    <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                        <!-- Wi-Fi Auto-Discovery Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,4">
+                                    <TextBlock x:Name="LblWifiDiscovery" Text="🔍 Wi-Fi Auto-Discovery" FontSize="13" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
+                                    <Button x:Name="BtnAutoDiscover" Content="⚡ Scan Wi-Fi Subnet" Height="24" MinWidth="110" Padding="8,0" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#10B981" Click="BtnAutoDiscover_Click"/>
+                                </Grid>
+                                <ListBox x:Name="LstDiscovered" Height="80" Margin="0,2,0,0" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="LstDiscovered_SelectionChanged"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tuya Cloud Key Hub Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
+                            <StackPanel>
+                                <TextBlock x:Name="LblCloudSync" Text="☁️ Auto-Fetch Key from Tuya Cloud" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,4"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                        <TextBlock x:Name="LblAccId" Text="Access ID:" FontSize="10" Foreground="#AAAAAA"/>
+                                        <TextBox x:Name="TxtAccId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="3,0,0,0">
+                                        <TextBlock x:Name="LblAccKey" Text="Access Key (Secret):" FontSize="10" Foreground="#AAAAAA"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <PasswordBox x:Name="PassAccKey" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236" Padding="4,0"/>
+                                            <TextBox x:Name="TxtAccKeyVisible" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236" Padding="4,0" Visibility="Collapsed"/>
+                                            <Button x:Name="BtnToggleAccKeyVisibility" Grid.Column="1" Content="👁️" Width="28" Height="24" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnToggleAccKeyVisibility_Click"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid Margin="0,5,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="1.1*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnCloudFetch" Grid.Column="0" Content="⚡ Fetch Key" Height="26" Padding="4,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Margin="0,0,3,0" Click="BtnCloudFetch_Click"/>
+                                    <Button x:Name="BtnCloudSyncAll" Grid.Column="1" Content="📥 Sync All" Height="26" Padding="4,0" Style="{StaticResource GlassBtn}" Background="#10B981" Margin="3,0,3,0" Click="BtnCloudSyncAll_Click"/>
+                                    <Button x:Name="BtnTuyaGuide" Grid.Column="2" Content="❓ Guide" MinWidth="68" Padding="6,0" Height="26" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnTuyaGuide_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Control Mode & Fallback Priority Card -->
+                        <Border Background="#161626" CornerRadius="12" Padding="10,8">
+                            <StackPanel>
+                                <TextBlock x:Name="LblControlModeTitle" Text="🎮 Control Mode &amp; Fallback Priority" FontSize="13" FontWeight="Bold" Foreground="#FFD700" Margin="0,0,0,5"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                        <TextBlock x:Name="LblControlMode" Text="Control Mode:" FontSize="10" Foreground="#AAAAAA"/>
+                                        <ComboBox x:Name="CmbControlMode" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbControlMode_SelectionChanged">
+                                            <ComboBoxItem x:Name="CmbItemModeAuto" Content="🔄 Auto (Hybrid Fallback)" Tag="auto"/>
+                                            <ComboBoxItem x:Name="CmbItemModeLocal" Content="⚡ Local LAN Only" Tag="local"/>
+                                            <ComboBoxItem x:Name="CmbItemModeCloud" Content="☁️ Tuya Cloud API Only" Tag="cloud"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel x:Name="PanelAutoPriority" Grid.Column="1" Margin="3,0,0,0">
+                                        <TextBlock x:Name="LblAutoPriority" Text="Auto Priority Order:" FontSize="10" Foreground="#AAAAAA"/>
+                                        <ComboBox x:Name="CmbAutoPriority" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbAutoPriority_SelectionChanged">
+                                            <ComboBoxItem x:Name="CmbItemPriCloud" Content="☁️ Cloud ➔ Local LAN" Tag="cloud_first"/>
+                                            <ComboBoxItem x:Name="CmbItemPriLocal" Content="⚡ Local LAN ➔ Cloud" Tag="local_first"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- VIEW 3: APPLICATION SETTINGS & BEHAVIOR -->
                 <ScrollViewer x:Name="ViewSettings" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
                     <Grid Margin="0,0,4,0">
                         <Grid.ColumnDefinitions>
@@ -546,12 +711,12 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- LEFT COLUMN: Language, Credentials, Save/Delete Device & Exit Behavior -->
+                        <!-- LEFT COLUMN: Language, App Behavior, Integrations -->
                         <StackPanel Grid.Column="0" Margin="0,0,5,0">
-                            <!-- Language Switcher Card (Dropdown Menu) -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
+                            <!-- Language Switcher Card -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12,10" Margin="0,0,0,6">
                                 <StackPanel>
-                                    <TextBlock x:Name="LblLanguageSettings" Text="🌐 Interface Language" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,5"/>
+                                    <TextBlock x:Name="LblLanguageSettings" Text="🌐 Interface Language" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,6"/>
                                     <ComboBox x:Name="CmbLanguage" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" HorizontalAlignment="Stretch">
                                         <ComboBoxItem Content="🇬🇧 English" Tag="en"/>
                                         <ComboBoxItem Content="🇩🇪 Deutsch" Tag="de"/>
@@ -560,84 +725,47 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Device Credentials Card -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
+                            <!-- APP BEHAVIOR & STARTUP CARD -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12,10" Margin="0,0,0,6">
                                 <StackPanel>
-                                    <Grid Margin="0,0,0,6">
-                                        <TextBlock x:Name="LblDevCreds" Text="📌 Device Credentials &amp; Group" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
-                                        <Button x:Name="BtnNewDevice" Content="➕ New Lamp" HorizontalAlignment="Right" MinWidth="85" Padding="8,0" Height="22" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#00F0FF" FontSize="11" Click="BtnNewDevice_Click"/>
-                                    </Grid>
-
-                                    <TextBlock x:Name="LblDevName" Text="Device Name:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,1,0,1"/>
-                                    <TextBox x:Name="TxtName" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
-
-                                    <TextBlock x:Name="LblDevIp" Text="IP Address:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,3,0,1"/>
-                                    <TextBox x:Name="TxtIp" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
-
-                                    <TextBlock x:Name="LblDevId" Text="Device ID:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,3,0,1"/>
-                                    <TextBox x:Name="TxtDevId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
-
-                                    <!-- MASKED LOCAL KEY WITH EYE TOGGLE BUTTON -->
-                                    <TextBlock x:Name="LblLocalKey" Text="Local Key (16 Chars):" FontSize="10.5" FontWeight="Bold" Foreground="#FFEA00" Margin="0,3,0,1"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <PasswordBox x:Name="PassLocalKey" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#FFEA00" Padding="6,0"/>
-                                        <TextBox x:Name="TxtLocalKeyVisible" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#FFEA00" Padding="6,0" Visibility="Collapsed"/>
-                                        <Button x:Name="BtnToggleKeyVisibility" Grid.Column="1" Content="👁️" Width="30" Height="24" Margin="4,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnToggleKeyVisibility_Click"/>
-                                    </Grid>
-
-                                    <TextBlock x:Name="LblGroupName" Text="Group Name (e.g. Living Room):" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,3,0,1"/>
-                                    <TextBox x:Name="TxtGroup" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
-
-                                    <!-- Save Device & Delete Device Buttons Grid -->
-                                    <Grid Margin="0,8,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Button x:Name="BtnSaveDevice" Grid.Column="0" Content="💾 Save Device" Height="28" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnSaveDevice_Click"/>
-                                        <Button x:Name="BtnDeleteDevice" Grid.Column="1" Content="🗑️ Delete" Width="85" Height="28" Margin="6,0,0,0" Style="{StaticResource GlassBtn}" Background="#DC3545" Click="BtnDeleteDevice_Click"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- APP BEHAVIOR & INTEGRATIONS CARD -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8">
-                                <StackPanel>
-                                    <TextBlock x:Name="LblAppBehavior" Text="⚙️ App Behavior &amp; Integrations" FontSize="13" FontWeight="Bold" Foreground="#FF9100" Margin="0,0,0,5"/>
+                                    <TextBlock x:Name="LblAppBehavior" Text="⚙️ App Behavior &amp; Startup" FontSize="13" FontWeight="Bold" Foreground="#FF9100" Margin="0,0,0,6"/>
                                     <CheckBox x:Name="ChkAutostart" Content="Launch automatically on Windows Startup"
                                               Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
-                                              Click="ChkAutostart_Click" Margin="0,0,0,4"/>
+                                              Click="ChkAutostart_Click" Margin="0,0,0,6"/>
                                     <CheckBox x:Name="ChkCloseToTray" Content="Minimize to System Tray on window close (✕)"
                                               Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"
-                                              Click="ChkConfigToggle_Click" Margin="0,0,0,4"/>
+                                              Click="ChkConfigToggle_Click" Margin="0,0,0,6"/>
                                     <CheckBox x:Name="ChkTimerNotifications" Content="Show Windows notifications for Sleep Timer"
                                               Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"
-                                              Click="ChkTimerNotifications_Click" Margin="0,0,0,4"/>
-                                    <CheckBox x:Name="ChkEnableGoogle" Content="Enable Google Home Bridge Integration"
-                                              Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
-                                              Click="ChkConfigToggle_Click" Margin="0,0,0,4"/>
-                                    <CheckBox x:Name="ChkEnableMqtt" Content="Enable Home Assistant &amp; MQTT Bridge"
-                                              Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
-                                              Click="ChkConfigToggle_Click" Margin="0,0,0,4"/>
+                                              Click="ChkTimerNotifications_Click" Margin="0,0,0,6"/>
                                     <CheckBox x:Name="ChkCheckUpdates" Content="Automatically check for updates on startup"
                                               Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True"
                                               Click="ChkCheckUpdates_Click" Margin="0,0,0,2"/>
                                 </StackPanel>
                             </Border>
+
+                            <!-- SMART HOME BRIDGES TOGGLE CARD -->
+                            <Border Background="#161626" CornerRadius="12" Padding="12,10">
+                                <StackPanel>
+                                    <TextBlock x:Name="LblBridgesIntegrations" Text="🔗 Smart Home Bridges &amp; Integrations" FontSize="13" FontWeight="Bold" Foreground="#4285F4" Margin="0,0,0,6"/>
+                                    <CheckBox x:Name="ChkEnableGoogle" Content="Enable Google Home Bridge Integration"
+                                              Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
+                                              Click="ChkConfigToggle_Click" Margin="0,0,0,6"/>
+                                    <CheckBox x:Name="ChkEnableMqtt" Content="Enable Home Assistant &amp; MQTT Bridge"
+                                              Foreground="#FFFFFF" FontWeight="Bold" IsChecked="False"
+                                              Click="ChkConfigToggle_Click" Margin="0,0,0,2"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
-                        <!-- RIGHT COLUMN: Shortcuts & Updates, Custom Hotkey, Auto-Discovery & Cloud Sync -->
+                        <!-- RIGHT COLUMN: Shortcuts & Updates, Custom Hotkey -->
                         <StackPanel Grid.Column="1" Margin="5,0,0,0">
                             <!-- SYSTEM SHORTCUTS & UPDATES CARD -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
+                            <Border Background="#161626" CornerRadius="12" Padding="12,10" Margin="0,0,0,6">
                                 <StackPanel>
                                     <TextBlock x:Name="LblSystemUpdates" Text="⚡ Shortcuts, System &amp; Updates" FontSize="13" FontWeight="Bold" Foreground="#651FFF" Margin="0,0,0,6"/>
 
-                                    <Grid Margin="0,0,0,6">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -658,100 +786,16 @@
                             </Border>
 
                             <!-- CUSTOM HOTKEY PICKER CARD -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
+                            <Border Background="#161626" CornerRadius="12" Padding="12,10">
                                 <StackPanel>
-                                    <TextBlock x:Name="LblHotkeyTitle" Text="⌨️ Custom Global Windows Hotkey" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,5"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                    <TextBlock x:Name="LblHotkeyTitle" Text="⌨️ Custom Global Windows Hotkey" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,6"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                         <CheckBox x:Name="ChkCtrl" Content="Ctrl" Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True" Margin="0,0,10,0"/>
                                         <CheckBox x:Name="ChkAlt" Content="Alt" Foreground="#FFFFFF" FontWeight="Bold" IsChecked="True" Margin="0,0,10,0"/>
                                         <CheckBox x:Name="ChkShift" Content="Shift" Foreground="#FFFFFF" FontWeight="Bold" Margin="0,0,10,0"/>
                                         <ComboBox x:Name="CmbHotkeyKey" Width="64" Height="24" Template="{StaticResource DarkComboBoxTemplate}"/>
                                     </StackPanel>
                                     <Button x:Name="BtnSaveHotkey" Content="💾 Register &amp; Save Hotkey" Height="26" Style="{StaticResource GlassBtn}" Background="#651FFF" Click="BtnSaveHotkey_Click"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Auto Discovery Card -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
-                                <StackPanel>
-                                    <TextBlock x:Name="LblWifiDiscovery" Text="🔍 Wi-Fi Auto-Discovery" FontSize="13" FontWeight="Bold" Foreground="#10B981" Margin="0,0,0,4"/>
-                                    <Button x:Name="BtnAutoDiscover" Content="⚡ Scan Local Wi-Fi Subnet" Height="26" Style="{StaticResource GlassBtn}" Background="#10B981" Click="BtnAutoDiscover_Click"/>
-
-                                    <ListBox x:Name="LstDiscovered" Height="52" Margin="0,4,0,0" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"
-                                             SelectionChanged="LstDiscovered_SelectionChanged"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Tuya Cloud Sync Card -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8" Margin="0,0,0,5">
-                                <StackPanel>
-                                    <TextBlock x:Name="LblCloudSync" Text="☁️ Auto-Fetch Key from Tuya Cloud" FontSize="13" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,4"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <StackPanel Grid.Column="0" Margin="0,0,3,0">
-                                            <TextBlock x:Name="LblAccId" Text="Access ID:" FontSize="10" Foreground="#AAAAAA"/>
-                                            <TextBox x:Name="TxtAccId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"/>
-                                        </StackPanel>
-
-                                        <!-- MASKED ACCESS KEY WITH EYE TOGGLE -->
-                                        <StackPanel Grid.Column="1" Margin="3,0,0,0">
-                                            <TextBlock x:Name="LblAccKey" Text="Access Key (Secret):" FontSize="10" Foreground="#AAAAAA"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <PasswordBox x:Name="PassAccKey" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236" Padding="4,0"/>
-                                                <TextBox x:Name="TxtAccKeyVisible" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236" Padding="4,0" Visibility="Collapsed"/>
-                                                <Button x:Name="BtnToggleAccKeyVisibility" Grid.Column="1" Content="👁️" Width="28" Height="24" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnToggleAccKeyVisibility_Click"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <Grid Margin="0,5,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="1*"/>
-                                            <ColumnDefinition Width="1.1*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Button x:Name="BtnCloudFetch" Grid.Column="0" Content="⚡ Fetch Key" Height="26" Padding="4,0" Style="{StaticResource GlassBtn}" Background="#0066CC" Margin="0,0,3,0" Click="BtnCloudFetch_Click"/>
-                                        <Button x:Name="BtnCloudSyncAll" Grid.Column="1" Content="📥 Sync All" Height="26" Padding="4,0" Style="{StaticResource GlassBtn}" Background="#10B981" Margin="3,0,3,0" Click="BtnCloudSyncAll_Click"/>
-                                        <Button x:Name="BtnTuyaGuide" Grid.Column="2" Content="❓ Guide" MinWidth="68" Padding="6,0" Height="26" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#222236" Click="BtnTuyaGuide_Click"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Control Mode & Priority Card -->
-                            <Border Background="#161626" CornerRadius="12" Padding="10,8">
-                                <StackPanel>
-                                    <TextBlock x:Name="LblControlModeTitle" Text="🎮 Control Mode &amp; Fallback Priority" FontSize="13" FontWeight="Bold" Foreground="#FFD700" Margin="0,0,0,5"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <StackPanel Grid.Column="0" Margin="0,0,3,0">
-                                            <TextBlock x:Name="LblControlMode" Text="Control Mode:" FontSize="10" Foreground="#AAAAAA"/>
-                                            <ComboBox x:Name="CmbControlMode" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbControlMode_SelectionChanged">
-                                                <ComboBoxItem x:Name="CmbItemModeAuto" Content="🔄 Auto (Hybrid Fallback)" Tag="auto"/>
-                                                <ComboBoxItem x:Name="CmbItemModeLocal" Content="⚡ Local LAN Only" Tag="local"/>
-                                                <ComboBoxItem x:Name="CmbItemModeCloud" Content="☁️ Tuya Cloud API Only" Tag="cloud"/>
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel x:Name="PanelAutoPriority" Grid.Column="1" Margin="3,0,0,0">
-                                            <TextBlock x:Name="LblAutoPriority" Text="Auto Priority Order:" FontSize="10" Foreground="#AAAAAA"/>
-                                            <ComboBox x:Name="CmbAutoPriority" Height="26" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="CmbAutoPriority_SelectionChanged">
-                                                <ComboBoxItem x:Name="CmbItemPriCloud" Content="☁️ Cloud ➔ Local LAN" Tag="cloud_first"/>
-                                                <ComboBoxItem x:Name="CmbItemPriLocal" Content="⚡ Local LAN ➔ Cloud" Tag="local_first"/>
-                                            </ComboBox>
-                                        </StackPanel>
-                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -1003,6 +1047,218 @@
                             <Button x:Name="BtnRemindLater" Grid.Column="1" Content="Remind Later" Height="34" Margin="3,0,3,0" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#AAAAAA" Click="BtnCloseUpdateModal_Click"/>
                             <Button x:Name="BtnInstallUpdate" Grid.Column="2" Content="⚡ Update Now" Height="34" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnInstallUpdate_Click"/>
                         </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 9. DEVICE SETUP WIZARD MODAL OVERLAY -->
+            <Grid x:Name="OverlayDeviceWizard" Grid.RowSpan="5" Visibility="Collapsed" Panel.ZIndex="120">
+                <Border Background="#E50A0A14" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
+                <Border Width="620" Background="#161626" BorderBrush="#651FFF" BorderThickness="1.5" CornerRadius="16" Padding="22" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel>
+                        <!-- Header -->
+                        <Grid Margin="0,0,0,12">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="🪄" FontSize="18" Margin="0,0,8,0"/>
+                                <StackPanel>
+                                    <TextBlock x:Name="LblWizardTitle" Text="Smart Lamp Setup Wizard" FontSize="16" FontWeight="Bold" Foreground="#00F0FF"/>
+                                    <TextBlock x:Name="TxtWizardSubtitle" Text="Step 1 of 3: Choose Connection Method" FontSize="11" Foreground="#AAAAAA" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Content="✕" Width="26" Height="26" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#AAAAAA" Click="BtnCloseWizard_Click"/>
+                        </Grid>
+
+                        <!-- Step Progress Badges -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="BadgeStep1" Grid.Column="0" Background="#651FFF" CornerRadius="8" Padding="6,4" Margin="0,0,3,0">
+                                <TextBlock x:Name="TxtBadgeStep1" Text="1. Method" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border x:Name="BadgeStep2" Grid.Column="1" Background="#222236" CornerRadius="8" Padding="6,4" Margin="3,0,3,0">
+                                <TextBlock x:Name="TxtBadgeStep2" Text="2. Discover / Connect" FontSize="11" FontWeight="Bold" Foreground="#8888AA" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border x:Name="BadgeStep3" Grid.Column="2" Background="#222236" CornerRadius="8" Padding="6,4" Margin="3,0,0,0">
+                                <TextBlock x:Name="TxtBadgeStep3" Text="3. Name &amp; Test" FontSize="11" FontWeight="Bold" Foreground="#8888AA" HorizontalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- STEP 1 PANEL: Choose Method -->
+                        <StackPanel x:Name="PanelWizardStep1" Visibility="Visible">
+                            <TextBlock Text="How would you like to connect your new lamp?" FontSize="12" Foreground="#CCCCCC" Margin="0,0,0,10"/>
+
+                            <!-- Option A: Wi-Fi Discovery -->
+                            <Button x:Name="BtnWizardChooseWifi" Height="62" Margin="0,0,0,8" Style="{StaticResource GlassBtn}" Background="#1F1F32" HorizontalContentAlignment="Stretch" Padding="12,8" Click="BtnWizardChooseWifi_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="🔍" FontSize="22" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                                        <TextBlock x:Name="LblWizOptWifiTitle" Text="🔍 Wi-Fi Auto-Discovery (Recommended)" FontSize="12.5" FontWeight="Bold" Foreground="#00F0FF"/>
+                                        <TextBlock x:Name="LblWizOptWifiDesc" Text="Scan local Wi-Fi subnet for Tuya lamps and bulbs connected to your router" FontSize="11" Foreground="#AAAAAA"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="➔" FontSize="16" Foreground="#00F0FF" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                </Grid>
+                            </Button>
+
+                            <!-- Option B: Tuya Cloud Sync -->
+                            <Button x:Name="BtnWizardChooseCloud" Height="62" Margin="0,0,0,8" Style="{StaticResource GlassBtn}" Background="#1F1F32" HorizontalContentAlignment="Stretch" Padding="12,8" Click="BtnWizardChooseCloud_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="☁️" FontSize="22" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                                        <TextBlock x:Name="LblWizOptCloudTitle" Text="☁️ Tuya Cloud One-Click Sync" FontSize="12.5" FontWeight="Bold" Foreground="#10B981"/>
+                                        <TextBlock x:Name="LblWizOptCloudDesc" Text="Automatically import all lamps &amp; encryption keys from your Tuya / Smart Life account" FontSize="11" Foreground="#AAAAAA"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="➔" FontSize="16" Foreground="#10B981" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                </Grid>
+                            </Button>
+
+                            <!-- Option C: Manual Entry -->
+                            <Button x:Name="BtnWizardChooseManual" Height="62" Margin="0,0,0,12" Style="{StaticResource GlassBtn}" Background="#1F1F32" HorizontalContentAlignment="Stretch" Padding="12,8" Click="BtnWizardChooseManual_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="✍️" FontSize="22" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                                        <TextBlock x:Name="LblWizOptManualTitle" Text="✍️ Manual Configuration" FontSize="12.5" FontWeight="Bold" Foreground="#FF9100"/>
+                                        <TextBlock x:Name="LblWizOptManualDesc" Text="Directly enter IP address, Device ID, and 16-character Local Key manually" FontSize="11" Foreground="#AAAAAA"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="➔" FontSize="16" Foreground="#FF9100" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- STEP 2 PANEL: Discover & Connect -->
+                        <StackPanel x:Name="PanelWizardStep2" Visibility="Collapsed">
+                            <!-- Step 2A: Wi-Fi Discovery Sub-View -->
+                            <StackPanel x:Name="SubPanelWizWifi" Visibility="Collapsed">
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock x:Name="LblWizFoundDevices" Text="Discovered Devices:" FontSize="12" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
+                                    <Button x:Name="BtnWizRescan" Content="⚡ Scan Network" Height="26" MinWidth="110" Padding="8,0" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#10B981" Click="BtnWizRescan_Click"/>
+                                </Grid>
+                                <ListBox x:Name="LstWizDiscovered" Height="100" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="LstWizDiscovered_SelectionChanged"/>
+
+                                <!-- Key & ID prompt for chosen Wi-Fi device -->
+                                <Border Background="#12121E" CornerRadius="8" Padding="10,8" Margin="0,8,0,0">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtWizKeyStatus" Text="Select a discovered device above to continue" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,4"/>
+                                        <Grid Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                                <TextBlock Text="Device ID:" FontSize="10" Foreground="#AAAAAA"/>
+                                                <TextBox x:Name="TxtWizDevId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Margin="3,0,0,0">
+                                                <TextBlock Text="Local Key (16 Chars):" FontSize="10" Foreground="#FFEA00"/>
+                                                <TextBox x:Name="TxtWizLocalKey" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Step 2B: Cloud Sync Sub-View -->
+                            <StackPanel x:Name="SubPanelWizCloud" Visibility="Collapsed">
+                                <TextBlock Text="Enter or confirm your Tuya IoT credentials:" FontSize="12" Foreground="#CCCCCC" Margin="0,0,0,6"/>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,3,0">
+                                        <TextBlock Text="Access ID (Client ID):" FontSize="10.5" Foreground="#AAAAAA"/>
+                                        <TextBox x:Name="TxtWizAccId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="3,0,0,0">
+                                        <TextBlock Text="Access Key (Client Secret):" FontSize="10.5" Foreground="#AAAAAA"/>
+                                        <TextBox x:Name="TxtWizAccKey" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Button x:Name="BtnWizLoadCloud" Content="📥 Fetch Lamps from Cloud Project" Height="28" Style="{StaticResource GlassBtn}" Background="#0066CC" Margin="0,0,0,8" Click="BtnWizLoadCloud_Click"/>
+                                <ListBox x:Name="LstWizCloudDevices" Height="90" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" SelectionChanged="LstWizCloudDevices_SelectionChanged"/>
+                            </StackPanel>
+
+                            <!-- Step 2C: Manual Entry Sub-View -->
+                            <StackPanel x:Name="SubPanelWizManual" Visibility="Collapsed">
+                                <TextBlock Text="Enter the IP address, Device ID, and Local Key:" FontSize="12" Foreground="#CCCCCC" Margin="0,0,0,6"/>
+                                <TextBlock Text="IP Address (e.g. 192.168.1.150):" FontSize="10.5" Foreground="#AAAAAA"/>
+                                <TextBox x:Name="TxtWizManualIp" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Margin="0,1,0,4"/>
+                                <TextBlock Text="Device ID:" FontSize="10.5" Foreground="#AAAAAA"/>
+                                <TextBox x:Name="TxtWizManualId" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Margin="0,1,0,4"/>
+                                <TextBlock Text="Local Key (16 Characters):" FontSize="10.5" Foreground="#FFEA00"/>
+                                <TextBox x:Name="TxtWizManualKey" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFEA00" FontWeight="Bold" BorderBrush="#222236" Margin="0,1,0,6"/>
+                            </StackPanel>
+
+                            <!-- Step 2 Navigation Buttons -->
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="BtnWizStep2Back" Grid.Column="0" Content="◀ Back" Height="30" MinWidth="85" Padding="8,0" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#AAAAAA" Click="BtnWizStep2Back_Click"/>
+                                <Button x:Name="BtnWizStep2Next" Grid.Column="2" Content="Next ▶" Height="30" MinWidth="95" Padding="8,0" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Click="BtnWizStep2Next_Click"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- STEP 3 PANEL: Name, Room, & Test -->
+                        <StackPanel x:Name="PanelWizardStep3" Visibility="Collapsed">
+                            <TextBlock Text="Almost done! Assign a name, room, and test your lamp:" FontSize="12" Foreground="#CCCCCC" Margin="0,0,0,8"/>
+
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                    <TextBlock Text="Lamp Name:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                    <TextBox x:Name="TxtWizFinalName" Text="Smart Lamp" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" FontWeight="Bold" BorderBrush="#222236" Padding="6,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                    <TextBlock Text="Room / Group:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                    <TextBox x:Name="TxtWizFinalGroup" Text="Living Room" Height="26" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Test Card -->
+                            <Border Background="#0C0C14" CornerRadius="10" Padding="12,10" Margin="0,6,0,12">
+                                <StackPanel>
+                                    <Grid>
+                                        <TextBlock Text="⚡ Connection Test:" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" VerticalAlignment="Center"/>
+                                        <Button x:Name="BtnWizTestToggle" Content="⚡ Test Power Toggle" Height="24" MinWidth="130" Padding="8,0" HorizontalAlignment="Right" Style="{StaticResource GlassBtn}" Background="#0066CC" Click="BtnWizTestToggle_Click"/>
+                                    </Grid>
+                                    <TextBlock x:Name="TxtWizTestResult" Text="Click 'Test Power Toggle' to verify socket connectivity" FontSize="11" Foreground="#AAAAAA" Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Step 3 Navigation Buttons -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="BtnWizStep3Back" Grid.Column="0" Content="◀ Back" Height="34" MinWidth="85" Padding="8,0" Style="{StaticResource GlassBtn}" Background="#222236" Foreground="#AAAAAA" Click="BtnWizStep3Back_Click"/>
+                                <Button x:Name="BtnWizFinish" Grid.Column="2" Content="✅ Add to System" Height="34" MinWidth="140" Padding="12,0" Style="{StaticResource GlassBtn}" Background="#10B981" Foreground="#FFFFFF" FontWeight="Bold" Click="BtnWizFinish_Click"/>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </Grid>

@@ -2,6 +2,14 @@
 
 All notable changes to **SmartLamp Studio** will be documented in this file.
 
+## [3.4.0] - 2026-10-13
+
+### Added
+- **Dedicated Devices Tab**: Moved device discovery, manual entry, and cloud sync out of Settings into a focused `🔌 Devices` navigation view with master device list and quick socket testing.
+- **Interactive 3-Step Setup Wizard**: Added guided smart lamp setup overlay (`🪄 Setup Wizard`) with auto-discovery, cloud import, real-time TCP toggle testing, and one-click saving.
+- **Streamlined Settings**: General preferences (Language, autostart, tray, smart home bridges, hotkeys) are now cleanly isolated from device pairing.
+- **Multilingual Support**: Complete translations (EN / DE / RU) for all new device management and wizard views.
+
 ## [3.3.3] - 2026-10-13
 
 ### Improved

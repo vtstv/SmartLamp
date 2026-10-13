@@ -1,6 +1,7 @@
-## SmartLamp Studio v3.3.3
+## SmartLamp Studio v3.4.0
 
 ### 🚀 What's New & Improved
-- **Adaptive UI & Responsive Sizing**: Removed rigid fixed-width buttons across Dashboard, Rooms, and Settings tabs in favor of flexible grid columns and auto-sizing `MinWidth` with balanced padding.
-- **Compact Multilingual Microcopy**: Streamlined Russian and German button labels and dropdown options to completely eliminate text clipping and awkward word wraps.
-- **Informative ToolTips**: Added comprehensive localized tooltips (EN / DE / RU) to all action buttons for instant guidance on hover.
+- **Dedicated Devices Management Tab**: Clean separation of device pairing from general settings with master device list and quick socket testing (`🔌 Devices`).
+- **Interactive 3-Step Setup Wizard**: Guided smart lamp onboarding overlay (`🪄 Setup Wizard`) with automatic Wi-Fi scanning, Tuya Cloud sync, live socket connectivity test, and one-click saving.
+- **Streamlined Settings View**: Simplified app settings (language, autostart, tray, smart home bridges, global hotkeys).
+- **Multilingual Support**: Comprehensive localization across English, German, and Russian for all device and wizard controls.

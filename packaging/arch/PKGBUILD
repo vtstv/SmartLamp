@@ -1,6 +1,6 @@
 # Maintainer: Murr <vtstv@users.noreply.github.com>
 pkgname=smartlamp-studio
-pkgver=3.3.3
+pkgver=3.4.0
 pkgrel=1
 pkgdesc="High-performance Tuya Smart Lamp Controller with sub-35ms response time"
 arch=('x86_64' 'aarch64')

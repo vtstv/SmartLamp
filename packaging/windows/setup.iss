@@ -4,7 +4,7 @@
 ; ============================================================================
 
 #ifndef AppVersion
-  #define AppVersion "3.3.3"
+  #define AppVersion "3.4.0"
 #endif
 
 #define AppName "SmartLamp Studio"

@@ -97,9 +97,16 @@ namespace SmartLampApp
                 : LocalizationService.T("ActiveDevice");
             NavDash.Content = LocalizationService.T("NavDash");
             NavGroups.Content = LocalizationService.T("NavGroups");
+            if (NavDevices != null) NavDevices.Content = LocalizationService.T("NavDevices");
             NavSettings.Content = LocalizationService.T("NavSettings");
             NavGoogleHome.Content = LocalizationService.T("NavGoogleHome");
             NavMqtt.Content = LocalizationService.T("NavMqtt");
+
+            if (BtnHeaderWizard != null)
+            {
+                BtnHeaderWizard.Content = LocalizationService.T("AddDeviceWizardBtn");
+                BtnHeaderWizard.ToolTip = LocalizationService.T("TooltipWizard");
+            }
 
             // Dashboard Controls
             LblSleepTimer.Text = LocalizationService.T("SleepTimer");
@@ -241,6 +248,35 @@ namespace SmartLampApp
             if (BtnSkipUpdate != null) BtnSkipUpdate.Content = LocalizationService.T("SkipUpdate");
             if (BtnRemindLater != null) BtnRemindLater.Content = LocalizationService.T("RemindLater");
             if (BtnInstallUpdate != null) BtnInstallUpdate.Content = LocalizationService.T("UpdateNow");
+
+            // Devices Tab
+            if (LblMyDevicesTitle != null) LblMyDevicesTitle.Text = LocalizationService.T("MyDevicesTitle");
+            if (BtnDeviceTabWizard != null)
+            {
+                BtnDeviceTabWizard.Content = LocalizationService.T("AddDeviceWizardBtn");
+                BtnDeviceTabWizard.ToolTip = LocalizationService.T("TooltipWizard");
+            }
+            if (BtnTestDevice != null) BtnTestDevice.Content = LocalizationService.T("TestDeviceBtn");
+
+            // Setup Wizard Modal
+            if (LblWizardTitle != null) LblWizardTitle.Text = LocalizationService.T("WizardTitle");
+            if (TxtBadgeStep1 != null) TxtBadgeStep1.Text = LocalizationService.T("WizardBadgeStep1");
+            if (TxtBadgeStep2 != null) TxtBadgeStep2.Text = LocalizationService.T("WizardBadgeStep2");
+            if (TxtBadgeStep3 != null) TxtBadgeStep3.Text = LocalizationService.T("WizardBadgeStep3");
+            if (LblWizOptWifiTitle != null) LblWizOptWifiTitle.Text = LocalizationService.T("WizardOptWifiTitle");
+            if (LblWizOptWifiDesc != null) LblWizOptWifiDesc.Text = LocalizationService.T("WizardOptWifiDesc");
+            if (LblWizOptCloudTitle != null) LblWizOptCloudTitle.Text = LocalizationService.T("WizardOptCloudTitle");
+            if (LblWizOptCloudDesc != null) LblWizOptCloudDesc.Text = LocalizationService.T("WizardOptCloudDesc");
+            if (LblWizOptManualTitle != null) LblWizOptManualTitle.Text = LocalizationService.T("WizardOptManualTitle");
+            if (LblWizOptManualDesc != null) LblWizOptManualDesc.Text = LocalizationService.T("WizardOptManualDesc");
+            if (LblWizFoundDevices != null) LblWizFoundDevices.Text = LocalizationService.T("WizardFoundDevices");
+            if (BtnWizRescan != null) BtnWizRescan.Content = LocalizationService.T("WizardScanNow");
+            if (BtnWizLoadCloud != null) BtnWizLoadCloud.Content = LocalizationService.T("WizardCloudFetchBtn");
+            if (BtnWizStep2Back != null) BtnWizStep2Back.Content = LocalizationService.T("WizardBack");
+            if (BtnWizStep2Next != null) BtnWizStep2Next.Content = LocalizationService.T("WizardNext");
+            if (BtnWizTestToggle != null) BtnWizTestToggle.Content = LocalizationService.T("WizardTestConnection");
+            if (BtnWizStep3Back != null) BtnWizStep3Back.Content = LocalizationService.T("WizardBack");
+            if (BtnWizFinish != null) BtnWizFinish.Content = LocalizationService.T("WizardFinish");
 
             // Compact mode labels
             TxtCompactTitle.Text = LocalizationService.T("AppTitle");

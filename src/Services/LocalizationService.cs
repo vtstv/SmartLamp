@@ -41,11 +41,13 @@ namespace SmartLampApp.Services
             RegisterCoreStrings(dict);
             RegisterGroupsStrings(dict);
             RegisterSettingsStrings(dict);
+            RegisterDevicesStrings(dict);
             return dict;
         }
 
         static partial void RegisterGroupsStrings(Dictionary<string, Dictionary<string, string>> dict);
         static partial void RegisterSettingsStrings(Dictionary<string, Dictionary<string, string>> dict);
+        static partial void RegisterDevicesStrings(Dictionary<string, Dictionary<string, string>> dict);
 
         public static string T(string key, params object[] args)
         {

@@ -311,6 +311,7 @@ namespace SmartLampApp
             _protocol.UpdateConfig(_config);
 
             PopulateDeviceSelector();
+            PopulateMasterDevicesList();
             BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
             _ = RefreshStatusAsync();
             System.Windows.MessageBox.Show(LocalizationService.T("DeviceSavedMsg"), "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -359,8 +360,91 @@ namespace SmartLampApp
                 _protocol.UpdateConfig(_config);
 
                 PopulateDeviceSelector();
+                PopulateMasterDevicesList();
                 _ = RefreshStatusAsync();
                 System.Windows.MessageBox.Show(LocalizationService.T("DeviceDeletedMsg"), "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        public void PopulateMasterDevicesList()
+        {
+            if (LstDevicesMaster == null) return;
+            _isUpdatingUi = true;
+            LstDevicesMaster.Items.Clear();
+
+            if (_config.devices.Count == 0)
+            {
+                LstDevicesMaster.Items.Add(LocalizationService.T("NoDevicesConfigured"));
+                _isUpdatingUi = false;
+                return;
+            }
+
+            int selIndex = -1;
+            for (int i = 0; i < _config.devices.Count; i++)
+            {
+                var dev = _config.devices[i];
+                string room = string.IsNullOrWhiteSpace(dev.GroupName) ? "Default" : dev.GroupName;
+                LstDevicesMaster.Items.Add($"💡 {dev.Name}  •  IP: {dev.Ip}  •  Room: {room}");
+
+                if (dev.DevId == _config.selected_dev_id)
+                {
+                    selIndex = i;
+                }
+            }
+
+            if (selIndex >= 0)
+            {
+                LstDevicesMaster.SelectedIndex = selIndex;
+            }
+            _isUpdatingUi = false;
+        }
+
+        private void LstDevicesMaster_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdatingUi || LstDevicesMaster.SelectedIndex < 0) return;
+            int idx = LstDevicesMaster.SelectedIndex;
+            if (idx >= 0 && idx < _config.devices.Count)
+            {
+                var dev = _config.devices[idx];
+                _config.selected_dev_id = dev.DevId;
+                _config.is_group_control_active = false;
+                ConfigManager.Save(_config);
+                _protocol.UpdateConfig(_config);
+
+                PopulateDeviceForm();
+                PopulateDeviceSelector();
+                _ = RefreshStatusAsync();
+            }
+        }
+
+        private async void BtnTestDevice_Click(object sender, RoutedEventArgs e)
+        {
+            BtnTestDevice.IsEnabled = false;
+            BtnTestDevice.Content = "⏳ Testing...";
+            try
+            {
+                var active = _protocol.GetActiveDevice();
+                bool success = await _protocol.TogglePowerAsync(active);
+                if (success)
+                {
+                    BtnTestDevice.Content = "🟢 Success";
+                    await System.Threading.Tasks.Task.Delay(1000);
+                }
+                else
+                {
+                    BtnTestDevice.Content = "🔴 Failed";
+                    await System.Threading.Tasks.Task.Delay(1200);
+                }
+            }
+            catch
+            {
+                BtnTestDevice.Content = "🔴 Error";
+                await System.Threading.Tasks.Task.Delay(1200);
+            }
+            finally
+            {
+                BtnTestDevice.Content = LocalizationService.T("TestDeviceBtn");
+                BtnTestDevice.IsEnabled = true;
             }
         }
     }
