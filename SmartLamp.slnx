@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/libs/">
+    <Project Path="libs/TuyaNet.Native/TuyaNet.Native.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/SmartLamp.Cli/SmartLamp.Cli.csproj" />
+    <Project Path="src/SmartLamp.Desktop/SmartLamp.Desktop.csproj" />
+    <Project Path="src/SmartLampApp.csproj" />
+  </Folder>
+</Solution>

@@ -93,18 +93,33 @@ await device.TogglePowerAsync();
 
 **Prerequisites**: [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 
+### Quick Build (Solution)
 ```bash
-# Windows Desktop App (WPF, standalone)
-dotnet publish src/SmartLampApp.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o dist
+# Build all projects in the solution
+dotnet build SmartLamp.slnx
+```
 
-# Linux CLI (Single-file native binary)
-dotnet publish src/SmartLamp.Cli/SmartLamp.Cli.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o dist/cli-linux-x64
+### Unified Build & Packaging Scripts
 
-# Linux Desktop App (Avalonia UI)
-dotnet publish src/SmartLamp.Desktop/SmartLamp.Desktop.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o dist/desktop-linux-x64
+#### Windows (PowerShell):
+```powershell
+# Build and package all targets for release
+.\scripts\build.ps1 -Target All -Pack
 
-# Standalone Protocol Library (NuGet)
-dotnet pack libs/TuyaNet.Native/TuyaNet.Native.csproj -c Release -o releases
+# Build only Windows WPF application
+.\scripts\build.ps1 -Target Windows -Pack
+
+# Clean build artifacts
+.\scripts\clean.ps1
+```
+
+#### Linux & macOS (Bash):
+```bash
+# Build and package all targets (deb, pacman, tarball)
+./scripts/build.sh --target all --pack
+
+# Deep clean workspace
+./scripts/clean.sh
 ```
 
 ---

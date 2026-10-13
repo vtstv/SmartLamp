@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=SmartLamp Studio
+Comment=Control Tuya Smart Lamps Locally with Sub-35ms Latency
+Exec=SmartLampDesktop
+Icon=smartlamp
+Terminal=false
+Categories=Utility;HardwareSettings;
+Keywords=tuya;smartlamp;light;lamp;
+StartupNotify=true

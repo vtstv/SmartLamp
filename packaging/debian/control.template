@@ -1,0 +1,11 @@
+Package: smartlamp-studio
+Version: {{VERSION}}
+Section: utils
+Priority: optional
+Architecture: {{ARCH}}
+Installed-Size: {{INSTALLED_SIZE}}
+Maintainer: Murr <vtstv@users.noreply.github.com>
+Homepage: https://github.com/vtstv/SmartLamp
+Description: SmartLamp Studio - High-performance Tuya Smart Lamp Controller
+ High-performance desktop lighting control application with sub-35ms local LAN
+ socket communication, Tuya Cloud fallback, scenes, and presets.

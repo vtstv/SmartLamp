@@ -1,0 +1,185 @@
+<#
+.SYNOPSIS
+    SmartLamp Studio - Unified Multi-Platform Build & Packaging Script.
+.DESCRIPTION
+    Builds and packages SmartLamp Studio projects for Windows, Linux, and CLI.
+.PARAMETER Target
+    Build target: 'All', 'Windows', 'Linux', 'Desktop', 'Cli', or 'Library'. Default is 'All'.
+.PARAMETER Configuration
+    Build configuration: 'Release' or 'Debug'. Default is 'Release'.
+.PARAMETER Arch
+    Target architecture: 'x64', 'arm64', or 'all'. Default is 'x64'.
+.PARAMETER Pack
+    Creates distribution packages (zip, tar.gz, nupkg) in the releases/ directory.
+.PARAMETER Clean
+    Performs a clean build by removing previous build artifacts first.
+.EXAMPLE
+    .\scripts\build.ps1
+    .\scripts\build.ps1 -Target Windows -Pack
+    .\scripts\build.ps1 -Target Linux -Arch all -Pack
+    .\scripts\build.ps1 -Clean -Target All -Pack
+#>
+[CmdletBinding()]
+param(
+    [ValidateSet("All", "Windows", "Linux", "Desktop", "Cli", "Library")]
+    [string]$Target = "All",
+
+    [ValidateSet("Release", "Debug")]
+    [string]$Configuration = "Release",
+
+    [ValidateSet("x64", "arm64", "all")]
+    [string]$Arch = "x64",
+
+    [switch]$Pack,
+
+    [switch]$Clean
+)
+
+$ErrorActionPreference = "Stop"
+
+$rootDir = Split-Path -Parent $PSScriptRoot
+$distDir = Join-Path $rootDir "dist"
+$releasesDir = Join-Path $rootDir "releases"
+$packagingDir = Join-Path $rootDir "packaging"
+
+# 1. Stop any running instances to avoid file locks
+Get-Process -Name "SmartLampApp", "SmartLampDesktop", "smartlamp" -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Milliseconds 200
+
+# 2. Clean if requested
+if ($Clean) {
+    & (Join-Path $PSScriptRoot "clean.ps1")
+}
+
+# 2. Extract Version from src/AppVersion.cs
+$appVersion = "3.1.0"
+$versionFile = Join-Path $rootDir "src\AppVersion.cs"
+if (Test-Path $versionFile) {
+    $content = Get-Content $versionFile -Raw
+    if ($content -match 'Version = "([^"]+)"') {
+        $appVersion = $matches[1]
+    }
+}
+
+Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "      SmartLamp Studio Unified Build System v$appVersion" -ForegroundColor Cyan
+Write-Host "      Target: $Target | Config: $Configuration | Arch: $Arch | Pack: $Pack" -ForegroundColor Cyan
+Write-Host "================================================================" -ForegroundColor Cyan
+
+New-Item -ItemType Directory -Path $distDir -Force | Out-Null
+if ($Pack) {
+    New-Item -ItemType Directory -Path $releasesDir -Force | Out-Null
+}
+
+# Resolve Linux Runtime Identifiers
+$linuxRids = @()
+switch ($Arch) {
+    "x64"   { $linuxRids = @("linux-x64") }
+    "arm64" { $linuxRids = @("linux-arm64") }
+    "all"   { $linuxRids = @("linux-x64", "linux-arm64") }
+}
+
+# ------------------------------------------------------------------
+# Target: Library (TuyaNet.Native)
+# ------------------------------------------------------------------
+if ($Target -in @("All", "Library", "Windows")) {
+    Write-Host "`n[1] Building TuyaNet.Native Protocol Library..." -ForegroundColor Yellow
+    $projLib = Join-Path $rootDir "libs\TuyaNet.Native\TuyaNet.Native.csproj"
+    dotnet build $projLib -c $Configuration
+
+    if ($Pack) {
+        Write-Host "  --> Packing TuyaNet.Native NuGet package..." -ForegroundColor Green
+        dotnet pack $projLib -c $Configuration -o $releasesDir
+    }
+}
+
+# ------------------------------------------------------------------
+# Target: Windows Desktop (SmartLampApp WPF)
+# ------------------------------------------------------------------
+if ($Target -in @("All", "Windows")) {
+    Write-Host "`n[2] Compiling Windows WPF App (win-x64)..." -ForegroundColor Yellow
+    $projWpf = Join-Path $rootDir "src\SmartLampApp.csproj"
+    dotnet publish $projWpf -c $Configuration -r win-x64 --no-self-contained `
+        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $distDir
+
+    $iconSrc = Join-Path $rootDir "src\Assets\app_icon.ico"
+    if (Test-Path $iconSrc) {
+        Copy-Item -Path $iconSrc -Destination (Join-Path $distDir "app_icon.ico") -Force
+    }
+
+    if ($Pack) {
+        Write-Host "  --> Creating Windows Release Packages..." -ForegroundColor Green
+        $zipPath = Join-Path $releasesDir "SmartLampStudio_v${appVersion}_win-x64.zip"
+        $readmePath = Join-Path $rootDir "README.md"
+        $licensePath = Join-Path $rootDir "LICENSE"
+        $exePath = Join-Path $distDir "SmartLampApp.exe"
+
+        Compress-Archive -Path $exePath, $readmePath, $licensePath -DestinationPath $zipPath -Force
+        Copy-Item -Path $exePath -Destination (Join-Path $releasesDir "SmartLampApp_v${appVersion}.exe") -Force
+        Write-Host "  --> Created: $zipPath" -ForegroundColor DarkCyan
+    }
+}
+
+# ------------------------------------------------------------------
+# Target: Cross-Platform Native CLI (SmartLamp.Cli)
+# ------------------------------------------------------------------
+if ($Target -in @("All", "Linux", "Cli")) {
+    Write-Host "`n[3] Compiling Native CLI..." -ForegroundColor Yellow
+    $projCli = Join-Path $rootDir "src\SmartLamp.Cli\SmartLamp.Cli.csproj"
+
+    foreach ($rid in $linuxRids) {
+        Write-Host "  --> Publishing CLI for $rid..." -ForegroundColor Yellow
+        $outCli = Join-Path $distDir "cli-$rid"
+        dotnet publish $projCli -c $Configuration -r $rid --self-contained `
+            -p:PublishSingleFile=true -p:PublishTrimmed=true -o $outCli
+
+        if ($Pack) {
+            $cliArchive = Join-Path $releasesDir "SmartLamp_CLI_v${appVersion}_${rid}.tar.gz"
+            tar -czf $cliArchive -C $outCli smartlamp
+            Write-Host "  --> Created: $cliArchive" -ForegroundColor DarkCyan
+        }
+    }
+}
+
+# ------------------------------------------------------------------
+# Target: Cross-Platform Avalonia Desktop (SmartLamp.Desktop)
+# ------------------------------------------------------------------
+if ($Target -in @("All", "Linux", "Desktop")) {
+    Write-Host "`n[4] Compiling Avalonia Desktop (Linux)..." -ForegroundColor Yellow
+    $projDesktop = Join-Path $rootDir "src\SmartLamp.Desktop\SmartLamp.Desktop.csproj"
+
+    foreach ($rid in $linuxRids) {
+        Write-Host "  --> Publishing Avalonia Desktop for $rid..." -ForegroundColor Yellow
+        $outDesktop = Join-Path $distDir "desktop-$rid"
+        dotnet publish $projDesktop -c $Configuration -r $rid --self-contained `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $outDesktop
+
+        if ($Pack) {
+            Write-Host "  --> Packaging Standalone Tarball for $rid..." -ForegroundColor Green
+            $bundleDir = Join-Path $distDir "bundle-$rid\SmartLampStudio"
+            New-Item -ItemType Directory -Path $bundleDir -Force | Out-Null
+
+            Copy-Item -Path (Join-Path $outDesktop "SmartLampDesktop") -Destination $bundleDir -Force
+            $cliBin = Join-Path $distDir "cli-$rid\smartlamp"
+            if (Test-Path $cliBin) {
+                Copy-Item -Path $cliBin -Destination $bundleDir -Force
+            }
+            Copy-Item -Path (Join-Path $rootDir "src\SmartLamp.Desktop\Assets\app_icon.png") -Destination (Join-Path $bundleDir "smartlamp.png") -Force
+            Copy-Item -Path (Join-Path $packagingDir "desktop\smartlamp.desktop") -Destination $bundleDir -Force
+            Copy-Item -Path (Join-Path $packagingDir "scripts\install.sh") -Destination $bundleDir -Force
+            Copy-Item -Path (Join-Path $packagingDir "scripts\uninstall.sh") -Destination $bundleDir -Force
+
+            $tarPath = Join-Path $releasesDir "SmartLampStudio_v${appVersion}_${rid}.tar.gz"
+            tar -czf $tarPath -C (Join-Path $distDir "bundle-$rid") SmartLampStudio
+            Write-Host "  --> Created: $tarPath" -ForegroundColor DarkCyan
+        }
+    }
+}
+
+Write-Host "`n================================================================" -ForegroundColor Green
+Write-Host "      BUILD COMPLETED SUCCESSFULLY!" -ForegroundColor Green
+Write-Host "================================================================" -ForegroundColor Green
+if ($Pack) {
+    Write-Host "Packages in: $releasesDir" -ForegroundColor White
+    Get-ChildItem -Path $releasesDir | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize
+}

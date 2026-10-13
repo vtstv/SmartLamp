@@ -11,6 +11,7 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 OUT_DIR="$ROOT_DIR/releases"
 SRC_APP="$ROOT_DIR/src/SmartLamp.Desktop"
 SRC_CLI="$ROOT_DIR/src/SmartLamp.Cli"
+PKG_TEMPLATES="$ROOT_DIR/packaging"
 
 # Detect version
 VERSION="3.1.0"
@@ -74,62 +75,10 @@ for entry in "${ARCHS[@]}"; do
     cp -f "$CLI_DIR/smartlamp" "$BUNDLE_DIR/"
     cp -f "$SRC_APP/Assets/app_icon.png" "$BUNDLE_DIR/smartlamp.png"
     
-    # Desktop shortcut template
-    cat << 'EOF' > "$BUNDLE_DIR/smartlamp.desktop"
-[Desktop Entry]
-Type=Application
-Name=SmartLamp Studio
-Comment=Control Tuya Smart Lamps Locally with Sub-35ms Latency
-Exec=SmartLampDesktop
-Icon=smartlamp
-Terminal=false
-Categories=Utility;HardwareSettings;
-Keywords=tuya;smartlamp;light;lamp;
-StartupNotify=true
-EOF
-
-    # One-click installer
-    cat << 'EOF' > "$BUNDLE_DIR/install.sh"
-#!/bin/bash
-set -e
-INSTALL_DIR="$HOME/.local/bin"
-ICON_DIR="$HOME/.local/share/icons"
-APP_DIR="$HOME/.local/share/applications"
-DESKTOP_DIR="$HOME/Desktop"
-
-mkdir -p "$INSTALL_DIR" "$ICON_DIR" "$APP_DIR" "$DESKTOP_DIR"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-echo "==> Installing SmartLamp Studio..."
-cp -f "$SCRIPT_DIR/SmartLampDesktop" "$INSTALL_DIR/SmartLampDesktop"
-cp -f "$SCRIPT_DIR/smartlamp" "$INSTALL_DIR/smartlamp"
-chmod +x "$INSTALL_DIR/SmartLampDesktop" "$INSTALL_DIR/smartlamp"
-
-cp -f "$SCRIPT_DIR/smartlamp.png" "$ICON_DIR/smartlamp.png"
-
-sed "s|Exec=SmartLampDesktop|Exec=$INSTALL_DIR/SmartLampDesktop|g; s|Icon=smartlamp|Icon=$ICON_DIR/smartlamp.png|g" \
-    "$SCRIPT_DIR/smartlamp.desktop" > "$APP_DIR/smartlamp.desktop"
-chmod +x "$APP_DIR/smartlamp.desktop"
-
-if [ -d "$DESKTOP_DIR" ]; then
-    cp -f "$APP_DIR/smartlamp.desktop" "$DESKTOP_DIR/SmartLamp.desktop"
-    chmod +x "$DESKTOP_DIR/SmartLamp.desktop"
-fi
-
-echo "==> Installation complete! SmartLamp Studio is ready in your Application Menu & Desktop."
-EOF
-    chmod +x "$BUNDLE_DIR/install.sh"
-
-    # Uninstaller
-    cat << 'EOF' > "$BUNDLE_DIR/uninstall.sh"
-#!/bin/bash
-rm -f "$HOME/.local/bin/SmartLampDesktop" "$HOME/.local/bin/smartlamp"
-rm -f "$HOME/.local/share/icons/smartlamp.png"
-rm -f "$HOME/.local/share/applications/smartlamp.desktop"
-rm -f "$HOME/Desktop/SmartLamp.desktop"
-echo "==> SmartLamp Studio uninstalled."
-EOF
-    chmod +x "$BUNDLE_DIR/uninstall.sh"
+    cp -f "$PKG_TEMPLATES/desktop/smartlamp.desktop" "$BUNDLE_DIR/"
+    cp -f "$PKG_TEMPLATES/scripts/install.sh" "$BUNDLE_DIR/"
+    cp -f "$PKG_TEMPLATES/scripts/uninstall.sh" "$BUNDLE_DIR/"
+    chmod +x "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/uninstall.sh"
 
     tar -czf "$OUT_DIR/SmartLampStudio_v${VERSION}_${RID}.tar.gz" -C "$BUILD_DIR/$RID" SmartLampStudio
     tar -czf "$OUT_DIR/SmartLamp_CLI_v${VERSION}_${RID}.tar.gz" -C "$CLI_DIR" smartlamp
@@ -148,35 +97,15 @@ EOF
 
         cp -f "$SRC_APP/Assets/app_icon.png" "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps/smartlamp.png"
         cp -f "$SRC_APP/Assets/app_icon.png" "$DEB_ROOT/usr/share/pixmaps/smartlamp.png"
-
-        cat << EOF > "$DEB_ROOT/usr/share/applications/smartlamp.desktop"
-[Desktop Entry]
-Type=Application
-Name=SmartLamp Studio
-Comment=Control Tuya Smart Lamps Locally with Sub-35ms Latency
-Exec=/usr/bin/SmartLampDesktop
-Icon=smartlamp
-Terminal=false
-Categories=Utility;HardwareSettings;
-Keywords=tuya;smartlamp;light;lamp;
-StartupNotify=true
-EOF
+        cp -f "$PKG_TEMPLATES/desktop/smartlamp.desktop" "$DEB_ROOT/usr/share/applications/smartlamp.desktop"
+        sed -i 's|Exec=SmartLampDesktop|Exec=/usr/bin/SmartLampDesktop|g' "$DEB_ROOT/usr/share/applications/smartlamp.desktop"
 
         INSTALLED_SIZE=$(du -sk "$DEB_ROOT" | cut -f1)
 
-        cat << EOF > "$DEB_ROOT/DEBIAN/control"
-Package: smartlamp-studio
-Version: $VERSION
-Section: utils
-Priority: optional
-Architecture: $DEB_ARCH
-Installed-Size: $INSTALLED_SIZE
-Maintainer: Murr <vtstv@users.noreply.github.com>
-Homepage: https://github.com/vtstv/SmartLamp
-Description: SmartLamp Studio - High-performance Tuya Smart Lamp Controller
- High-performance desktop lighting control application with sub-35ms local LAN
- socket communication, Tuya Cloud fallback, scenes, and presets.
-EOF
+        sed -e "s|{{VERSION}}|$VERSION|g" \
+            -e "s|{{ARCH}}|$DEB_ARCH|g" \
+            -e "s|{{INSTALLED_SIZE}}|$INSTALLED_SIZE|g" \
+            "$PKG_TEMPLATES/debian/control.template" > "$DEB_ROOT/DEBIAN/control"
 
         dpkg-deb --build --root-owner-group "$DEB_ROOT" "$OUT_DIR/smartlamp-studio_${VERSION}_${DEB_ARCH}.deb"
         echo "--> Generated: $OUT_DIR/smartlamp-studio_${VERSION}_${DEB_ARCH}.deb"
@@ -195,19 +124,8 @@ EOF
 
     cp -f "$SRC_APP/Assets/app_icon.png" "$ARCH_ROOT/usr/share/icons/hicolor/512x512/apps/smartlamp.png"
     cp -f "$SRC_APP/Assets/app_icon.png" "$ARCH_ROOT/usr/share/pixmaps/smartlamp.png"
-
-    cat << EOF > "$ARCH_ROOT/usr/share/applications/smartlamp.desktop"
-[Desktop Entry]
-Type=Application
-Name=SmartLamp Studio
-Comment=Control Tuya Smart Lamps Locally with Sub-35ms Latency
-Exec=/usr/bin/SmartLampDesktop
-Icon=smartlamp
-Terminal=false
-Categories=Utility;HardwareSettings;
-Keywords=tuya;smartlamp;light;lamp;
-StartupNotify=true
-EOF
+    cp -f "$PKG_TEMPLATES/desktop/smartlamp.desktop" "$ARCH_ROOT/usr/share/applications/smartlamp.desktop"
+    sed -i 's|Exec=SmartLampDesktop|Exec=/usr/bin/SmartLampDesktop|g' "$ARCH_ROOT/usr/share/applications/smartlamp.desktop"
 
     RAW_SIZE=$(du -sb "$ARCH_ROOT" | cut -f1)
     BUILD_DATE=$(date +%s)

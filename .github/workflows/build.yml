@@ -26,31 +26,10 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Build and Pack TuyaNet.Native Class Library
-        run: |
-          dotnet pack libs/TuyaNet.Native/TuyaNet.Native.csproj -c Release -o releases
-
-      - name: Compile Lightweight WPF Application (.NET 9 win-x64)
-        run: |
-          dotnet publish src/SmartLampApp.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
-
-      - name: Create Windows Release Packages
+      - name: Build and Package Windows App & Library
         shell: powershell
         run: |
-          $versionFile = "src/AppVersion.cs"
-          $appVersion = "3.1.0"
-          if (Test-Path $versionFile) {
-              $content = Get-Content $versionFile -Raw
-              if ($content -match 'Version = "([^"]+)"') {
-                  $appVersion = $matches[1]
-              }
-          }
-          New-Item -ItemType Directory -Path releases -Force
-
-          # Package Windows WPF Application
-          $winZipPath = "releases/SmartLampStudio_v${appVersion}_win-x64.zip"
-          Compress-Archive -Path "dist/SmartLampApp.exe", "README.md", "LICENSE" -DestinationPath $winZipPath -Force
-          Copy-Item -Path "dist/SmartLampApp.exe" -Destination "releases/SmartLampApp_v${appVersion}.exe" -Force
+          .\scripts\build.ps1 -Target Windows -Pack
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
