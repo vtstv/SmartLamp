@@ -85,7 +85,9 @@ namespace SmartLampApp
                 var tokenRes = await _sharingAuthService.RequestQrCodeAsync(userCode, schema);
                 if (!tokenRes.Success || string.IsNullOrEmpty(tokenRes.Token))
                 {
-                    string errMsg = string.IsNullOrEmpty(tokenRes.ErrorMsg) ? tokenRes.ErrorCode : tokenRes.ErrorMsg;
+                    string errMsg = !string.IsNullOrEmpty(tokenRes.ErrorMsg) ? tokenRes.ErrorMsg :
+                                    !string.IsNullOrEmpty(tokenRes.ErrorCode) ? tokenRes.ErrorCode :
+                                    "Failed to obtain login QR code from Tuya gateway.";
                     TxtWizQrStatus.Text = $"🔴 {errMsg}";
                     TxtWizQrStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xEF, 0x44, 0x44));
                     BtnGenerateQrCode.IsEnabled = true;

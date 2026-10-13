@@ -70,5 +70,67 @@ namespace SmartLamp.Tests
             string resultShort = TuyaSharingCrypto.DecryptAesGcm(shortBase64, secret);
             Assert.Equal(string.Empty, resultShort);
         }
+
+        [Fact]
+        public async System.Threading.Tasks.Task RequestQrCodeAsync_ParsesTuyaQrcodePropertyCorrectly()
+        {
+            string jsonResponse = "{\"success\":true,\"tid\":\"2f4eceb2c74c11f1a4f1fe311d4ee919\",\"t\":1791926545041,\"result\":{\"qrcode\":\"EU1791926545039HkNuczMDdeHtSisDmapiklgaRc179192684503903\"}}";
+            var mockHandler = new MockHttpMessageHandler(req => new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new System.Net.Http.StringContent(jsonResponse)
+            });
+
+            var service = new TuyaSharingAuthService(new System.Net.Http.HttpClient(mockHandler));
+            var tokenRes = await service.RequestQrCodeAsync("CxWGgPB", "smartlife");
+
+            Assert.True(tokenRes.Success);
+            Assert.Equal("EU1791926545039HkNuczMDdeHtSisDmapiklgaRc179192684503903", tokenRes.Token);
+            Assert.Equal("smartlife--qrLogin?token=EU1791926545039HkNuczMDdeHtSisDmapiklgaRc179192684503903", tokenRes.QrCodeContent);
+        }
+
+        [Fact]
+        public async System.Threading.Tasks.Task PollLoginResultAsync_ReturnsUnscannedWhenPending()
+        {
+            string jsonResponse = "{\"code\":\"E0020003\",\"msg\":\"Login failed, please scan and try again!\",\"success\":false,\"tid\":\"34f2c0c1c74c11f1befb3a77ad39ec5d\",\"t\":1791926554503}";
+            var mockHandler = new MockHttpMessageHandler(req => new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new System.Net.Http.StringContent(jsonResponse)
+            });
+
+            var service = new TuyaSharingAuthService(new System.Net.Http.HttpClient(mockHandler));
+            var (scanned, session, err) = await service.PollLoginResultAsync("token_123", "CxWGgPB");
+
+            Assert.False(scanned);
+            Assert.Null(session);
+            Assert.Contains("E0020003", err);
+        }
+
+        [Fact]
+        public async System.Threading.Tasks.Task PollLoginResultAsync_ReturnsSessionWhenConfirmed()
+        {
+            string jsonResponse = "{\"success\":true,\"result\":{\"accessToken\":\"acc_123\",\"refreshToken\":\"ref_456\",\"expireTime\":1791999999,\"uid\":\"uid_789\",\"endpoint\":\"https://openapi.tuyaeu.com\"}}";
+            var mockHandler = new MockHttpMessageHandler(req => new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new System.Net.Http.StringContent(jsonResponse)
+            });
+
+            var service = new TuyaSharingAuthService(new System.Net.Http.HttpClient(mockHandler));
+            var (scanned, session, err) = await service.PollLoginResultAsync("token_123", "CxWGgPB");
+
+            Assert.True(scanned);
+            Assert.NotNull(session);
+            Assert.Equal("acc_123", session.AccessToken);
+            Assert.Equal("ref_456", session.RefreshToken);
+            Assert.Equal("https://openapi.tuyaeu.com", session.Endpoint);
+        }
+    }
+
+    public class MockHttpMessageHandler : System.Net.Http.HttpMessageHandler
+    {
+        private readonly Func<System.Net.Http.HttpRequestMessage, System.Net.Http.HttpResponseMessage> _handler;
+        public MockHttpMessageHandler(Func<System.Net.Http.HttpRequestMessage, System.Net.Http.HttpResponseMessage> handler) => _handler = handler;
+        protected override System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> SendAsync(
+            System.Net.Http.HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+            => System.Threading.Tasks.Task.FromResult(_handler(request));
     }
 }

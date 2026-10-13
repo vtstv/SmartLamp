@@ -179,13 +179,32 @@ namespace SmartLampApp.Services
 
                 if (success && doc.RootElement.TryGetProperty("result", out var resElem))
                 {
-                    if (resElem.TryGetProperty("token", out var tok)) result.Token = tok.GetString() ?? "";
-                    if (resElem.TryGetProperty("code", out var code)) result.QrCodeContent = code.GetString() ?? "";
+                    string rawToken = "";
+                    if (resElem.TryGetProperty("qrcode", out var qrProp)) rawToken = qrProp.GetString() ?? "";
+                    else if (resElem.TryGetProperty("token", out var tokProp)) rawToken = tokProp.GetString() ?? "";
+                    else if (resElem.TryGetProperty("code", out var codeProp)) rawToken = codeProp.GetString() ?? "";
+
+                    result.Token = rawToken;
+
+                    if (string.IsNullOrEmpty(rawToken))
+                    {
+                        result.Success = false;
+                        result.ErrorMsg = "No token returned from Tuya gateway.";
+                    }
+                    else if (rawToken.Contains("--qrLogin") || rawToken.StartsWith("http"))
+                    {
+                        result.QrCodeContent = rawToken;
+                    }
+                    else
+                    {
+                        result.QrCodeContent = $"{schema}--qrLogin?token={rawToken}";
+                    }
                 }
                 else
                 {
                     if (doc.RootElement.TryGetProperty("code", out var c)) result.ErrorCode = c.GetString() ?? "";
                     if (doc.RootElement.TryGetProperty("msg", out var m)) result.ErrorMsg = m.GetString() ?? "";
+                    if (string.IsNullOrEmpty(result.ErrorMsg)) result.ErrorMsg = result.ErrorCode;
                 }
             }
             catch (Exception ex)
