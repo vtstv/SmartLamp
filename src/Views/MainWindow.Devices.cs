@@ -319,7 +319,7 @@ namespace SmartLampApp
         private void BtnDeleteDevice_Click(object sender, RoutedEventArgs e)
         {
             var active = _protocol.GetActiveDevice();
-            if (active == null || string.IsNullOrWhiteSpace(active.DevId))
+            if (active == null || (string.IsNullOrWhiteSpace(active.DevId) && string.IsNullOrWhiteSpace(active.Ip)))
             {
                 return;
             }
@@ -327,9 +327,35 @@ namespace SmartLampApp
             var result = System.Windows.MessageBox.Show(LocalizationService.T("ConfirmDeleteDevice", active.Name, active.Ip), "SmartLamp", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
-                _config.devices.RemoveAll(d => d.DevId == active.DevId);
-                _config.selected_dev_id = _config.devices.Count > 0 ? _config.devices[0].DevId : "";
+                _config.devices.RemoveAll(d => d.DevId == active.DevId || (!string.IsNullOrEmpty(active.Ip) && d.Ip == active.Ip));
+                if (_config.groups != null)
+                {
+                    foreach (var grp in _config.groups)
+                    {
+                        if (!string.IsNullOrEmpty(active.DevId)) grp.DeviceIds.Remove(active.DevId);
+                    }
+                }
+
+                if (_config.devices.Count == 0)
+                {
+                    _config.ip = "";
+                    _config.dev_id = "";
+                    _config.local_key = "";
+                    _config.selected_dev_id = "";
+                }
+                else
+                {
+                    _config.selected_dev_id = _config.devices[0].DevId;
+                    if (_config.dev_id == active.DevId)
+                    {
+                        _config.ip = _config.devices[0].Ip;
+                        _config.dev_id = _config.devices[0].DevId;
+                        _config.local_key = _config.devices[0].LocalKey;
+                    }
+                }
+
                 ConfigManager.Save(_config);
+                TuyaProtocol.ResetLocalClients();
                 _protocol.UpdateConfig(_config);
 
                 PopulateDeviceSelector();

@@ -117,6 +117,30 @@ namespace SmartLampApp
                 return;
             }
 
+            if (accKey.Length < 32)
+            {
+                var confirm = System.Windows.MessageBox.Show(
+                    $"Warning: Access Key (Secret) is only {accKey.Length} characters long (standard Tuya secret is 32 characters).\n\nPlease check if characters were cut off when copying.\n\nDo you want to continue anyway?",
+                    "Potentially Truncated Secret",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm != MessageBoxResult.Yes) return;
+            }
+
+            if (string.IsNullOrWhiteSpace(devId))
+            {
+                var ask = System.Windows.MessageBox.Show(
+                    "Device ID field is empty.\n\nTo fetch a specific key, enter its Device ID (from iot.tuya.com, e.g. bf0123456789abcdef).\n\nWould you like to run 'Sync All Devices' instead to find all devices from your Tuya cloud project?",
+                    "Device ID Missing",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+                if (ask == MessageBoxResult.Yes)
+                {
+                    BtnCloudSyncAll_Click(sender, e);
+                }
+                return;
+            }
+
             BtnCloudFetch.Content = "Fetching key...";
             BtnCloudFetch.IsEnabled = false;
 
@@ -150,6 +174,16 @@ namespace SmartLampApp
             {
                 System.Windows.MessageBox.Show("Please enter your Tuya Access ID and Access Key (Secret).", "Missing Credentials", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
+            }
+
+            if (accKey.Length < 32)
+            {
+                var confirm = System.Windows.MessageBox.Show(
+                    $"Warning: Access Key (Secret) is only {accKey.Length} characters long (standard Tuya secret is 32 characters).\n\nPlease check if characters were cut off when copying.\n\nDo you want to continue anyway?",
+                    "Potentially Truncated Secret",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm != MessageBoxResult.Yes) return;
             }
 
             BtnCloudSyncAll.Content = "Syncing devices...";

@@ -82,7 +82,7 @@ namespace SmartLampApp.Services
                 return dev;
             }
 
-            if (!string.IsNullOrWhiteSpace(_config.local_key))
+            if (_config.devices == null && !string.IsNullOrWhiteSpace(_config.local_key))
             {
                 return new DeviceInfo
                 {
@@ -97,7 +97,7 @@ namespace SmartLampApp.Services
             return new DeviceInfo();
         }
 
-        public bool IsConfigured => _activeDevice != null && !string.IsNullOrWhiteSpace(_activeDevice.LocalKey);
+        public bool IsConfigured => _activeDevice != null && !string.IsNullOrWhiteSpace(_activeDevice.LocalKey) && !string.IsNullOrWhiteSpace(_activeDevice.Ip);
 
         private async Task<bool> DispatchCommandAsync(Func<Task<bool>> localAction, Func<Task<bool>> cloudAction)
         {

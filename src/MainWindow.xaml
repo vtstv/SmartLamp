@@ -262,8 +262,8 @@
                 <Button x:Name="NavDash" Content="💡 Control Dashboard" Width="160" Height="34" Style="{StaticResource GlassBtn}" Background="#00F0FF" Foreground="#000000" FontWeight="Bold" Margin="0,0,6,0" Click="NavDash_Click"/>
                 <Button x:Name="NavGroups" Content="👥 Groups &amp; Rooms" Width="150" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGroups_Click"/>
                 <Button x:Name="NavSettings" Content="⚙️ Settings &amp; Hotkeys" Width="160" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavSettings_Click"/>
-                <Button x:Name="NavGoogleHome" Content="🌐 Google Home" Width="130" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGoogleHome_Click"/>
-                <Button x:Name="NavMqtt" Content="🤖 Home Assistant &amp; MQTT" Width="180" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Click="NavMqtt_Click"/>
+                <Button x:Name="NavGoogleHome" Visibility="Collapsed" Content="🌐 Google Home" Width="130" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Margin="0,0,6,0" Click="NavGoogleHome_Click"/>
+                <Button x:Name="NavMqtt" Visibility="Collapsed" Content="🤖 Home Assistant &amp; MQTT" Width="180" Height="34" Style="{StaticResource GlassBtn}" Background="#1F1F30" Foreground="#AAAAAA" Click="NavMqtt_Click"/>
             </StackPanel>
 
             <!-- 4. Content Area (2-Column Grid, ZERO SCROLLING!) -->

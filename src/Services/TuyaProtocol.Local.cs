@@ -16,6 +16,7 @@ namespace SmartLampApp.Services
     public partial class TuyaProtocol
     {
         private static readonly ConcurrentDictionary<string, TuyaDevice> _localClients = new();
+        public static void ResetLocalClients() => _localClients.Clear();
 
         private TuyaDevice GetLocalDevice(DeviceInfo dev)
         {

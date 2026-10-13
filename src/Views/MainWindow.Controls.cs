@@ -207,6 +207,13 @@ namespace SmartLampApp
 
         public async Task<bool> TogglePowerFromExternalTriggerAsync()
         {
+            if (!_protocol.IsConfigured && (!_config.is_group_control_active || _protocol.GetActiveGroup() == null || _protocol.GetDevicesForGroup(_protocol.GetActiveGroup()!).Count == 0))
+            {
+                _isPowerOn = false;
+                UpdatePowerButtonUi();
+                return false;
+            }
+
             _isPowerOn = !_isPowerOn;
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
@@ -229,6 +236,13 @@ namespace SmartLampApp
 
         public async Task<bool> SetPowerFromExternalTriggerAsync(bool powerOn)
         {
+            if (!_protocol.IsConfigured && (!_config.is_group_control_active || _protocol.GetActiveGroup() == null || _protocol.GetDevicesForGroup(_protocol.GetActiveGroup()!).Count == 0))
+            {
+                _isPowerOn = false;
+                UpdatePowerButtonUi();
+                return false;
+            }
+
             _isPowerOn = powerOn;
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();

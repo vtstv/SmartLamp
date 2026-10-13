@@ -35,6 +35,33 @@ namespace SmartLampApp.Services
             return await res.Content.ReadAsStringAsync();
         }
 
+        private static string ParseTuyaCloudError(string jsonStr)
+        {
+            if (string.IsNullOrWhiteSpace(jsonStr)) return "";
+            try
+            {
+                using var doc = JsonDocument.Parse(jsonStr);
+                var root = doc.RootElement;
+                int code = root.TryGetProperty("code", out var cProp) ? cProp.GetInt32() : 0;
+                string msg = root.TryGetProperty("msg", out var mProp) ? mProp.GetString() ?? "" : "";
+
+                if (code == 28841002 || msg.Contains("subscription has expired", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Tuya IoT Core service subscription has expired (code 28841002). Renew for free on iot.tuya.com: Cloud -> Cloud Services -> IoT Core -> Extend Trial Period.";
+                }
+                if (code == 1004 || msg.Contains("sign invalid", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Signature invalid (code 1004). Please verify your Access ID and Access Key (Secret).";
+                }
+                if (!string.IsNullOrEmpty(msg))
+                {
+                    return $"{msg} (code {code})";
+                }
+            }
+            catch { }
+            return "";
+        }
+
         public async Task<(string localKey, string error)> AutoFetchKeyFromCloudAsync(string accessId, string accessKey, string region, string devId = "")
         {
             return await FetchLocalKeyFromCloudAsync(accessId, accessKey, region, devId);
@@ -48,6 +75,7 @@ namespace SmartLampApp.Services
                 if (string.IsNullOrEmpty(token)) return ("", "Failed to obtain Tuya Cloud token. Check credentials.");
 
                 string baseUrl = GetTuyaBaseUrl(region);
+                string lastError = "";
 
                 // 1. Try direct device details endpoint: /v1.0/devices/{devId}
                 if (!string.IsNullOrWhiteSpace(devId))
@@ -56,6 +84,9 @@ namespace SmartLampApp.Services
                     string resJson1 = await SendCloudGetAsync(accessId, accessKey, token, baseUrl, uri1);
                     if (!string.IsNullOrWhiteSpace(resJson1))
                     {
+                        string err1 = ParseTuyaCloudError(resJson1);
+                        if (!string.IsNullOrEmpty(err1)) lastError = err1;
+
                         using var doc1 = JsonDocument.Parse(resJson1);
                         if (doc1.RootElement.TryGetProperty("result", out var resObj) && resObj.ValueKind == JsonValueKind.Object)
                         {
@@ -73,6 +104,9 @@ namespace SmartLampApp.Services
                 string resJson2 = await SendCloudGetAsync(accessId, accessKey, token, baseUrl, uri2);
                 if (!string.IsNullOrWhiteSpace(resJson2))
                 {
+                    string err2 = ParseTuyaCloudError(resJson2);
+                    if (!string.IsNullOrEmpty(err2)) lastError = err2;
+
                     using var doc2 = JsonDocument.Parse(resJson2);
                     if (doc2.RootElement.TryGetProperty("result", out var resObj) && resObj.TryGetProperty("devices", out var devArr))
                     {
@@ -119,6 +153,7 @@ namespace SmartLampApp.Services
                     }
                 }
 
+                if (!string.IsNullOrEmpty(lastError)) return ("", lastError);
                 return ("", "Device or local key not found in cloud account.");
             }
             catch (Exception ex)
@@ -141,8 +176,10 @@ namespace SmartLampApp.Services
                 string uri2 = "/v1.0/iot-01/associated-users/devices";
                 string resJson2 = await SendCloudGetAsync(accessId, accessKey, token, baseUrl, uri2);
                 string uid = "";
+                string lastError = "";
                 if (!string.IsNullOrWhiteSpace(resJson2))
                 {
+                    lastError = ParseTuyaCloudError(resJson2);
                     using var doc2 = JsonDocument.Parse(resJson2);
                     if (doc2.RootElement.TryGetProperty("result", out var resObj) && resObj.TryGetProperty("devices", out var devArr))
                     {
@@ -214,6 +251,7 @@ namespace SmartLampApp.Services
                 }
 
                 if (result.Count > 0) return (result, "");
+                if (!string.IsNullOrEmpty(lastError)) return (result, lastError);
                 return (result, "No devices found in Tuya Cloud account.");
             }
             catch (Exception ex)

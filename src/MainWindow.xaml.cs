@@ -68,6 +68,8 @@ namespace SmartLampApp
             ChkCloseToTray.IsChecked = _config.close_to_tray;
             ChkEnableGoogle.IsChecked = _config.enable_google_home;
             ChkEnableMqtt.IsChecked = _config.enable_mqtt;
+            NavGoogleHome.Visibility = _config.enable_google_home ? Visibility.Visible : Visibility.Collapsed;
+            NavMqtt.Visibility = _config.enable_mqtt ? Visibility.Visible : Visibility.Collapsed;
             ChkTimerNotifications.IsChecked = _config.enable_timer_notifications;
             UpdateInstallButtonState();
             InitializeUpdateService();

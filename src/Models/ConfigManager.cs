@@ -185,19 +185,31 @@ namespace SmartLampApp.Models
                         cfg.access_key = DecryptSecret(cfg.access_key);
                         cfg.local_key = DecryptSecret(cfg.local_key);
 
-                        if (cfg.devices != null)
+                        if (cfg.devices == null) cfg.devices = new List<DeviceInfo>();
+
+                        if (cfg.devices.Count == 0 && !string.IsNullOrWhiteSpace(cfg.ip))
                         {
-                            foreach (var dev in cfg.devices)
+                            cfg.devices.Add(new DeviceInfo
                             {
-                                dev.LocalKey = DecryptSecret(dev.LocalKey);
-                                if (string.IsNullOrWhiteSpace(dev.LocalKey) && !string.IsNullOrWhiteSpace(cfg.local_key))
-                                {
-                                    dev.LocalKey = cfg.local_key;
-                                }
-                                if ((string.IsNullOrWhiteSpace(dev.DevId) || dev.DevId.Contains(".") || dev.DevId == dev.Ip) && !string.IsNullOrWhiteSpace(cfg.dev_id) && !cfg.dev_id.Contains("."))
-                                {
-                                    dev.DevId = cfg.dev_id;
-                                }
+                                Name = "Smart Lamp",
+                                Ip = cfg.ip,
+                                DevId = cfg.dev_id,
+                                LocalKey = cfg.local_key,
+                                Version = string.IsNullOrWhiteSpace(cfg.version) ? "3.5" : cfg.version,
+                                GroupName = "Default Group"
+                            });
+                        }
+
+                        foreach (var dev in cfg.devices)
+                        {
+                            dev.LocalKey = DecryptSecret(dev.LocalKey);
+                            if (string.IsNullOrWhiteSpace(dev.LocalKey) && !string.IsNullOrWhiteSpace(cfg.local_key))
+                            {
+                                dev.LocalKey = cfg.local_key;
+                            }
+                            if ((string.IsNullOrWhiteSpace(dev.DevId) || dev.DevId.Contains(".") || dev.DevId == dev.Ip) && !string.IsNullOrWhiteSpace(cfg.dev_id) && !cfg.dev_id.Contains("."))
+                            {
+                                dev.DevId = cfg.dev_id;
                             }
                         }
 
