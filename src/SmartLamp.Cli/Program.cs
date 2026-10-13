@@ -151,7 +151,8 @@ namespace SmartLamp.Cli
             Console.WriteLine($"Found {devices.Count} device(s):");
             foreach (var d in devices)
             {
-                Console.WriteLine($" - IP: {d.Ip,-15} | DevID: {d.DeviceId} | Version: {d.Version}");
+                string name = string.IsNullOrWhiteSpace(d.ProductKey) ? "Tuya Device" : d.ProductKey;
+                Console.WriteLine($" - IP: {d.Ip,-15} | Name: {name,-22} | DevID: {d.DeviceId} | Version: {d.Version}");
             }
             return 0;
         }

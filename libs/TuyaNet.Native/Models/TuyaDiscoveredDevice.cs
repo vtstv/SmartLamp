@@ -11,19 +11,19 @@ namespace TuyaNet.Native.Models
     public class TuyaDiscoveredDevice
     {
         /// <summary>IP address of the device on the local network.</summary>
-        public string Ip { get; init; } = "";
+        public string Ip { get; set; } = "";
 
         /// <summary>Unique Tuya Device ID (gwId).</summary>
-        public string DeviceId { get; init; } = "";
+        public string DeviceId { get; set; } = "";
 
         /// <summary>Protocol version reported by the device (e.g. "3.5", "3.4", "3.3").</summary>
-        public string Version { get; init; } = "3.5";
+        public string Version { get; set; } = "3.5";
 
         /// <summary>Tuya Product Key identifier.</summary>
-        public string ProductKey { get; init; } = "";
+        public string ProductKey { get; set; } = "";
 
         /// <summary>Raw JSON payload decoded from the discovery broadcast.</summary>
-        public string RawJson { get; init; } = "";
+        public string RawJson { get; set; } = "";
 
         /// <inheritdoc />
         public override string ToString() => $"[TuyaDevice {DeviceId} @ {Ip} (v{Version}) - {ProductKey}]";

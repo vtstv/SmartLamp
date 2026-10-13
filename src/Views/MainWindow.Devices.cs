@@ -258,7 +258,17 @@ namespace SmartLampApp
             {
                 foreach (var dev in _discoveredList)
                 {
-                    LstDiscovered.Items.Add($"💡 {dev.ProductName} - IP: {dev.Ip} (ID: {dev.DevId})");
+                    var known = _config.devices.FirstOrDefault(d => d.Ip == dev.Ip);
+                    if (known != null)
+                    {
+                        if (dev.DevId.StartsWith("lan_") || string.IsNullOrWhiteSpace(dev.DevId))
+                            dev.DevId = known.DevId;
+                        if (dev.ProductName == "Tuya Device" || dev.ProductName.StartsWith("Tuya Device ("))
+                            dev.ProductName = known.Name;
+                    }
+
+                    string idDisplay = dev.DevId.StartsWith("lan_") ? "Port 6668" : $"ID: {dev.DevId}";
+                    LstDiscovered.Items.Add($"💡 {dev.ProductName} - IP: {dev.Ip} ({idDisplay})");
                 }
             }
         }
@@ -269,9 +279,25 @@ namespace SmartLampApp
             if (idx >= 0 && idx < _discoveredList.Count)
             {
                 var sel = _discoveredList[idx];
-                TxtName.Text = sel.ProductName;
-                TxtIp.Text = sel.Ip;
-                TxtDevId.Text = sel.DevId;
+                var known = _config.devices.FirstOrDefault(d => d.Ip == sel.Ip);
+                if (known != null)
+                {
+                    TxtName.Text = known.Name;
+                    TxtIp.Text = known.Ip;
+                    TxtDevId.Text = known.DevId;
+                    PassLocalKey.Password = known.LocalKey;
+                    TxtLocalKeyVisible.Text = known.LocalKey;
+                    TxtGroup.Text = known.GroupName;
+                }
+                else
+                {
+                    TxtName.Text = sel.ProductName;
+                    TxtIp.Text = sel.Ip;
+                    if (!sel.DevId.StartsWith("lan_"))
+                    {
+                        TxtDevId.Text = sel.DevId;
+                    }
+                }
             }
         }
 
