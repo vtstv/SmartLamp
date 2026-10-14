@@ -30,28 +30,35 @@ namespace SmartLampApp
             }
 
             _isUpdatingUi = true;
-            if (active.UseLocalIp && !string.IsNullOrEmpty(active.LocalIp))
+            try
             {
-                TxtIp.Text = active.LocalIp;
-                if (RbIpLocal != null) RbIpLocal.IsChecked = true;
+                if (active.UseLocalIp && !string.IsNullOrEmpty(active.LocalIp))
+                {
+                    TxtIp.Text = active.LocalIp;
+                    if (RbIpLocal != null) RbIpLocal.IsChecked = true;
+                }
+                else if (!active.UseLocalIp && !string.IsNullOrEmpty(active.ExternalIp))
+                {
+                    TxtIp.Text = active.ExternalIp;
+                    if (RbIpExternal != null) RbIpExternal.IsChecked = true;
+                }
+                else
+                {
+                    TxtIp.Text = active.Ip;
+                    if (RbIpLocal != null) RbIpLocal.IsChecked = TuyaSharingCrypto.IsPrivateIp(active.Ip);
+                    if (RbIpExternal != null) RbIpExternal.IsChecked = !TuyaSharingCrypto.IsPrivateIp(active.Ip);
+                }
             }
-            else if (!active.UseLocalIp && !string.IsNullOrEmpty(active.ExternalIp))
+            finally
             {
-                TxtIp.Text = active.ExternalIp;
-                if (RbIpExternal != null) RbIpExternal.IsChecked = true;
+                _isUpdatingUi = false;
             }
-            else
-            {
-                TxtIp.Text = active.Ip;
-                if (RbIpLocal != null) RbIpLocal.IsChecked = TuyaSharingCrypto.IsPrivateIp(active.Ip);
-                if (RbIpExternal != null) RbIpExternal.IsChecked = !TuyaSharingCrypto.IsPrivateIp(active.Ip);
-            }
-            _isUpdatingUi = false;
         }
 
         private void RbIpType_Checked(object sender, RoutedEventArgs e)
         {
             if (_isUpdatingUi || _protocol == null || TxtIp == null) return;
+            if (_isAddingNewDevice) return;
             var active = _protocol.GetActiveDevice();
             if (active == null) return;
 
@@ -61,10 +68,16 @@ namespace SmartLampApp
                 if (!string.IsNullOrEmpty(active.LocalIp))
                 {
                     TxtIp.Text = active.LocalIp;
+                    active.Ip = active.LocalIp;
+                    ConfigManager.Save(_config);
+                    _protocol.UpdateConfig(_config);
+                    TuyaProtocol.ResetLocalClients();
+                    _ = RefreshStatusAsync();
                 }
                 else
                 {
-                    _ = AutoDetectLocalIpAsync(active.DevId, showFeedback: false);
+                    string localKey = GetEnteredLocalKey();
+                    _ = AutoDetectLocalIpAsync(active.DevId, localKey, active.Version, showFeedback: false);
                 }
             }
             else if (RbIpExternal?.IsChecked == true)
@@ -73,6 +86,11 @@ namespace SmartLampApp
                 if (!string.IsNullOrEmpty(active.ExternalIp))
                 {
                     TxtIp.Text = active.ExternalIp;
+                    active.Ip = active.ExternalIp;
+                    ConfigManager.Save(_config);
+                    _protocol.UpdateConfig(_config);
+                    TuyaProtocol.ResetLocalClients();
+                    _ = RefreshStatusAsync();
                 }
             }
         }
@@ -86,11 +104,15 @@ namespace SmartLampApp
                 return;
             }
 
+            string localKey = GetEnteredLocalKey();
+            var active = _protocol?.GetActiveDevice();
+            string version = active?.Version ?? "3.5";
+
             BtnAutoDetectIp.IsEnabled = false;
             BtnAutoDetectIp.Content = "⏳ Scanning...";
             try
             {
-                await AutoDetectLocalIpAsync(devId, showFeedback: true);
+                await AutoDetectLocalIpAsync(devId, localKey, version, showFeedback: true);
             }
             finally
             {
@@ -99,23 +121,68 @@ namespace SmartLampApp
             }
         }
 
-        private async Task AutoDetectLocalIpAsync(string devId, bool showFeedback = false)
+        private async void BtnAutoResolveAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (_protocol == null || _config?.devices == null || _config.devices.Count == 0)
+            {
+                MessageBox.Show(this, "No devices configured to resolve.", "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            BtnAutoResolveAll.IsEnabled = false;
+            BtnAutoResolveAll.Content = "⏳ Resolving...";
+            try
+            {
+                var (resolved, total) = await _protocol.AutoResolveAllDeviceIpsAsync(3500);
+
+                var active = _protocol.GetActiveDevice();
+                SyncDeviceIpUi(active);
+                PopulateMasterDevicesList();
+                PopulateDeviceSelector();
+                _ = RefreshStatusAsync();
+
+                if (resolved > 0)
+                {
+                    MessageBox.Show(this,
+                        $"⚡ Auto-LAN Complete!\n\nSuccessfully resolved {resolved} of {total} lamp(s) to local LAN IPs (~25 ms ultra-fast control).\n\nAll detected lamps are now configured for instant local control.",
+                        "SmartLamp Auto-LAN", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show(this,
+                        $"Scanned local network, but could not resolve local IPs for the {total} configured device(s).\n\nPlease verify that the PC and smart lamps are on the same Wi-Fi subnet and powered on.",
+                        "SmartLamp Auto-LAN", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            finally
+            {
+                BtnAutoResolveAll.IsEnabled = true;
+                BtnAutoResolveAll.Content = LocalizationService.T("AutoResolveAllBtn");
+            }
+        }
+
+        private async Task AutoDetectLocalIpAsync(string devId, string? localKey = null, string version = "3.5", bool showFeedback = false)
         {
             if (string.IsNullOrEmpty(devId) || _protocol == null) return;
 
-            // 1. Check if already known in _discoveredList
+            if (string.IsNullOrEmpty(localKey))
+            {
+                localKey = GetEnteredLocalKey();
+            }
+
+            // 1. Check if already known in _discoveredList with matching devId
             string? foundIp = _discoveredList?.FirstOrDefault(d => d.DevId == devId && TuyaSharingCrypto.IsPrivateIp(d.Ip))?.Ip;
 
-            // 2. If not, perform UDP scan
+            // 2. Perform intelligent local search with cryptographic probe
             if (string.IsNullOrEmpty(foundIp))
             {
-                foundIp = await _protocol.FindLocalIpForDeviceAsync(devId, 2500);
+                foundIp = await _protocol.FindLocalIpForDeviceAsync(devId, localKey, version, 3000);
             }
 
             if (!string.IsNullOrEmpty(foundIp))
             {
                 var active = _protocol.GetActiveDevice();
-                if (active != null && active.DevId == devId)
+                if (active != null && (active.DevId == devId || _config?.devices?.Count == 1))
                 {
                     if (!string.IsNullOrEmpty(active.Ip) && !TuyaSharingCrypto.IsPrivateIp(active.Ip))
                     {

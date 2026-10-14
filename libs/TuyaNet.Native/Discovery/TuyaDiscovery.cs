@@ -53,12 +53,15 @@ namespace TuyaNet.Native.Discovery
                     try
                     {
                         string json = DecryptUdpData(data);
-                        if (string.IsNullOrWhiteSpace(json) || !json.Contains("gwId")) return;
+                        if (string.IsNullOrWhiteSpace(json) || (!json.Contains("gwId") && !json.Contains("devId") && !json.Contains("ip"))) return;
 
                         using var doc = JsonDocument.Parse(json);
                         var root = doc.RootElement;
-                        string devId = root.TryGetProperty("gwId", out var idElem) ? idElem.GetString() ?? "" : "";
-                        if (string.IsNullOrWhiteSpace(devId)) return;
+                        string devId = "";
+                        if (root.TryGetProperty("gwId", out var idElem)) devId = idElem.GetString() ?? "";
+                        else if (root.TryGetProperty("devId", out var idElem2)) devId = idElem2.GetString() ?? "";
+                        else if (root.TryGetProperty("dev_id", out var idElem3)) devId = idElem3.GetString() ?? "";
+                        if (string.IsNullOrWhiteSpace(devId)) devId = $"lan_{remote.Address}";
 
                         string ip = root.TryGetProperty("ip", out var ipElem) ? ipElem.GetString() ?? remote.Address.ToString() : remote.Address.ToString();
                         string ver = root.TryGetProperty("version", out var verElem) ? verElem.GetString() ?? "3.3" : "3.3";

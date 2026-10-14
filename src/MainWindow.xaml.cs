@@ -22,9 +22,21 @@ namespace SmartLampApp
 
         private bool _isPowerOn = false;
         private string _currentMode = "white";
-        private bool _isUpdatingUi = false;
+        private int _uiUpdatingDepth = 0;
+        private bool _isUpdatingUi
+        {
+            get => _uiUpdatingDepth > 0;
+            set
+            {
+                if (value)
+                    _uiUpdatingDepth++;
+                else if (_uiUpdatingDepth > 0)
+                    _uiUpdatingDepth--;
+            }
+        }
         private bool _isKeyVisible = false;
         private bool _isAccKeyVisible = false;
+        private bool _isAddingNewDevice = false;
 
         // Feature 1: Sleep Timer
         private System.Windows.Threading.DispatcherTimer? _sleepTimer;

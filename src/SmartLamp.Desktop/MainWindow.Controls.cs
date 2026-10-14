@@ -34,7 +34,7 @@ namespace SmartLamp.Desktop
             _brightDebouncer.Tick += async (s, e) =>
             {
                 _brightDebouncer.Stop();
-                if (_isUpdatingUi || _device == null) return;
+                if (_isUpdatingUi || _device == null || !_isPowerOn) return;
                 int val = (int)SliderBright.Value;
                 SyncBrightnessUi(val);
                 await SetBrightnessAsync(val);
@@ -67,7 +67,7 @@ namespace SmartLamp.Desktop
             _tempDebouncer.Tick += async (s, e) =>
             {
                 _tempDebouncer.Stop();
-                if (_isUpdatingUi || _device == null) return;
+                if (_isUpdatingUi || _device == null || !_isPowerOn) return;
                 int val = (int)SliderTemp.Value;
                 SyncTempUi(val);
                 await SetColorTempAsync(val);

@@ -55,6 +55,10 @@ namespace SmartLamp.Tests
         [InlineData("WizardStep3Subtitle")]
         [InlineData("WizardTestConnection")]
         [InlineData("WizardFinish")]
+        [InlineData("CancelBtn")]
+        [InlineData("AddDeviceBtn")]
+        [InlineData("AutoResolveAllBtn")]
+        [InlineData("TooltipAutoResolveAll")]
         public void CoreAndWizardKeys_ExistInAllLanguages(string key)
         {
             foreach (var lang in new[] { "en", "de", "ru" })

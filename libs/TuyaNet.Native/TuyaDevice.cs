@@ -189,6 +189,28 @@ namespace TuyaNet.Native
             return await SetPowerAsync(!currentPower, dpId, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Probes a physical Tuya device at the given IP with cryptographic handshake and status query.
+        /// Returns true if the device successfully authenticates with the provided credentials.
+        /// </summary>
+        public static async Task<bool> ProbeAsync(string ip, string devId, string localKey, string version = "3.5", int timeoutMs = 1500)
+        {
+            if (string.IsNullOrWhiteSpace(ip) || string.IsNullOrWhiteSpace(devId) || string.IsNullOrWhiteSpace(localKey))
+                return false;
+
+            try
+            {
+                using var cts = new CancellationTokenSource(timeoutMs);
+                using var dev = new TuyaDevice(ip, devId, localKey, string.IsNullOrWhiteSpace(version) ? "3.5" : version);
+                string json = await dev.GetStatusJsonAsync(cts.Token).ConfigureAwait(false);
+                return !string.IsNullOrWhiteSpace(json);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         #endregion
 
         /// <inheritdoc />

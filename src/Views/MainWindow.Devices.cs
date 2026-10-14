@@ -22,141 +22,154 @@ namespace SmartLampApp
         private void PopulateDeviceSelector()
         {
             _isUpdatingUi = true;
-            CmbDeviceSelector.Items.Clear();
-
-            if (_config.devices.Count == 0 && (_config.groups == null || _config.groups.Count == 0))
+            try
             {
-                CmbDeviceSelector.Items.Add(new ComboBoxItem { Content = LocalizationService.T("AddDeviceInSettings"), Tag = "none" });
-                CmbDeviceSelector.SelectedIndex = 0;
-                TxtDeviceInfo.Text = LocalizationService.T("NoDevicesConfigured");
-                _isUpdatingUi = false;
-                return;
-            }
+                CmbDeviceSelector.Items.Clear();
 
-            foreach (var dev in _config.devices)
-            {
-                CmbDeviceSelector.Items.Add(new ComboBoxItem
+                if (_config.devices.Count == 0 && (_config.groups == null || _config.groups.Count == 0))
                 {
-                    Content = $"💡 {dev.Name} ({dev.Ip})",
-                    Tag = $"dev:{dev.DevId}"
-                });
-            }
+                    CmbDeviceSelector.Items.Add(new ComboBoxItem { Content = LocalizationService.T("AddDeviceInSettings"), Tag = "none" });
+                    CmbDeviceSelector.SelectedIndex = 0;
+                    TxtDeviceInfo.Text = LocalizationService.T("NoDevicesConfigured");
+                    return;
+                }
 
-            if (_config.groups != null && _config.groups.Count > 0)
-            {
-                foreach (var grp in _config.groups)
+                foreach (var dev in _config.devices)
                 {
-                    int devCount = grp.DeviceIds?.Count ?? 0;
-                    string unit = LocalizationService.T(devCount == 1 ? "LampUnit" : "LampsUnit");
                     CmbDeviceSelector.Items.Add(new ComboBoxItem
                     {
-                        Content = $"👥 {grp.Icon} {grp.Name} ({devCount} {unit})",
-                        Tag = $"grp:{grp.Id}"
+                        Content = $"💡 {dev.Name} ({dev.Ip})",
+                        Tag = $"dev:{dev.DevId}"
                     });
                 }
-            }
 
-            int selectedIndex = -1;
-            if (_config.is_group_control_active && !string.IsNullOrEmpty(_config.selected_group_id))
-            {
-                for (int i = 0; i < CmbDeviceSelector.Items.Count; i++)
+                if (_config.groups != null && _config.groups.Count > 0)
                 {
-                    if (CmbDeviceSelector.Items[i] is ComboBoxItem cbi && (cbi.Tag as string) == $"grp:{_config.selected_group_id}")
+                    foreach (var grp in _config.groups)
                     {
-                        selectedIndex = i;
-                        break;
+                        int devCount = grp.DeviceIds?.Count ?? 0;
+                        string unit = LocalizationService.T(devCount == 1 ? "LampUnit" : "LampsUnit");
+                        CmbDeviceSelector.Items.Add(new ComboBoxItem
+                        {
+                            Content = $"👥 {grp.Icon} {grp.Name} ({devCount} {unit})",
+                            Tag = $"grp:{grp.Id}"
+                        });
                     }
                 }
-            }
 
-            if (selectedIndex < 0 && !string.IsNullOrEmpty(_config.selected_dev_id))
-            {
-                for (int i = 0; i < CmbDeviceSelector.Items.Count; i++)
+                int selectedIndex = -1;
+                if (_config.is_group_control_active && !string.IsNullOrEmpty(_config.selected_group_id))
                 {
-                    if (CmbDeviceSelector.Items[i] is ComboBoxItem cbi && (cbi.Tag as string) == $"dev:{_config.selected_dev_id}")
+                    for (int i = 0; i < CmbDeviceSelector.Items.Count; i++)
                     {
-                        selectedIndex = i;
-                        break;
+                        if (CmbDeviceSelector.Items[i] is ComboBoxItem cbi && (cbi.Tag as string) == $"grp:{_config.selected_group_id}")
+                        {
+                            selectedIndex = i;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (selectedIndex < 0 && CmbDeviceSelector.Items.Count > 0)
+                if (selectedIndex < 0 && !string.IsNullOrEmpty(_config.selected_dev_id))
+                {
+                    for (int i = 0; i < CmbDeviceSelector.Items.Count; i++)
+                    {
+                        if (CmbDeviceSelector.Items[i] is ComboBoxItem cbi && (cbi.Tag as string) == $"dev:{_config.selected_dev_id}")
+                        {
+                            selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (selectedIndex < 0 && CmbDeviceSelector.Items.Count > 0)
+                {
+                    selectedIndex = 0;
+                }
+
+                CmbDeviceSelector.SelectedIndex = selectedIndex;
+                ApplySelectionFromSelector();
+            }
+            finally
             {
-                selectedIndex = 0;
+                _isUpdatingUi = false;
             }
-
-            CmbDeviceSelector.SelectedIndex = selectedIndex;
-            ApplySelectionFromSelector();
-            _isUpdatingUi = false;
         }
 
         private void PopulateDeviceForm()
         {
-            var active = _protocol.GetActiveDevice();
-            if (active != null)
+            _isUpdatingUi = true;
+            try
             {
-                TxtName.Text = active.Name;
-                SyncDeviceIpUi(active);
-                TxtDevId.Text = active.DevId;
-
-                PassLocalKey.Password = active.LocalKey;
-                TxtLocalKeyVisible.Text = active.LocalKey;
-
-                TxtGroup.Text = active.GroupName;
-                if (!_config.is_group_control_active)
+                var active = _protocol.GetActiveDevice();
+                if (active != null)
                 {
-                    TxtDeviceInfo.Text = $"IP: {active.Ip}  |  ID: {active.DevId}";
+                    TxtName.Text = active.Name;
+                    SyncDeviceIpUi(active);
+                    TxtDevId.Text = active.DevId;
 
-                    // Restore saved brightness, temperature, and color hex
-                    int bVal = active.last_brightness > 0 ? active.last_brightness : (_config.last_brightness > 0 ? _config.last_brightness : 50);
-                    SliderBright.Value = bVal;
-                    TxtBrightVal.Text = $"{bVal}%";
+                    PassLocalKey.Password = active.LocalKey;
+                    TxtLocalKeyVisible.Text = active.LocalKey;
 
-                    int tVal = active.last_temp >= 2700 ? active.last_temp : (_config.last_temp >= 2700 ? _config.last_temp : 4000);
-                    SliderTemp.Value = tVal;
-                    TxtTempVal.Text = $"{tVal}K";
+                    TxtGroup.Text = active.GroupName;
+                    if (!_config.is_group_control_active)
+                    {
+                        TxtDeviceInfo.Text = $"IP: {active.Ip}  |  ID: {active.DevId}";
 
-                    string hexVal = !string.IsNullOrWhiteSpace(active.last_color_hex) ? active.last_color_hex : (_config.last_color_hex ?? "#00E5FF");
-                    TxtHexCode.Text = hexVal;
+                        // Restore saved brightness, temperature, and color hex
+                        int bVal = active.last_brightness > 0 ? active.last_brightness : (_config.last_brightness > 0 ? _config.last_brightness : 50);
+                        SliderBright.Value = bVal;
+                        TxtBrightVal.Text = $"{bVal}%";
+
+                        int tVal = active.last_temp >= 2700 ? active.last_temp : (_config.last_temp >= 2700 ? _config.last_temp : 4000);
+                        SliderTemp.Value = tVal;
+                        TxtTempVal.Text = $"{tVal}K";
+
+                        string hexVal = !string.IsNullOrWhiteSpace(active.last_color_hex) ? active.last_color_hex : (_config.last_color_hex ?? "#00E5FF");
+                        TxtHexCode.Text = hexVal;
+                    }
                 }
-            }
 
-            TxtAccId.Text = _config.access_id;
-            PassAccKey.Password = _config.access_key;
-            TxtAccKeyVisible.Text = _config.access_key;
+                TxtAccId.Text = _config.access_id;
+                PassAccKey.Password = _config.access_key;
+                TxtAccKeyVisible.Text = _config.access_key;
 
-            string mode = string.IsNullOrWhiteSpace(_config.control_mode) ? "auto" : _config.control_mode;
-            foreach (ComboBoxItem item in CmbControlMode.Items)
-            {
-                if ((string)item.Tag == mode)
+                string mode = string.IsNullOrWhiteSpace(_config.control_mode) ? "auto" : _config.control_mode;
+                foreach (ComboBoxItem item in CmbControlMode.Items)
                 {
-                    item.IsSelected = true;
-                    break;
+                    if ((string)item.Tag == mode)
+                    {
+                        item.IsSelected = true;
+                        break;
+                    }
                 }
-            }
 
-            string priority = string.IsNullOrWhiteSpace(_config.auto_priority) ? "cloud_first" : _config.auto_priority;
-            foreach (ComboBoxItem item in CmbAutoPriority.Items)
-            {
-                if ((string)item.Tag == priority)
+                string priority = string.IsNullOrWhiteSpace(_config.auto_priority) ? "cloud_first" : _config.auto_priority;
+                foreach (ComboBoxItem item in CmbAutoPriority.Items)
                 {
-                    item.IsSelected = true;
-                    break;
+                    if ((string)item.Tag == priority)
+                    {
+                        item.IsSelected = true;
+                        break;
+                    }
                 }
-            }
 
-            if (PanelAutoPriority != null)
+                if (PanelAutoPriority != null)
+                {
+                    PanelAutoPriority.Visibility = mode == "auto" ? Visibility.Visible : Visibility.Collapsed;
+                }
+
+                ChkCloseToTray.IsChecked = _config.close_to_tray;
+                ChkEnableGoogle.IsChecked = _config.enable_google_home;
+                ChkEnableMqtt.IsChecked = _config.enable_mqtt;
+
+                NavGoogleHome.Visibility = _config.enable_google_home ? Visibility.Visible : Visibility.Collapsed;
+                NavMqtt.Visibility = _config.enable_mqtt ? Visibility.Visible : Visibility.Collapsed;
+            }
+            finally
             {
-                PanelAutoPriority.Visibility = mode == "auto" ? Visibility.Visible : Visibility.Collapsed;
+                _isUpdatingUi = false;
             }
-
-            ChkCloseToTray.IsChecked = _config.close_to_tray;
-            ChkEnableGoogle.IsChecked = _config.enable_google_home;
-            ChkEnableMqtt.IsChecked = _config.enable_mqtt;
-
-            NavGoogleHome.Visibility = _config.enable_google_home ? Visibility.Visible : Visibility.Collapsed;
-            NavMqtt.Visibility = _config.enable_mqtt ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void BtnToggleKeyVisibility_Click(object sender, RoutedEventArgs e)
@@ -321,6 +334,7 @@ namespace SmartLampApp
 
             PopulateDeviceSelector();
             PopulateMasterDevicesList();
+            SetAddingNewDeviceMode(false);
             BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
             _ = RefreshStatusAsync();
             System.Windows.MessageBox.Show(LocalizationService.T("DeviceSavedMsg"), "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -328,6 +342,12 @@ namespace SmartLampApp
 
         private void BtnDeleteDevice_Click(object sender, RoutedEventArgs e)
         {
+            if (_isAddingNewDevice)
+            {
+                BtnCancelNewDevice_Click(sender, e);
+                return;
+            }
+
             var active = _protocol.GetActiveDevice();
             if (active == null || (string.IsNullOrWhiteSpace(active.DevId) && string.IsNullOrWhiteSpace(active.Ip)))
             {
@@ -379,38 +399,47 @@ namespace SmartLampApp
         {
             if (LstDevicesMaster == null) return;
             _isUpdatingUi = true;
-            LstDevicesMaster.Items.Clear();
-
-            if (_config.devices.Count == 0)
+            try
             {
-                LstDevicesMaster.Items.Add(LocalizationService.T("NoDevicesConfigured"));
-                _isUpdatingUi = false;
-                return;
-            }
+                LstDevicesMaster.Items.Clear();
 
-            int selIndex = -1;
-            for (int i = 0; i < _config.devices.Count; i++)
-            {
-                var dev = _config.devices[i];
-                string room = string.IsNullOrWhiteSpace(dev.GroupName) ? "Default" : dev.GroupName;
-                LstDevicesMaster.Items.Add($"💡 {dev.Name}  •  IP: {dev.Ip}  •  Room: {room}");
-
-                if (dev.DevId == _config.selected_dev_id)
+                if (_config.devices.Count == 0)
                 {
-                    selIndex = i;
+                    LstDevicesMaster.Items.Add(LocalizationService.T("NoDevicesConfigured"));
+                    return;
+                }
+
+                int selIndex = -1;
+                for (int i = 0; i < _config.devices.Count; i++)
+                {
+                    var dev = _config.devices[i];
+                    string room = string.IsNullOrWhiteSpace(dev.GroupName) ? "Default" : dev.GroupName;
+                    LstDevicesMaster.Items.Add($"💡 {dev.Name}  •  IP: {dev.Ip}  •  Room: {room}");
+
+                    if (dev.DevId == _config.selected_dev_id)
+                    {
+                        selIndex = i;
+                    }
+                }
+
+                if (selIndex >= 0)
+                {
+                    LstDevicesMaster.SelectedIndex = selIndex;
                 }
             }
-
-            if (selIndex >= 0)
+            finally
             {
-                LstDevicesMaster.SelectedIndex = selIndex;
+                _isUpdatingUi = false;
             }
-            _isUpdatingUi = false;
         }
 
         private void LstDevicesMaster_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_isUpdatingUi || LstDevicesMaster.SelectedIndex < 0) return;
+            if (_isAddingNewDevice)
+            {
+                SetAddingNewDeviceMode(false);
+            }
             int idx = LstDevicesMaster.SelectedIndex;
             if (idx >= 0 && idx < _config.devices.Count)
             {

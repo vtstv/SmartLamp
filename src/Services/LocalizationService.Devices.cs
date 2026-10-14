@@ -20,9 +20,33 @@ namespace SmartLampApp.Services
             };
             dict["MyDevicesTitle"] = new()
             {
-                ["en"] = "💡 My Smart Lamps & Devices",
-                ["de"] = "💡 Meine smarten Lampen & Geräte",
-                ["ru"] = "💡 Мои смарт-лампы и устройства"
+                ["en"] = "💡 My Smart Lamps",
+                ["de"] = "💡 Meine Geräte",
+                ["ru"] = "💡 Мои устройства"
+            };
+            dict["CancelBtn"] = new()
+            {
+                ["en"] = "✖️ Cancel",
+                ["de"] = "✖️ Abbrechen",
+                ["ru"] = "✖️ Отмена"
+            };
+            dict["AddDeviceBtn"] = new()
+            {
+                ["en"] = "➕ Add Device",
+                ["de"] = "➕ Hinzufügen",
+                ["ru"] = "➕ Добавить"
+            };
+            dict["AutoResolveAllBtn"] = new()
+            {
+                ["en"] = "⚡ Auto-LAN",
+                ["de"] = "⚡ Auto-LAN",
+                ["ru"] = "⚡ Auto-LAN"
+            };
+            dict["TooltipAutoResolveAll"] = new()
+            {
+                ["en"] = "Automatically detect and assign local LAN IPs for all configured lamps",
+                ["de"] = "Lokale LAN-IPs für alle konfigurierten Lampen automatisch erkennen",
+                ["ru"] = "Автоматически найти и назначить локальные IP-адреса для всех ламп"
             };
             dict["AddDeviceWizardBtn"] = new()
             {
@@ -72,9 +96,9 @@ namespace SmartLampApp.Services
             // Step 1 Options
             dict["WizardOptWifiTitle"] = new()
             {
-                ["en"] = "🔍 Wi-Fi Auto-Discovery",
-                ["de"] = "🔍 Wi-Fi Auto-Erkennung",
-                ["ru"] = "🔍 Автопоиск в сети Wi-Fi"
+                ["en"] = "Wi-Fi Auto-Discovery",
+                ["de"] = "Wi-Fi Auto-Erkennung",
+                ["ru"] = "Автопоиск в сети Wi-Fi"
             };
             dict["WizardOptWifiDesc"] = new()
             {
@@ -85,9 +109,9 @@ namespace SmartLampApp.Services
 
             dict["WizardOptCloudTitle"] = new()
             {
-                ["en"] = "☁️ Tuya Cloud One-Click Sync",
-                ["de"] = "☁️ Tuya Cloud 1-Klick-Synchronisierung",
-                ["ru"] = "☁️ Импорт из Tuya Cloud"
+                ["en"] = "Tuya Cloud One-Click Sync",
+                ["de"] = "Tuya Cloud 1-Klick-Synchronisierung",
+                ["ru"] = "Импорт из Tuya Cloud"
             };
             dict["WizardOptCloudDesc"] = new()
             {
@@ -98,9 +122,9 @@ namespace SmartLampApp.Services
 
             dict["WizardOptManualTitle"] = new()
             {
-                ["en"] = "✍️ Manual Configuration",
-                ["de"] = "✍️ Manuelle Konfiguration",
-                ["ru"] = "✍️ Ручной ввод параметров"
+                ["en"] = "Manual Configuration",
+                ["de"] = "Manuelle Konfiguration",
+                ["ru"] = "Ручной ввод параметров"
             };
             dict["WizardOptManualDesc"] = new()
             {
@@ -240,9 +264,9 @@ namespace SmartLampApp.Services
             };
             dict["WizardOptQrTitle"] = new()
             {
-                ["en"] = "📲 Scan QR Code / App Login (Recommended)",
-                ["de"] = "📲 QR-Code scannen / App-Anmeldung (Empfohlen)",
-                ["ru"] = "📲 Вход через QR-код / Приложение (Рекомендуется)"
+                ["en"] = "Scan QR Code / App Login (Recommended)",
+                ["de"] = "QR-Code scannen / App-Anmeldung (Empfohlen)",
+                ["ru"] = "Вход через QR-код / Приложение (Рекомендуется)"
             };
             dict["WizardOptQrDesc"] = new()
             {

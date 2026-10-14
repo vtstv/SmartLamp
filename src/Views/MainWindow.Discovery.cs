@@ -7,24 +7,98 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 using SmartLampApp.Models;
+using SmartLampApp.Services;
+
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
 
 namespace SmartLampApp
 {
     public partial class MainWindow : Window
     {
+        public void SetAddingNewDeviceMode(bool isAdding)
+        {
+            _isAddingNewDevice = isAdding;
+            if (isAdding)
+            {
+                if (LstDevicesMaster != null)
+                {
+                    _isUpdatingUi = true;
+                    LstDevicesMaster.SelectedIndex = -1;
+                    _isUpdatingUi = false;
+                }
+                if (BtnSaveDevice != null)
+                {
+                    BtnSaveDevice.Content = LocalizationService.T("AddDeviceBtn");
+                    BtnSaveDevice.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                }
+                if (BtnCancelNewDevice != null) BtnCancelNewDevice.Visibility = Visibility.Visible;
+                if (BtnDeleteDevice != null) BtnDeleteDevice.Visibility = Visibility.Collapsed;
+                if (BtnTestDevice != null) BtnTestDevice.IsEnabled = false;
+            }
+            else
+            {
+                if (BtnSaveDevice != null)
+                {
+                    BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
+                    BtnSaveDevice.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0066CC"));
+                }
+                if (BtnCancelNewDevice != null) BtnCancelNewDevice.Visibility = Visibility.Collapsed;
+                if (BtnDeleteDevice != null) BtnDeleteDevice.Visibility = Visibility.Visible;
+                if (BtnTestDevice != null) BtnTestDevice.IsEnabled = true;
+            }
+        }
+
+        private void BtnCancelNewDevice_Click(object sender, RoutedEventArgs e)
+        {
+            SetAddingNewDeviceMode(false);
+
+            if (_config.devices != null && _config.devices.Count > 0)
+            {
+                int selIndex = -1;
+                for (int i = 0; i < _config.devices.Count; i++)
+                {
+                    if (_config.devices[i].DevId == _config.selected_dev_id)
+                    {
+                        selIndex = i;
+                        break;
+                    }
+                }
+                if (selIndex < 0) selIndex = 0;
+
+                if (LstDevicesMaster != null)
+                {
+                    LstDevicesMaster.SelectedIndex = selIndex;
+                }
+                PopulateDeviceForm();
+            }
+            else
+            {
+                TxtName.Text = "";
+                TxtIp.Text = "";
+                TxtDevId.Text = "";
+                PassLocalKey.Password = "";
+                TxtLocalKeyVisible.Text = "";
+                TxtGroup.Text = "";
+            }
+        }
+
         private void BtnNewDevice_Click(object sender, RoutedEventArgs e)
         {
+            SetAddingNewDeviceMode(true);
             TxtName.Text = "Smart Lamp";
             TxtIp.Text = "";
             TxtDevId.Text = "";
             PassLocalKey.Password = "";
             TxtLocalKeyVisible.Text = "";
             TxtGroup.Text = "Default Group";
-            BtnSaveDevice.Content = "➕ Add Device";
-            LstDiscovered.SelectedIndex = -1;
-            TxtIp.Focus();
+            if (RbIpLocal != null) RbIpLocal.IsChecked = true;
+            if (LstDiscovered != null) LstDiscovered.SelectedIndex = -1;
+            TxtName.Focus();
+            TxtName.SelectAll();
         }
 
         private async void BtnAutoDiscover_Click(object sender, RoutedEventArgs e)
@@ -46,7 +120,8 @@ namespace SmartLampApp
             {
                 foreach (var dev in _discoveredList)
                 {
-                    var known = _config.devices.FirstOrDefault(d => d.Ip == dev.Ip || (!string.IsNullOrEmpty(d.DevId) && d.DevId == dev.DevId));
+                    var known = _config.devices.FirstOrDefault(d => d.Ip == dev.Ip || d.LocalIp == dev.Ip || (!string.IsNullOrEmpty(d.DevId) && d.DevId == dev.DevId))
+                                ?? (_config.devices.Count == 1 ? _config.devices[0] : null);
                     if (known != null)
                     {
                         if (dev.DevId.StartsWith("lan_") || string.IsNullOrWhiteSpace(dev.DevId))
@@ -72,27 +147,34 @@ namespace SmartLampApp
             if (idx >= 0 && idx < _discoveredList.Count)
             {
                 var sel = _discoveredList[idx];
-                var known = _config.devices.FirstOrDefault(d => d.Ip == sel.Ip || (!string.IsNullOrEmpty(d.DevId) && d.DevId == sel.DevId));
+                var known = _config.devices.FirstOrDefault(d => d.Ip == sel.Ip || d.LocalIp == sel.Ip || (!string.IsNullOrEmpty(d.DevId) && d.DevId == sel.DevId))
+                            ?? (_config.devices.Count == 1 ? _config.devices[0] : null);
                 if (known != null)
                 {
+                    SetAddingNewDeviceMode(false);
                     TxtName.Text = known.Name;
-                    TxtIp.Text = known.Ip;
+                    TxtIp.Text = sel.Ip;
+                    known.LocalIp = sel.Ip;
+                    known.Ip = sel.Ip;
+                    known.UseLocalIp = true;
+                    if (RbIpLocal != null) RbIpLocal.IsChecked = true;
                     TxtDevId.Text = known.DevId;
                     PassLocalKey.Password = known.LocalKey;
                     TxtLocalKeyVisible.Text = known.LocalKey;
                     TxtGroup.Text = known.GroupName;
-                    BtnSaveDevice.Content = "💾 Save Device";
+                    BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
                 }
                 else
                 {
                     // New discovered device: auto-fill IP and Product Name, clear previous device credentials!
+                    SetAddingNewDeviceMode(true);
                     TxtName.Text = sel.ProductName;
                     TxtIp.Text = sel.Ip;
+                    if (RbIpLocal != null) RbIpLocal.IsChecked = true;
                     TxtDevId.Text = sel.DevId.StartsWith("lan_") ? "" : sel.DevId;
                     PassLocalKey.Password = "";
                     TxtLocalKeyVisible.Text = "";
                     TxtGroup.Text = "Default Group";
-                    BtnSaveDevice.Content = "➕ Add This Device";
                     if (string.IsNullOrEmpty(TxtDevId.Text))
                     {
                         TxtDevId.Focus();

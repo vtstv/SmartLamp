@@ -174,9 +174,16 @@ namespace SmartLampApp
             LblDevIp.Text = LocalizationService.T("IpAddress");
             LblDevId.Text = LocalizationService.T("DeviceId");
             LblLocalKey.Text = LocalizationService.T("LocalKey");
-            LblGroupName.Text = LocalizationService.T("GroupName");
-            BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
+            if (_isAddingNewDevice)
+            {
+                BtnSaveDevice.Content = LocalizationService.T("AddDeviceBtn");
+            }
+            else
+            {
+                BtnSaveDevice.Content = LocalizationService.T("SaveDevice");
+            }
             BtnDeleteDevice.Content = LocalizationService.T("Delete");
+            if (BtnCancelNewDevice != null) BtnCancelNewDevice.Content = LocalizationService.T("CancelBtn");
 
             if (LblAppBehavior != null) LblAppBehavior.Text = LocalizationService.T("AppBehavior");
             ChkAutostart.Content = LocalizationService.T("Autostart");
@@ -197,6 +204,11 @@ namespace SmartLampApp
 
             LblWifiDiscovery.Text = LocalizationService.T("WifiDiscovery");
             BtnAutoDiscover.Content = LocalizationService.T("ScanWifi");
+            if (BtnAutoResolveAll != null)
+            {
+                BtnAutoResolveAll.Content = LocalizationService.T("AutoResolveAllBtn");
+                BtnAutoResolveAll.ToolTip = LocalizationService.T("TooltipAutoResolveAll");
+            }
 
             if (LblCloudSync != null) LblCloudSync.Text = LocalizationService.T("CloudSync");
             if (LblAccId != null) LblAccId.Text = LocalizationService.T("AccessId");
@@ -255,11 +267,6 @@ namespace SmartLampApp
             {
                 BtnDeviceTabQrLogin.Content = LocalizationService.T("QrLoginBtn");
                 BtnDeviceTabQrLogin.ToolTip = LocalizationService.T("TooltipQrLogin");
-            }
-            if (BtnDeviceTabWizard != null)
-            {
-                BtnDeviceTabWizard.Content = LocalizationService.T("AddDeviceWizardBtn");
-                BtnDeviceTabWizard.ToolTip = LocalizationService.T("TooltipWizard");
             }
             if (BtnTestDevice != null) BtnTestDevice.Content = LocalizationService.T("TestDeviceBtn");
 

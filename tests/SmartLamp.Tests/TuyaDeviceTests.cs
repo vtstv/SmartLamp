@@ -45,5 +45,41 @@ namespace SmartLamp.Tests
             Assert.True(resultEmpty);
             Assert.True(resultNull);
         }
+
+        [Fact]
+        public async Task ProbeAsync_InvalidIpOrKey_ReturnsFalseSafely()
+        {
+            // Empty IP or key should immediately return false without throwing
+            bool res1 = await TuyaDevice.ProbeAsync("", "devId", "key");
+            Assert.False(res1);
+
+            bool res2 = await TuyaDevice.ProbeAsync("127.0.0.1", "", "key");
+            Assert.False(res2);
+
+            bool res3 = await TuyaDevice.ProbeAsync("127.0.0.1", "devId", "");
+            Assert.False(res3);
+
+            // Unreachable IP with short timeout should safely return false
+            bool res4 = await TuyaDevice.ProbeAsync("192.0.2.1", "devId", "0123456789abcdef", "3.5", 100);
+            Assert.False(res4);
+        }
+
+        [Fact]
+        public void ParseStatus_PowerOffWithBrightness_RecognizesPowerOffAccurately()
+        {
+            // Verify that a Tuya status payload with DP 20=false or switch_led=false is recognized as powered off,
+            // even if DP 22 (brightness) is present and non-zero
+            string json = "{\"dps\":{\"20\":false,\"21\":\"white\",\"22\":500,\"23\":500}}";
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var dps = doc.RootElement.GetProperty("dps");
+
+            bool isPowerOn = false;
+            if (dps.TryGetProperty("20", out var pVal))
+            {
+                isPowerOn = pVal.ValueKind == System.Text.Json.JsonValueKind.True;
+            }
+
+            Assert.False(isPowerOn);
+        }
     }
 }

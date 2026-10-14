@@ -187,21 +187,6 @@ namespace SmartLampApp
                                             }
                                         }
 
-                                        // 3. If localIp still not found, do a quick network scan
-                                        if (string.IsNullOrEmpty(localIp))
-                                        {
-                                            try
-                                            {
-                                                var quickScan = await _protocol.ScanLocalNetworkAsync(1200);
-                                                var found = quickScan?.Find(x => x.DevId == d.Id && TuyaSharingCrypto.IsPrivateIp(x.Ip));
-                                                if (found != null && !string.IsNullOrEmpty(found.Ip))
-                                                {
-                                                    localIp = found.Ip;
-                                                }
-                                            }
-                                            catch { }
-                                        }
-
                                         // Prefer Local IP over External IP
                                         string devIp = !string.IsNullOrEmpty(localIp) ? localIp : cloudIp;
                                         bool useLocal = !string.IsNullOrEmpty(localIp);
@@ -210,43 +195,50 @@ namespace SmartLampApp
                                         string ipState = !string.IsNullOrEmpty(localIp) ? $" • LAN: {localIp}" : (!string.IsNullOrEmpty(externalIp) ? $" • WAN: {externalIp}" : "");
                                         LstWizQrDevices.Items.Add($"💡 {d.Name} ({d.Id}){ipState} • {keyState}");
 
-                                        var existing = _config.devices.Find(x => x.DevId == d.Id);
-                                        if (existing == null)
+                                        if (_config != null)
                                         {
-                                            _config.devices.Add(new DeviceInfo
+                                            _config.devices ??= new();
+                                            var existing = _config.devices.Find(x => x.DevId == d.Id);
+                                            if (existing == null)
                                             {
-                                                Name = string.IsNullOrWhiteSpace(d.Name) ? "Smart Lamp" : d.Name,
-                                                DevId = d.Id,
-                                                LocalKey = d.LocalKey,
-                                                Ip = devIp,
-                                                LocalIp = localIp,
-                                                ExternalIp = externalIp,
-                                                UseLocalIp = useLocal,
-                                                Version = "3.5",
-                                                GroupName = string.IsNullOrWhiteSpace(d.HomeName) ? "Living Room" : d.HomeName
-                                            });
-                                            added++;
-                                        }
-                                        else
-                                        {
-                                            if (!string.IsNullOrEmpty(d.LocalKey)) existing.LocalKey = d.LocalKey;
-                                            if (!string.IsNullOrEmpty(localIp)) existing.LocalIp = localIp;
-                                            if (!string.IsNullOrEmpty(externalIp)) existing.ExternalIp = externalIp;
-                                            existing.Ip = devIp;
-                                            existing.UseLocalIp = useLocal;
-                                        }
+                                                _config.devices.Add(new DeviceInfo
+                                                {
+                                                    Name = string.IsNullOrWhiteSpace(d.Name) ? "Smart Lamp" : d.Name,
+                                                    DevId = d.Id,
+                                                    LocalKey = d.LocalKey,
+                                                    Ip = devIp,
+                                                    LocalIp = localIp,
+                                                    ExternalIp = externalIp,
+                                                    UseLocalIp = useLocal,
+                                                    Version = "3.5",
+                                                    GroupName = string.IsNullOrWhiteSpace(d.HomeName) ? "Living Room" : d.HomeName
+                                                });
+                                                added++;
+                                            }
+                                            else
+                                            {
+                                                if (!string.IsNullOrEmpty(d.LocalKey)) existing.LocalKey = d.LocalKey;
+                                                if (!string.IsNullOrEmpty(localIp)) existing.LocalIp = localIp;
+                                                if (!string.IsNullOrEmpty(externalIp)) existing.ExternalIp = externalIp;
+                                                existing.Ip = devIp;
+                                                existing.UseLocalIp = useLocal;
+                                            }
 
-                                        if (_config.dev_id == d.Id || string.IsNullOrEmpty(_config.local_key))
-                                        {
-                                            if (!string.IsNullOrEmpty(d.LocalKey)) _config.local_key = d.LocalKey;
-                                            _config.ip = devIp;
-                                            if (string.IsNullOrEmpty(_config.dev_id)) _config.dev_id = d.Id;
+                                            if (_config.dev_id == d.Id || string.IsNullOrEmpty(_config.local_key))
+                                            {
+                                                if (!string.IsNullOrEmpty(d.LocalKey)) _config.local_key = d.LocalKey;
+                                                _config.ip = devIp;
+                                                if (string.IsNullOrEmpty(_config.dev_id)) _config.dev_id = d.Id;
+                                            }
                                         }
                                     }
 
                                     LstWizQrDevices.Visibility = Visibility.Visible;
-                                    ConfigManager.Save(_config);
-                                    _protocol.UpdateConfig(_config);
+                                    if (_config != null)
+                                    {
+                                        ConfigManager.Save(_config);
+                                        _protocol.UpdateConfig(_config);
+                                    }
                                     PopulateDeviceSelector();
                                     PopulateMasterDevicesList();
 
@@ -257,6 +249,30 @@ namespace SmartLampApp
                                     {
                                         LstWizQrDevices.SelectedIndex = 0;
                                     }
+
+                                    // Automatically resolve local LAN IPs for all imported devices!
+                                    try
+                                    {
+                                        var (resolved, total) = await _protocol.AutoResolveAllDeviceIpsAsync(3000);
+                                        if (resolved > 0 && _config?.devices != null)
+                                        {
+                                            LstWizQrDevices.Items.Clear();
+                                            foreach (var dev in _config.devices)
+                                            {
+                                                string ipState = !string.IsNullOrEmpty(dev.LocalIp) ? $" • LAN: {dev.LocalIp}" : (!string.IsNullOrEmpty(dev.ExternalIp) ? $" • WAN: {dev.ExternalIp}" : "");
+                                                string keyState = !string.IsNullOrEmpty(dev.LocalKey) ? "🔑 Key OK" : "No Key";
+                                                LstWizQrDevices.Items.Add($"💡 {dev.Name} ({dev.DevId}){ipState} • {keyState}");
+                                            }
+                                            TxtWizQrStatus.Text = $"✅ {successMsg} • Local LAN IP(s) resolved ({resolved}/{total})!";
+                                            PopulateDeviceSelector();
+                                            PopulateMasterDevicesList();
+                                            if (_sharingDevices.Count > 0)
+                                            {
+                                                LstWizQrDevices.SelectedIndex = 0;
+                                            }
+                                        }
+                                    }
+                                    catch { }
                                 }
                                 else
                                 {

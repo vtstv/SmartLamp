@@ -170,15 +170,15 @@ namespace SmartLampApp.Services
             };
             dict["WifiDiscovery"] = new()
             {
-                ["en"] = "🔍 Wi-Fi Auto-Discovery",
-                ["de"] = "🔍 Wi-Fi Auto-Erkennung",
-                ["ru"] = "🔍 Автопоиск в сети Wi-Fi"
+                ["en"] = "🔍 Wi-Fi Discovery",
+                ["de"] = "🔍 Wi-Fi Erkennung",
+                ["ru"] = "🔍 Wi-Fi Поиск"
             };
             dict["ScanWifi"] = new()
             {
-                ["en"] = "⚡ Scan Local Wi-Fi Subnet",
-                ["de"] = "⚡ Lokales WLAN scannen",
-                ["ru"] = "⚡ Сканировать сеть"
+                ["en"] = "⚡ Scan",
+                ["de"] = "⚡ Scannen",
+                ["ru"] = "⚡ Сканировать"
             };
             dict["CloudSync"] = new()
             {

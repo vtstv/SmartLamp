@@ -96,24 +96,36 @@ namespace SmartLampApp
                 if (status.Brightness > 0)
                 {
                     _isUpdatingUi = true;
-                    SliderBright.Value = status.Brightness;
-                    TxtBrightVal.Text = $"{status.Brightness}%";
-                    if (SliderCompactBright != null) SliderCompactBright.Value = status.Brightness;
-                    if (TxtCompactBrightVal != null) TxtCompactBrightVal.Text = $"{status.Brightness}%";
-                    if (active != null) active.last_brightness = status.Brightness;
-                    _config.last_brightness = status.Brightness;
-                    _isUpdatingUi = false;
+                    try
+                    {
+                        SliderBright.Value = status.Brightness;
+                        TxtBrightVal.Text = $"{status.Brightness}%";
+                        if (SliderCompactBright != null) SliderCompactBright.Value = status.Brightness;
+                        if (TxtCompactBrightVal != null) TxtCompactBrightVal.Text = $"{status.Brightness}%";
+                        if (active != null) active.last_brightness = status.Brightness;
+                        _config.last_brightness = status.Brightness;
+                    }
+                    finally
+                    {
+                        _isUpdatingUi = false;
+                    }
                 }
                 if (status.ColorTempK >= 2700)
                 {
                     _isUpdatingUi = true;
-                    SliderTemp.Value = status.ColorTempK;
-                    TxtTempVal.Text = $"{status.ColorTempK}K";
-                    if (SliderCompactTemp != null) SliderCompactTemp.Value = status.ColorTempK;
-                    if (TxtCompactTempVal != null) TxtCompactTempVal.Text = $"{status.ColorTempK}K";
-                    if (active != null) active.last_temp = status.ColorTempK;
-                    _config.last_temp = status.ColorTempK;
-                    _isUpdatingUi = false;
+                    try
+                    {
+                        SliderTemp.Value = status.ColorTempK;
+                        TxtTempVal.Text = $"{status.ColorTempK}K";
+                        if (SliderCompactTemp != null) SliderCompactTemp.Value = status.ColorTempK;
+                        if (TxtCompactTempVal != null) TxtCompactTempVal.Text = $"{status.ColorTempK}K";
+                        if (active != null) active.last_temp = status.ColorTempK;
+                        _config.last_temp = status.ColorTempK;
+                    }
+                    finally
+                    {
+                        _isUpdatingUi = false;
+                    }
                 }
                 if (!string.IsNullOrWhiteSpace(status.ColorHex) && status.Mode == "colour")
                 {
@@ -289,6 +301,7 @@ namespace SmartLampApp
                         int baseMaster = grp.MasterBrightness > 0 ? grp.MasterBrightness : 50;
                         grp.MasterBrightness = val;
                         ConfigManager.Save(_config);
+                        if (!grp.MasterPowerOn) return;
                         var devices = _protocol.GetDevicesForGroup(grp);
                         await _protocol.SetGroupBrightnessAsync(devices, val, grp.SyncMode, baseMaster);
                         return;
@@ -299,6 +312,8 @@ namespace SmartLampApp
                 if (active != null) active.last_brightness = val;
                 _config.last_brightness = val;
                 ConfigManager.Save(_config);
+
+                if (!_isPowerOn) return;
 
                 await _protocol.SetBrightnessAsync(val);
             };
@@ -321,6 +336,7 @@ namespace SmartLampApp
                         grp.MasterTempK = kVal;
                         grp.MasterMode = "white";
                         ConfigManager.Save(_config);
+                        if (!grp.MasterPowerOn) return;
                         var devices = _protocol.GetDevicesForGroup(grp);
                         await _protocol.SetGroupColorTempAsync(devices, kVal);
                         return;
@@ -331,6 +347,8 @@ namespace SmartLampApp
                 if (active != null) active.last_temp = kVal;
                 _config.last_temp = kVal;
                 ConfigManager.Save(_config);
+
+                if (!_isPowerOn) return;
 
                 await _protocol.SetColorTempAsync(kVal);
             };
@@ -418,75 +436,6 @@ namespace SmartLampApp
             _currentMode = "white";
             SliderTemp.Value = 6500;
             UpdateBulbGlow(TxtHexCode.Text, _isPowerOn);
-        }
-
-        private async Task ApplyColorHexAsync(string hex)
-        {
-            _currentMode = "colour";
-            TxtHexCode.Text = hex;
-            UpdateBulbGlow(hex, _isPowerOn);
-
-            if (_config.is_group_control_active)
-            {
-                var grp = _protocol.GetActiveGroup();
-                if (grp != null)
-                {
-                    grp.MasterColorHex = hex;
-                    grp.MasterMode = "colour";
-                    ConfigManager.Save(_config);
-                    var devices = _protocol.GetDevicesForGroup(grp);
-                    await _protocol.SetGroupColorHexAsync(devices, hex);
-                    return;
-                }
-            }
-
-            var active = _protocol.GetActiveDevice();
-            if (active != null) active.last_color_hex = hex;
-            _config.last_color_hex = hex;
-            ConfigManager.Save(_config);
-            await _protocol.SetColorHexAsync(hex);
-        }
-
-        private async void BtnColor_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is string hex)
-            {
-                await ApplyColorHexAsync(hex);
-            }
-        }
-
-        private async void BtnColorPicker_Click(object sender, RoutedEventArgs e)
-        {
-            var pickerWin = new ColorPickerWindow(TxtHexCode.Text) { Owner = this };
-            if (pickerWin.ShowDialog() == true)
-            {
-                await ApplyColorHexAsync(pickerWin.SelectedHex);
-            }
-        }
-
-        private async void BtnApplyHex_Click(object sender, RoutedEventArgs e)
-        {
-            await ApplyColorHexAsync(TxtHexCode.Text.Trim());
-        }
-
-        private async void BtnScene_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is string sceneKey)
-            {
-                if (_config.is_group_control_active)
-                {
-                    var grp = _protocol.GetActiveGroup();
-                    if (grp != null)
-                    {
-                        var devices = _protocol.GetDevicesForGroup(grp);
-                        var tasks = new System.Collections.Generic.List<Task>();
-                        foreach (var d in devices) tasks.Add(_protocol.SetSceneAsync(sceneKey, d));
-                        await Task.WhenAll(tasks);
-                        return;
-                    }
-                }
-                await _protocol.SetSceneAsync(sceneKey);
-            }
         }
     }
 }
