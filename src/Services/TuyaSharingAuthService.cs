@@ -6,11 +6,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,6 +20,7 @@ namespace SmartLampApp.Services
     {
         private const string GatewayHost = "https://apigw.iotbing.com";
         public const string DefaultClientId = "HA_3y9q4ak7g4ephrvke";
+        public const string DefaultAppSchema = "haauthorize";
 
         private readonly HttpClient _http;
 
@@ -28,14 +29,36 @@ namespace SmartLampApp.Services
             _http = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
         }
 
+        public static void LogDiagnostic(string message)
+        {
+            try
+            {
+                string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SmartLampApp");
+                Directory.CreateDirectory(dir);
+                string path = Path.Combine(dir, "tuya_sharing_debug.log");
+                string line = $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}";
+                File.AppendAllText(path, line);
+            }
+            catch { }
+        }
+
+        public static string GetDiagnosticLogPath()
+        {
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SmartLampApp");
+            return Path.Combine(dir, "tuya_sharing_debug.log");
+        }
+
         public async Task<TuyaQrCodeToken> RequestQrCodeAsync(string userCode, string schema = "smartlife", string clientId = DefaultClientId, CancellationToken ct = default)
         {
             var result = new TuyaQrCodeToken();
             try
             {
-                string url = $"{GatewayHost}/v1.0/m/life/home-assistant/qrcode/tokens?clientid={clientId}&usercode={userCode}&schema={schema}";
+                string url = $"{GatewayHost}/v1.0/m/life/home-assistant/qrcode/tokens?clientid={clientId}&usercode={userCode}&schema={DefaultAppSchema}";
+                LogDiagnostic($"RequestQrCodeAsync -> {url}");
+
                 using var response = await _http.PostAsync(url, null, ct).ConfigureAwait(false);
                 string json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                LogDiagnostic($"RequestQrCodeAsync (status {(int)response.StatusCode}) <- {json}");
 
                 using var doc = JsonDocument.Parse(json);
                 bool success = doc.RootElement.TryGetProperty("success", out var s) && s.GetBoolean();
@@ -43,11 +66,7 @@ namespace SmartLampApp.Services
 
                 if (success && doc.RootElement.TryGetProperty("result", out var resElem))
                 {
-                    string rawToken = "";
-                    if (resElem.TryGetProperty("qrcode", out var qrProp)) rawToken = qrProp.GetString() ?? "";
-                    else if (resElem.TryGetProperty("token", out var tokProp)) rawToken = tokProp.GetString() ?? "";
-                    else if (resElem.TryGetProperty("code", out var codeProp)) rawToken = codeProp.GetString() ?? "";
-
+                    string rawToken = GetPropString(resElem, "qrcode", "token", "code");
                     result.Token = rawToken;
 
                     if (string.IsNullOrEmpty(rawToken))
@@ -61,18 +80,20 @@ namespace SmartLampApp.Services
                     }
                     else
                     {
-                        result.QrCodeContent = $"{schema}--qrLogin?token={rawToken}";
+                        string appPrefix = string.IsNullOrWhiteSpace(schema) ? "smartlife" : schema;
+                        result.QrCodeContent = $"{appPrefix}--qrLogin?token={rawToken}";
                     }
                 }
                 else
                 {
-                    if (doc.RootElement.TryGetProperty("code", out var c)) result.ErrorCode = c.GetString() ?? "";
-                    if (doc.RootElement.TryGetProperty("msg", out var m)) result.ErrorMsg = m.GetString() ?? "";
+                    result.ErrorCode = GetPropString(doc.RootElement, "code");
+                    result.ErrorMsg = GetPropString(doc.RootElement, "msg");
                     if (string.IsNullOrEmpty(result.ErrorMsg)) result.ErrorMsg = result.ErrorCode;
                 }
             }
             catch (Exception ex)
             {
+                LogDiagnostic($"RequestQrCodeAsync exception: {ex}");
                 result.Success = false;
                 result.ErrorMsg = ex.Message;
             }
@@ -93,35 +114,55 @@ namespace SmartLampApp.Services
 
                 if (success && doc.RootElement.TryGetProperty("result", out var resElem))
                 {
+                    LogDiagnostic($"PollLoginResult confirmed: {json}");
                     var session = new TuyaSharingSession
                     {
                         ClientId = clientId,
-                        UserCode = userCode
+                        UserCode = userCode,
+                        AccessToken = GetPropString(resElem, "access_token", "accessToken"),
+                        RefreshToken = GetPropString(resElem, "refresh_token", "refreshToken"),
+                        ExpireTime = GetPropLong(resElem, "expire_time", "expireTime"),
+                        Uid = GetPropString(resElem, "uid")
                     };
 
-                    if (resElem.TryGetProperty("accessToken", out var at)) session.AccessToken = at.GetString() ?? "";
-                    if (resElem.TryGetProperty("refreshToken", out var rt)) session.RefreshToken = rt.GetString() ?? "";
-                    if (resElem.TryGetProperty("expireTime", out var exp)) session.ExpireTime = exp.GetInt64();
-                    if (resElem.TryGetProperty("uid", out var uid)) session.Uid = uid.GetString() ?? "";
-                    if (resElem.TryGetProperty("endpoint", out var ep)) session.Endpoint = ep.GetString() ?? "https://openapi.tuyaeu.com";
+                    string ep = GetPropString(resElem, "endpoint", "end_point");
+                    session.Endpoint = NormalizeEndpoint(ep);
 
+                    LogDiagnostic($"Session created: uid={session.Uid}, ep={session.Endpoint}, tokenLen={session.AccessToken.Length}, refreshLen={session.RefreshToken.Length}");
                     return (true, session, null);
                 }
 
-                string errCode = doc.RootElement.TryGetProperty("code", out var c) ? c.GetString() ?? "" : "";
-                string errMsg = doc.RootElement.TryGetProperty("msg", out var m) ? m.GetString() ?? "" : "";
+                string errCode = GetPropString(doc.RootElement, "code");
+                string errMsg = GetPropString(doc.RootElement, "msg");
                 return (false, null, $"{errCode}: {errMsg}");
             }
             catch (Exception ex)
             {
+                LogDiagnostic($"PollLoginResult exception: {ex}");
                 return (false, null, ex.Message);
             }
+        }
+
+        public static string NormalizeEndpoint(string? ep)
+        {
+            if (string.IsNullOrWhiteSpace(ep)) return "https://apigw.tuyaeu.com";
+            string res = ep.Trim();
+            if (!res.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !res.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                res = "https://" + res;
+            }
+            if (res.Contains("openapi."))
+            {
+                res = res.Replace("openapi.", "apigw.");
+            }
+            return res.TrimEnd('/');
         }
 
         public async Task<List<TuyaSharingDiscoveredDevice>> QueryUserDevicesAsync(
             TuyaSharingSession session, IEnumerable<string>? knownDeviceIds = null, CancellationToken ct = default)
         {
             var devices = new List<TuyaSharingDiscoveredDevice>();
+            LogDiagnostic($"Starting QueryUserDevicesAsync for uid={session.Uid}...");
 
             // 1. Get Homes
             var homes = await QueryHomesAsync(session, ct).ConfigureAwait(false);
@@ -132,43 +173,37 @@ namespace SmartLampApp.Services
                 var homeDevices = await QueryDevicesByHomeAsync(session, home.Key, home.Value, ct).ConfigureAwait(false);
                 foreach (var d in homeDevices)
                 {
-                    if (!devices.Any(x => x.Id == d.Id))
-                    {
-                        devices.Add(d);
-                    }
+                    if (!devices.Any(x => x.Id == d.Id)) devices.Add(d);
                 }
             }
 
             // 3. Fallback: query without homeId if homes returned nothing
             if (devices.Count == 0)
             {
+                LogDiagnostic("No devices found in homes, querying default home...");
                 var directDevices = await QueryDevicesByHomeAsync(session, "", "My Home", ct).ConfigureAwait(false);
                 foreach (var d in directDevices)
                 {
-                    if (!devices.Any(x => x.Id == d.Id))
-                    {
-                        devices.Add(d);
-                    }
+                    if (!devices.Any(x => x.Id == d.Id)) devices.Add(d);
                 }
             }
 
             // 4. Fallback: if knownDeviceIds specified, query /v1.0/m/life/ha/devices/detail
             if (knownDeviceIds != null)
             {
-                var missingIds = knownDeviceIds.Where(id => !string.IsNullOrWhiteSpace(id) && !devices.Any(d => d.Id == id)).ToList();
+                var missingIds = knownDeviceIds.Where(id => !string.IsNullOrWhiteSpace(id) && !devices.Any(d => d.Id == id)).Distinct().ToList();
                 if (missingIds.Count > 0)
                 {
+                    LogDiagnostic($"Querying devices by known IDs: {string.Join(", ", missingIds)}");
                     var idDevices = await QueryDevicesByIdsAsync(session, missingIds, "Default", ct).ConfigureAwait(false);
                     foreach (var d in idDevices)
                     {
-                        if (!devices.Any(x => x.Id == d.Id))
-                        {
-                            devices.Add(d);
-                        }
+                        if (!devices.Any(x => x.Id == d.Id)) devices.Add(d);
                     }
                 }
             }
 
+            LogDiagnostic($"QueryUserDevicesAsync finished: {devices.Count} total devices.");
             return devices;
         }
 
@@ -177,10 +212,13 @@ namespace SmartLampApp.Services
             try
             {
                 string jsonResp = await ExecuteSignedRequestAsync(session, HttpMethod.Get, "/v1.0/m/life/users/homes", null, null, ct).ConfigureAwait(false);
-                return ParseHomesArray(jsonResp);
+                var homes = ParseHomesArray(jsonResp);
+                LogDiagnostic($"QueryHomesAsync found {homes.Count} homes.");
+                return homes;
             }
-            catch
+            catch (Exception ex)
             {
+                LogDiagnostic($"QueryHomesAsync exception: {ex}");
                 return new List<KeyValuePair<string, string>>();
             }
         }
@@ -192,10 +230,13 @@ namespace SmartLampApp.Services
             {
                 var queryParams = !string.IsNullOrEmpty(homeId) ? new Dictionary<string, string> { { "homeId", homeId } } : null;
                 string jsonResp = await ExecuteSignedRequestAsync(session, HttpMethod.Get, "/v1.0/m/life/ha/home/devices", queryParams, null, ct).ConfigureAwait(false);
-                return ParseDevicesArray(jsonResp, homeName);
+                var devs = ParseDevicesArray(jsonResp, homeName);
+                LogDiagnostic($"QueryDevicesByHomeAsync (homeId={homeId}) found {devs.Count} devices.");
+                return devs;
             }
-            catch
+            catch (Exception ex)
             {
+                LogDiagnostic($"QueryDevicesByHomeAsync exception: {ex}");
                 return new List<TuyaSharingDiscoveredDevice>();
             }
         }
@@ -211,10 +252,13 @@ namespace SmartLampApp.Services
             {
                 var queryParams = new Dictionary<string, string> { { "devIds", string.Join(",", ids) } };
                 string jsonResp = await ExecuteSignedRequestAsync(session, HttpMethod.Get, "/v1.0/m/life/ha/devices/detail", queryParams, null, ct).ConfigureAwait(false);
-                return ParseDevicesArray(jsonResp, homeName);
+                var devs = ParseDevicesArray(jsonResp, homeName);
+                LogDiagnostic($"QueryDevicesByIdsAsync found {devs.Count} devices.");
+                return devs;
             }
-            catch
+            catch (Exception ex)
             {
+                LogDiagnostic($"QueryDevicesByIdsAsync exception: {ex}");
                 return list;
             }
         }
@@ -242,12 +286,10 @@ namespace SmartLampApp.Services
                 {
                     foreach (var h in arrayElem.EnumerateArray())
                     {
-                        string ownerId = "";
-                        if (h.TryGetProperty("ownerId", out var oid)) ownerId = oid.ValueKind == JsonValueKind.String ? oid.GetString() ?? "" : oid.ToString();
-                        if (string.IsNullOrEmpty(ownerId) && h.TryGetProperty("homeId", out var hid)) ownerId = hid.ValueKind == JsonValueKind.String ? hid.GetString() ?? "" : hid.ToString();
-                        if (string.IsNullOrEmpty(ownerId) && h.TryGetProperty("id", out var id)) ownerId = id.ValueKind == JsonValueKind.String ? id.GetString() ?? "" : id.ToString();
+                        string ownerId = GetPropString(h, "ownerId", "owner_id", "homeId", "home_id", "id");
+                        string name = GetPropString(h, "name", "home_name");
+                        if (string.IsNullOrEmpty(name)) name = "Home";
 
-                        string name = h.TryGetProperty("name", out var n) ? n.GetString() ?? "Home" : "Home";
                         if (!string.IsNullOrEmpty(ownerId))
                         {
                             homes.Add(new KeyValuePair<string, string>(ownerId, name));
@@ -291,25 +333,14 @@ namespace SmartLampApp.Services
                 {
                     foreach (var d in arrayElem.EnumerateArray())
                     {
-                        string id = "";
-                        if (d.TryGetProperty("id", out var idProp)) id = idProp.GetString() ?? "";
-                        else if (d.TryGetProperty("devId", out var idProp2)) id = idProp2.GetString() ?? "";
-                        else if (d.TryGetProperty("dev_id", out var idProp3)) id = idProp3.GetString() ?? "";
-
-                        string name = "";
-                        if (d.TryGetProperty("name", out var nameProp)) name = nameProp.GetString() ?? "";
-                        else if (d.TryGetProperty("dev_name", out var nameProp2)) name = nameProp2.GetString() ?? "";
-
-                        string localKey = "";
-                        if (d.TryGetProperty("local_key", out var keyProp)) localKey = keyProp.GetString() ?? "";
-                        else if (d.TryGetProperty("localKey", out var keyProp2)) localKey = keyProp2.GetString() ?? "";
-                        else if (d.TryGetProperty("key", out var keyProp3)) localKey = keyProp3.GetString() ?? "";
-
-                        string cat = d.TryGetProperty("category", out var catProp) ? catProp.GetString() ?? "" : "";
-                        string pid = d.TryGetProperty("product_id", out var pidProp) ? pidProp.GetString() ?? "" : "";
-                        string pname = d.TryGetProperty("product_name", out var pnProp) ? pnProp.GetString() ?? "" : "";
-                        string ip = d.TryGetProperty("ip", out var ipProp) ? ipProp.GetString() ?? "" : "";
-                        bool online = d.TryGetProperty("online", out var onProp) && onProp.GetBoolean();
+                        string id = GetPropString(d, "id", "devId", "dev_id");
+                        string name = GetPropString(d, "name", "dev_name", "custom_name");
+                        string localKey = GetPropString(d, "local_key", "localKey", "key");
+                        string cat = GetPropString(d, "category", "product_category");
+                        string pid = GetPropString(d, "product_id", "productId");
+                        string pname = GetPropString(d, "product_name", "productName");
+                        string ip = GetPropString(d, "ip");
+                        bool online = d.TryGetProperty("online", out var onProp) && (onProp.ValueKind == JsonValueKind.True || (onProp.ValueKind == JsonValueKind.String && onProp.GetString() == "true"));
 
                         if (!string.IsNullOrEmpty(id))
                         {
@@ -342,6 +373,45 @@ namespace SmartLampApp.Services
             string? jsonBody,
             CancellationToken ct)
         {
+            var endpointsToTry = new List<string> { session.Endpoint };
+            if (!endpointsToTry.Contains("https://apigw.tuyaeu.com", StringComparer.OrdinalIgnoreCase))
+                endpointsToTry.Add("https://apigw.tuyaeu.com");
+            if (!endpointsToTry.Contains("https://apigw.iotbing.com", StringComparer.OrdinalIgnoreCase))
+                endpointsToTry.Add("https://apigw.iotbing.com");
+
+            string lastResponse = "";
+            foreach (var ep in endpointsToTry)
+            {
+                try
+                {
+                    string resp = await SendSignedOnceAsync(session, ep, method, path, queryParams, jsonBody, ct).ConfigureAwait(false);
+                    if (!string.IsNullOrWhiteSpace(resp))
+                    {
+                        using var doc = JsonDocument.Parse(resp);
+                        if (doc.RootElement.TryGetProperty("success", out var s) && s.GetBoolean())
+                        {
+                            return resp;
+                        }
+                    }
+                    lastResponse = resp;
+                }
+                catch (Exception ex)
+                {
+                    LogDiagnostic($"SendSignedOnce to {ep} failed: {ex.Message}");
+                }
+            }
+            return lastResponse;
+        }
+
+        private async Task<string> SendSignedOnceAsync(
+            TuyaSharingSession session,
+            string baseEndpoint,
+            HttpMethod method,
+            string path,
+            Dictionary<string, string>? queryParams,
+            string? jsonBody,
+            CancellationToken ct)
+        {
             string rid = Guid.NewGuid().ToString();
             string sid = "";
 
@@ -351,7 +421,7 @@ namespace SmartLampApp.Services
             string secret = TuyaSharingCrypto.ComputeSecret(rid, sid, hashKey);
 
             string queryEncData = "";
-            string requestUri = session.Endpoint.TrimEnd('/') + path;
+            string requestUri = baseEndpoint.TrimEnd('/') + path;
 
             if (queryParams != null && queryParams.Count > 0)
             {
@@ -393,8 +463,10 @@ namespace SmartLampApp.Services
                 req.Content = new StringContent(requestContent, Encoding.UTF8, "application/json");
             }
 
+            LogDiagnostic($"SignedReq -> {method} {requestUri}");
             using var res = await _http.SendAsync(req, ct).ConfigureAwait(false);
             string rawContent = await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            LogDiagnostic($"SignedResp ({(int)res.StatusCode}) <- {rawContent}");
 
             try
             {
@@ -405,6 +477,7 @@ namespace SmartLampApp.Services
                     if (!string.IsNullOrEmpty(cipherBase64))
                     {
                         string decrypted = TuyaSharingCrypto.DecryptAesGcm(cipherBase64, secret);
+                        LogDiagnostic($"SignedDecrypted <- {decrypted}");
                         if (!string.IsNullOrWhiteSpace(decrypted))
                         {
                             return $"{{\"success\":true,\"result\":{decrypted}}}";
@@ -414,10 +487,36 @@ namespace SmartLampApp.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[TuyaSharing] Error processing decrypted response: {ex.Message}");
+                LogDiagnostic($"Decrypt error: {ex.Message}");
             }
 
             return rawContent;
+        }
+
+        private static string GetPropString(JsonElement elem, params string[] names)
+        {
+            foreach (var n in names)
+            {
+                if (elem.TryGetProperty(n, out var prop))
+                {
+                    if (prop.ValueKind == JsonValueKind.String) return prop.GetString() ?? "";
+                    return prop.ToString();
+                }
+            }
+            return "";
+        }
+
+        private static long GetPropLong(JsonElement elem, params string[] names)
+        {
+            foreach (var n in names)
+            {
+                if (elem.TryGetProperty(n, out var prop))
+                {
+                    if (prop.TryGetInt64(out var val)) return val;
+                    if (long.TryParse(prop.ToString(), out var parsed)) return parsed;
+                }
+            }
+            return 0;
         }
     }
 }

@@ -220,7 +220,8 @@ namespace SmartLampApp
                                 }
                                 else
                                 {
-                                    TxtWizQrStatus.Text = "Login successful, but no lamps were found in this account.";
+                                    TxtWizQrStatus.Text = "⚠️ Login OK, but 0 devices found in cloud. Click here to open tuya_sharing_debug.log";
+                                    TxtWizQrStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xFB, 0xBF, 0x24));
                                 }
                             });
                             break;
@@ -234,6 +235,30 @@ namespace SmartLampApp
                 TxtWizQrStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xEF, 0x44, 0x44));
                 BtnGenerateQrCode.IsEnabled = true;
                 BtnGenerateQrCode.Content = LocalizationService.T("GenerateQrBtn");
+            }
+        }
+
+        private void TxtWizQrStatus_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            try
+            {
+                string logPath = TuyaSharingAuthService.GetDiagnosticLogPath();
+                if (File.Exists(logPath))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = logPath,
+                        UseShellExecute = true
+                    });
+                }
+                else
+                {
+                    MessageBox.Show(this, "Diagnostic log file is not yet created.", "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Could not open log file: {ex.Message}", "SmartLamp", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

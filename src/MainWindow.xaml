@@ -1265,7 +1265,7 @@
                                 <Border x:Name="BorderQrCode" Background="#FFFFFF" CornerRadius="8" Padding="6" HorizontalAlignment="Center" Width="144" Height="144" Margin="0,0,0,6" Visibility="Collapsed">
                                     <Image x:Name="ImgWizQrCode" Width="132" Height="132" Stretch="Uniform"/>
                                 </Border>
-                                <TextBlock x:Name="TxtWizQrStatus" Text="" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="TxtWizQrStatus" Text="" FontSize="11" FontWeight="Bold" Foreground="#00F0FF" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,2,0,0" TextWrapping="Wrap" Cursor="Hand" ToolTip="Click to open tuya_sharing_debug.log" MouseLeftButtonUp="TxtWizQrStatus_MouseLeftButtonUp"/>
                                 <ListBox x:Name="LstWizQrDevices" Height="70" Margin="0,6,0,0" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Visibility="Collapsed" SelectionChanged="LstWizQrDevices_SelectionChanged"/>
                             </StackPanel>
 

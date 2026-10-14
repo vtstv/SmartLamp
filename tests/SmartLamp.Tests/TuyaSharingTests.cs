@@ -121,7 +121,26 @@ namespace SmartLamp.Tests
             Assert.NotNull(session);
             Assert.Equal("acc_123", session.AccessToken);
             Assert.Equal("ref_456", session.RefreshToken);
-            Assert.Equal("https://openapi.tuyaeu.com", session.Endpoint);
+            Assert.Equal("https://apigw.tuyaeu.com", session.Endpoint);
+        }
+
+        [Fact]
+        public async System.Threading.Tasks.Task PollLoginResultAsync_ParsesSnakeCasePropertiesCorrectly()
+        {
+            string jsonResponse = "{\"success\":true,\"result\":{\"access_token\":\"snake_acc\",\"refresh_token\":\"snake_ref\",\"expire_time\":7200,\"uid\":\"snake_uid\",\"endpoint\":\"apigw.tuyaeu.com\"}}";
+            var mockHandler = new MockHttpMessageHandler(req => new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new System.Net.Http.StringContent(jsonResponse)
+            });
+
+            var service = new TuyaSharingAuthService(new System.Net.Http.HttpClient(mockHandler));
+            var (scanned, session, err) = await service.PollLoginResultAsync("token_456", "user_abc");
+
+            Assert.True(scanned);
+            Assert.NotNull(session);
+            Assert.Equal("snake_acc", session.AccessToken);
+            Assert.Equal("snake_ref", session.RefreshToken);
+            Assert.Equal("https://apigw.tuyaeu.com", session.Endpoint);
         }
 
         [Fact]
