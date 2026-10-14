@@ -585,7 +585,7 @@
                                         <Grid Margin="0,0,0,1">
                                             <TextBlock x:Name="LblDevIp" Text="IP Address:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" VerticalAlignment="Center"/>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                <RadioButton x:Name="RbIpLocal" Content="Local" FontSize="9.5" Foreground="#00F0FF" IsChecked="True" Margin="0,0,5,0" Checked="RbIpType_Checked" ToolTip="Use local LAN IP address (~25ms response)"/>
+                                                <RadioButton x:Name="RbIpLocal" Content="Local" FontSize="9.5" Foreground="#00F0FF" Margin="0,0,5,0" Checked="RbIpType_Checked" ToolTip="Use local LAN IP address (~25ms response)"/>
                                                 <RadioButton x:Name="RbIpExternal" Content="External" FontSize="9.5" Foreground="#AAAAAA" Checked="RbIpType_Checked" ToolTip="Use external WAN / Cloud reported IP address"/>
                                             </StackPanel>
                                         </Grid>

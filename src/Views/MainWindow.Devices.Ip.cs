@@ -16,8 +16,10 @@ namespace SmartLampApp
 {
     public partial class MainWindow : Window
     {
-        private void SyncDeviceIpUi(DeviceInfo active)
+        private void SyncDeviceIpUi(DeviceInfo? active)
         {
+            if (active == null || TxtIp == null) return;
+
             if (string.IsNullOrEmpty(active.LocalIp) && TuyaSharingCrypto.IsPrivateIp(active.Ip))
             {
                 active.LocalIp = active.Ip;
@@ -49,7 +51,7 @@ namespace SmartLampApp
 
         private void RbIpType_Checked(object sender, RoutedEventArgs e)
         {
-            if (_isUpdatingUi) return;
+            if (_isUpdatingUi || _protocol == null || TxtIp == null) return;
             var active = _protocol.GetActiveDevice();
             if (active == null) return;
 
@@ -99,7 +101,7 @@ namespace SmartLampApp
 
         private async Task AutoDetectLocalIpAsync(string devId, bool showFeedback = false)
         {
-            if (string.IsNullOrEmpty(devId)) return;
+            if (string.IsNullOrEmpty(devId) || _protocol == null) return;
 
             // 1. Check if already known in _discoveredList
             string? foundIp = _discoveredList?.FirstOrDefault(d => d.DevId == devId && TuyaSharingCrypto.IsPrivateIp(d.Ip))?.Ip;
