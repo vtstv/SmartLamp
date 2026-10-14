@@ -62,5 +62,13 @@ namespace SmartLampApp.Services
 
             return results;
         }
+
+        public async Task<string?> FindLocalIpForDeviceAsync(string devId, int timeoutMs = 2500)
+        {
+            if (string.IsNullOrWhiteSpace(devId)) return null;
+            var list = await ScanLocalNetworkAsync(timeoutMs).ConfigureAwait(false);
+            var match = list.FirstOrDefault(d => d.DevId == devId && TuyaSharingCrypto.IsPrivateIp(d.Ip));
+            return match?.Ip;
+        }
     }
 }

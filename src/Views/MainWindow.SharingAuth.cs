@@ -150,30 +150,64 @@ namespace SmartLampApp
                                     int added = 0;
                                     foreach (var d in _sharingDevices)
                                     {
-                                        string devIp = d.Ip ?? "";
-                                        if (string.IsNullOrEmpty(devIp))
+                                        string cloudIp = d.Ip ?? "";
+                                        string localIp = "";
+                                        string externalIp = "";
+
+                                        if (TuyaSharingCrypto.IsPrivateIp(cloudIp))
                                         {
-                                            var disc = _discoveredList?.Find(x => x.DevId == d.Id);
-                                            if (disc != null && !string.IsNullOrEmpty(disc.Ip))
+                                            localIp = cloudIp;
+                                        }
+                                        else
+                                        {
+                                            externalIp = cloudIp;
+                                        }
+
+                                        // 1. Check cached UDP broadcast discovered list for private LAN IP
+                                        var disc = _discoveredList?.Find(x => x.DevId == d.Id && TuyaSharingCrypto.IsPrivateIp(x.Ip));
+                                        if (disc != null && !string.IsNullOrEmpty(disc.Ip))
+                                        {
+                                            localIp = disc.Ip;
+                                        }
+                                        else
+                                        {
+                                            // 2. Check existing config for known local IP
+                                            var existingDev = _config?.devices?.Find(x => x.DevId == d.Id);
+                                            if (existingDev != null && !string.IsNullOrEmpty(existingDev.LocalIp))
                                             {
-                                                devIp = disc.Ip;
+                                                localIp = existingDev.LocalIp;
                                             }
-                                            else
+                                            else if (existingDev != null && TuyaSharingCrypto.IsPrivateIp(existingDev.Ip))
                                             {
-                                                var existingDev = _config?.devices?.Find(x => x.DevId == d.Id);
-                                                if (existingDev != null && !string.IsNullOrEmpty(existingDev.Ip))
-                                                {
-                                                    devIp = existingDev.Ip;
-                                                }
-                                                else if (_config?.dev_id == d.Id && !string.IsNullOrEmpty(_config.ip))
-                                                {
-                                                    devIp = _config.ip;
-                                                }
+                                                localIp = existingDev.Ip;
+                                            }
+                                            else if (_config?.dev_id == d.Id && TuyaSharingCrypto.IsPrivateIp(_config.ip))
+                                            {
+                                                localIp = _config.ip;
                                             }
                                         }
 
+                                        // 3. If localIp still not found, do a quick network scan
+                                        if (string.IsNullOrEmpty(localIp))
+                                        {
+                                            try
+                                            {
+                                                var quickScan = await _protocol.ScanLocalNetworkAsync(1200);
+                                                var found = quickScan?.Find(x => x.DevId == d.Id && TuyaSharingCrypto.IsPrivateIp(x.Ip));
+                                                if (found != null && !string.IsNullOrEmpty(found.Ip))
+                                                {
+                                                    localIp = found.Ip;
+                                                }
+                                            }
+                                            catch { }
+                                        }
+
+                                        // Prefer Local IP over External IP
+                                        string devIp = !string.IsNullOrEmpty(localIp) ? localIp : cloudIp;
+                                        bool useLocal = !string.IsNullOrEmpty(localIp);
+
                                         string keyState = !string.IsNullOrEmpty(d.LocalKey) ? "🔑 Key OK" : "No Key";
-                                        string ipState = !string.IsNullOrEmpty(devIp) ? $" • {devIp}" : "";
+                                        string ipState = !string.IsNullOrEmpty(localIp) ? $" • LAN: {localIp}" : (!string.IsNullOrEmpty(externalIp) ? $" • WAN: {externalIp}" : "");
                                         LstWizQrDevices.Items.Add($"💡 {d.Name} ({d.Id}){ipState} • {keyState}");
 
                                         var existing = _config.devices.Find(x => x.DevId == d.Id);
@@ -185,6 +219,9 @@ namespace SmartLampApp
                                                 DevId = d.Id,
                                                 LocalKey = d.LocalKey,
                                                 Ip = devIp,
+                                                LocalIp = localIp,
+                                                ExternalIp = externalIp,
+                                                UseLocalIp = useLocal,
                                                 Version = "3.5",
                                                 GroupName = string.IsNullOrWhiteSpace(d.HomeName) ? "Living Room" : d.HomeName
                                             });
@@ -193,13 +230,16 @@ namespace SmartLampApp
                                         else
                                         {
                                             if (!string.IsNullOrEmpty(d.LocalKey)) existing.LocalKey = d.LocalKey;
-                                            if (string.IsNullOrEmpty(existing.Ip) && !string.IsNullOrEmpty(devIp)) existing.Ip = devIp;
+                                            if (!string.IsNullOrEmpty(localIp)) existing.LocalIp = localIp;
+                                            if (!string.IsNullOrEmpty(externalIp)) existing.ExternalIp = externalIp;
+                                            existing.Ip = devIp;
+                                            existing.UseLocalIp = useLocal;
                                         }
 
                                         if (_config.dev_id == d.Id || string.IsNullOrEmpty(_config.local_key))
                                         {
                                             if (!string.IsNullOrEmpty(d.LocalKey)) _config.local_key = d.LocalKey;
-                                            if (string.IsNullOrEmpty(_config.ip) && !string.IsNullOrEmpty(devIp)) _config.ip = devIp;
+                                            _config.ip = devIp;
                                             if (string.IsNullOrEmpty(_config.dev_id)) _config.dev_id = d.Id;
                                         }
                                     }

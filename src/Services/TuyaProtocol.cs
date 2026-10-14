@@ -79,6 +79,14 @@ namespace SmartLampApp.Services
                 {
                     dev.LocalKey = _config.local_key;
                 }
+                if (dev.UseLocalIp && !string.IsNullOrEmpty(dev.LocalIp) && dev.Ip != dev.LocalIp)
+                {
+                    dev.Ip = dev.LocalIp;
+                }
+                else if (!dev.UseLocalIp && !string.IsNullOrEmpty(dev.ExternalIp) && dev.Ip != dev.ExternalIp)
+                {
+                    dev.Ip = dev.ExternalIp;
+                }
                 return dev;
             }
 

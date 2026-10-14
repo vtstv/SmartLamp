@@ -582,8 +582,21 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Margin="0,0,3,0">
-                                        <TextBlock x:Name="LblDevIp" Text="IP Address:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,1"/>
-                                        <TextBox x:Name="TxtIp" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+                                        <Grid Margin="0,0,0,1">
+                                            <TextBlock x:Name="LblDevIp" Text="IP Address:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <RadioButton x:Name="RbIpLocal" Content="Local" FontSize="9.5" Foreground="#00F0FF" IsChecked="True" Margin="0,0,5,0" Checked="RbIpType_Checked" ToolTip="Use local LAN IP address (~25ms response)"/>
+                                                <RadioButton x:Name="RbIpExternal" Content="External" FontSize="9.5" Foreground="#AAAAAA" Checked="RbIpType_Checked" ToolTip="Use external WAN / Cloud reported IP address"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtIp" Grid.Column="0" Height="24" VerticalContentAlignment="Center" Background="#0C0C14" Foreground="#FFFFFF" BorderBrush="#222236" Padding="6,0"/>
+                                            <Button x:Name="BtnAutoDetectIp" Grid.Column="1" Content="🔍 Auto-LAN" ToolTip="Auto-detect local LAN IP via UDP discovery" Height="24" Padding="5,0" Margin="3,0,0,0" Style="{StaticResource GlassBtn}" Background="#1E293B" Foreground="#00F0FF" FontSize="9.5" FontWeight="Bold" Click="BtnAutoDetectIp_Click"/>
+                                        </Grid>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="3,0,0,0">
                                         <TextBlock x:Name="LblDevId" Text="Device ID:" FontSize="10.5" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,1"/>

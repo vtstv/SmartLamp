@@ -97,7 +97,7 @@ namespace SmartLampApp
             if (active != null)
             {
                 TxtName.Text = active.Name;
-                TxtIp.Text = active.Ip;
+                SyncDeviceIpUi(active);
                 TxtDevId.Text = active.DevId;
 
                 PassLocalKey.Password = active.LocalKey;
@@ -286,23 +286,32 @@ namespace SmartLampApp
             }
 
             var existing = _config.devices.Find(d => d.DevId == devId);
+            bool isLocal = RbIpLocal?.IsChecked == true || TuyaSharingCrypto.IsPrivateIp(ip);
+
             if (existing != null)
             {
                 existing.Name = string.IsNullOrWhiteSpace(name) ? "Smart Lamp" : name;
                 existing.Ip = ip;
+                if (isLocal) existing.LocalIp = ip;
+                else existing.ExternalIp = ip;
+                existing.UseLocalIp = isLocal;
                 existing.LocalKey = key;
                 existing.GroupName = string.IsNullOrWhiteSpace(group) ? "Default Group" : group;
             }
             else
             {
-                _config.devices.Add(new DeviceInfo
+                var newDev = new DeviceInfo
                 {
                     Name = string.IsNullOrWhiteSpace(name) ? "Smart Lamp" : name,
                     Ip = ip,
                     DevId = devId,
                     LocalKey = key,
-                    GroupName = string.IsNullOrWhiteSpace(group) ? "Default Group" : group
-                });
+                    GroupName = string.IsNullOrWhiteSpace(group) ? "Default Group" : group,
+                    UseLocalIp = isLocal
+                };
+                if (isLocal) newDev.LocalIp = ip;
+                else newDev.ExternalIp = ip;
+                _config.devices.Add(newDev);
             }
 
             _config.selected_dev_id = devId;

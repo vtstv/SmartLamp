@@ -144,5 +144,23 @@ namespace SmartLampApp.Services
 
             return Convert.ToBase64String(nonce) + Convert.ToBase64String(combinedCipherAndTag);
         }
+
+        public static bool IsPrivateIp(string? ip)
+        {
+            if (string.IsNullOrWhiteSpace(ip)) return false;
+            if (System.Net.IPAddress.TryParse(ip.Trim(), out var addr))
+            {
+                byte[] bytes = addr.GetAddressBytes();
+                if (bytes.Length == 4)
+                {
+                    if (bytes[0] == 10) return true;
+                    if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
+                    if (bytes[0] == 192 && bytes[1] == 168) return true;
+                    if (bytes[0] == 127) return true;
+                    if (bytes[0] == 169 && bytes[1] == 254) return true;
+                }
+            }
+            return false;
+        }
     }
 }

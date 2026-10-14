@@ -181,6 +181,26 @@ namespace SmartLamp.Tests
             Assert.Equal("key987654321098", envDevs[0].LocalKey);
             Assert.False(envDevs[0].Online);
         }
+
+        [Theory]
+        [InlineData("192.168.0.68", true)]
+        [InlineData("192.168.1.1", true)]
+        [InlineData("10.0.0.1", true)]
+        [InlineData("172.16.0.1", true)]
+        [InlineData("172.31.255.255", true)]
+        [InlineData("127.0.0.1", true)]
+        [InlineData("169.254.1.1", true)]
+        [InlineData("8.8.8.8", false)]
+        [InlineData("95.123.45.67", false)]
+        [InlineData("1.1.1.1", false)]
+        [InlineData("", false)]
+        [InlineData(null, false)]
+        [InlineData("invalid_ip", false)]
+        public void IsPrivateIp_IdentifiesPrivateAndPublicIps(string? ip, bool expectedPrivate)
+        {
+            bool actual = TuyaSharingCrypto.IsPrivateIp(ip);
+            Assert.Equal(expectedPrivate, actual);
+        }
     }
 
     public class MockHttpMessageHandler : System.Net.Http.HttpMessageHandler

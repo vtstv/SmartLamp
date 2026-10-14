@@ -16,6 +16,9 @@ namespace SmartLampApp.Models
     {
         public string Name { get; set; } = "Smart Lamp";
         public string Ip { get; set; } = "";
+        public string LocalIp { get; set; } = "";
+        public string ExternalIp { get; set; } = "";
+        public bool UseLocalIp { get; set; } = true;
         public string DevId { get; set; } = "";
         public string LocalKey { get; set; } = "";
         public string Version { get; set; } = "3.5";
