@@ -45,6 +45,10 @@ namespace SmartLampApp
         // Feature 4: System Tray Icon
         private System.Windows.Forms.NotifyIcon? _notifyIcon;
 
+        // Status Polling Timer
+        private System.Windows.Threading.DispatcherTimer? _statusPollingTimer;
+        private bool _isRefreshingStatus = false;
+
         private List<DiscoveredDevice> _discoveredList = new List<DiscoveredDevice>();
         private DateTime _lastUserCommandTime = DateTime.MinValue;
 
@@ -97,7 +101,77 @@ namespace SmartLampApp
                 SetCompactMode(true);
             }
 
-            _ = RefreshStatusAsync();
+            InitializeStatusPolling();
+        }
+
+        private void InitializeStatusPolling()
+        {
+            this.StateChanged += MainWindow_StateChanged;
+            this.Activated += MainWindow_Activated;
+            this.IsVisibleChanged += MainWindow_IsVisibleChanged;
+
+            _statusPollingTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(5)
+            };
+            _statusPollingTimer.Tick += StatusPollingTimer_Tick;
+            _statusPollingTimer.Start();
+        }
+
+        private void UpdateStatusPollingInterval()
+        {
+            if (_statusPollingTimer == null) return;
+            bool isBackground = !this.IsVisible || this.WindowState == WindowState.Minimized;
+            var targetInterval = isBackground ? TimeSpan.FromSeconds(15) : TimeSpan.FromSeconds(5);
+            if (_statusPollingTimer.Interval != targetInterval)
+            {
+                _statusPollingTimer.Interval = targetInterval;
+            }
+        }
+
+        private void MainWindow_StateChanged(object? sender, EventArgs e)
+        {
+            UpdateStatusPollingInterval();
+            if (this.WindowState != WindowState.Minimized && this.IsVisible)
+            {
+                _ = RefreshStatusAsync();
+            }
+        }
+
+        private void MainWindow_Activated(object? sender, EventArgs e)
+        {
+            UpdateStatusPollingInterval();
+            if (this.WindowState != WindowState.Minimized && this.IsVisible)
+            {
+                _ = RefreshStatusAsync();
+            }
+        }
+
+        private void MainWindow_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            UpdateStatusPollingInterval();
+            if (this.WindowState != WindowState.Minimized && this.IsVisible)
+            {
+                _ = RefreshStatusAsync();
+            }
+        }
+
+        private async void StatusPollingTimer_Tick(object? sender, EventArgs e)
+        {
+            UpdateStatusPollingInterval();
+
+            if ((DateTime.UtcNow - _lastUserCommandTime).TotalSeconds < 5.0)
+            {
+                return;
+            }
+
+            await RefreshStatusAsync();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _statusPollingTimer?.Stop();
+            base.OnClosed(e);
         }
 
         protected override void OnSourceInitialized(EventArgs e)
