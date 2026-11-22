@@ -121,6 +121,11 @@ namespace TuyaNet.Native
                 Buffer.BlockCopy(jsonBytes, 0, fullPayload, TuyaHeader.Version35Header.Length, jsonBytes.Length);
 
                 var (respCmd, plaintext) = await _session.SendReceive6699Async(TuyaCommandType.ControlNew, fullPayload, cancellationToken).ConfigureAwait(false);
+
+                // Check if a second acknowledgement packet (such as 4 zero bytes 00 00 00 00) is arriving
+                // within a short timeout (~150-200ms) and drain it, keeping the socket buffer clean for subsequent GetStatusJsonAsync calls.
+                await _session.DrainSecondPacketAsync(200, cancellationToken).ConfigureAwait(false);
+
                 if (plaintext == null || plaintext.Length == 0)
                 {
                     return respCmd == TuyaCommandType.ControlNew || respCmd == TuyaCommandType.Status;

@@ -10,10 +10,16 @@
 
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\AppVersion.cs" Link="AppVersion.cs" />
+    <Compile Include="..\Models\ConfigManager.cs" Link="Models\ConfigManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

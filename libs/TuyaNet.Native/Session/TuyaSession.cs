@@ -133,6 +133,98 @@ namespace TuyaNet.Native.Session
         #region Thread-Safe Request Dispatching
 
         /// <summary>
+        /// Drains and discards any available leftover bytes from the socket stream.
+        /// </summary>
+        public void DrainAvailableBytes()
+        {
+            try
+            {
+                if (_stream != null && _stream.DataAvailable)
+                {
+                    byte[] drainBuf = new byte[1024];
+                    while (_stream.DataAvailable)
+                    {
+                        int read = _stream.Read(drainBuf, 0, drainBuf.Length);
+                        if (read <= 0) break;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Sends raw packet bytes over the active stream, draining any leftover bytes first if data is available.
+        /// </summary>
+        public async Task SendAsync(byte[] packet, CancellationToken cancellationToken = default)
+        {
+            if (_stream != null && _stream.DataAvailable)
+            {
+                DrainAvailableBytes();
+            }
+
+            if (_stream != null)
+            {
+                await _stream.WriteAsync(packet, cancellationToken).ConfigureAwait(false);
+                await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Drains an optional second acknowledgement packet arriving within the timeout (e.g. Tuya v3.5 0x0D ack).
+        /// </summary>
+        public async Task DrainSecondPacketAsync(int timeoutMs = 200, CancellationToken cancellationToken = default)
+        {
+            await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                if (_stream == null || _tcpClient == null || !_tcpClient.Connected) return;
+
+                int waited = 0;
+                const int step = 10;
+                while (waited < timeoutMs && !_stream.DataAvailable && !cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(step, cancellationToken).ConfigureAwait(false);
+                    waited += step;
+                }
+
+                if (_stream.DataAvailable)
+                {
+                    try
+                    {
+                        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        cts.CancelAfter(300);
+
+                        if (IsVersion35 && _sessionKey != null)
+                        {
+                            await TuyaPacket.Read6699Async(_stream, _sessionKey, cts.Token).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await TuyaPacket.Read55AAAsync(_stream, cts.Token).ConfigureAwait(false);
+                        }
+                    }
+                    catch
+                    {
+                        DrainAvailableBytes();
+                    }
+
+                    if (_stream.DataAvailable)
+                    {
+                        DrainAvailableBytes();
+                    }
+                }
+            }
+            catch
+            {
+                // Discard draining errors
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+
+        /// <summary>
         /// Sends a 6699 message and returns the decrypted payload. Reconnects on connection loss.
         /// </summary>
         public async Task<(TuyaCommandType Cmd, byte[] Plaintext)> SendReceive6699Async(TuyaCommandType cmd, byte[] payload, CancellationToken cancellationToken)
@@ -147,10 +239,9 @@ namespace TuyaNet.Native.Session
                         await EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
 
                         byte[] packet = TuyaPacket.Pack6699(cmd, _seqNo++, payload, _sessionKey!);
-                        await _stream!.WriteAsync(packet, cancellationToken).ConfigureAwait(false);
-                        await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                        await SendAsync(packet, cancellationToken).ConfigureAwait(false);
 
-                        var resp = await TuyaPacket.Read6699Async(_stream, _sessionKey!, cancellationToken).ConfigureAwait(false);
+                        var resp = await TuyaPacket.Read6699Async(_stream!, _sessionKey!, cancellationToken).ConfigureAwait(false);
                         return (resp.Cmd, resp.Plaintext);
                     }
                     catch
@@ -182,10 +273,9 @@ namespace TuyaNet.Native.Session
                         await EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
 
                         byte[] packet = TuyaPacket.Pack55AA(cmd, _seqNo++, payload);
-                        await _stream!.WriteAsync(packet, cancellationToken).ConfigureAwait(false);
-                        await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                        await SendAsync(packet, cancellationToken).ConfigureAwait(false);
 
-                        var resp = await TuyaPacket.Read55AAAsync(_stream, cancellationToken).ConfigureAwait(false);
+                        var resp = await TuyaPacket.Read55AAAsync(_stream!, cancellationToken).ConfigureAwait(false);
                         return (resp.Cmd, resp.Payload);
                     }
                     catch

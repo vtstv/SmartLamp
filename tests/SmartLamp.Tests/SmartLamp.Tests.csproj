@@ -32,6 +32,12 @@
     <Compile Include="..\..\src\Services\LocalizationService.Settings.cs" Link="Services\LocalizationService.Settings.cs" />
     <Compile Include="..\..\src\Services\LocalizationService.Devices.cs" Link="Services\LocalizationService.Devices.cs" />
     <Compile Include="..\..\src\Services\TuyaProtocol.Color.cs" Link="Services\TuyaProtocol.Color.cs" />
+    <Compile Include="..\..\src\Services\TuyaProtocol.cs" Link="Services\TuyaProtocol.cs" />
+    <Compile Include="..\..\src\Services\TuyaProtocol.Local.cs" Link="Services\TuyaProtocol.Local.cs" />
+    <Compile Include="..\..\src\Services\TuyaProtocol.Cloud.cs" Link="Services\TuyaProtocol.Cloud.cs" />
+    <Compile Include="..\..\src\Services\TuyaProtocol.CloudKey.cs" Link="Services\TuyaProtocol.CloudKey.cs" />
+    <Compile Include="..\..\src\Services\TuyaProtocol.Discovery.cs" Link="Services\TuyaProtocol.Discovery.cs" />
+    <Compile Include="..\..\src\Services\TuyaProtocol.Groups.cs" Link="Services\TuyaProtocol.Groups.cs" />
     <Compile Include="..\..\src\Services\BackupService.cs" Link="Services\BackupService.cs" />
     <Compile Include="..\..\src\Services\TuyaSharingAuthService.cs" Link="Services\TuyaSharingAuthService.cs" />
     <Compile Include="..\..\src\Services\TuyaSharingAuthService.Transport.cs" Link="Services\TuyaSharingAuthService.Transport.cs" />

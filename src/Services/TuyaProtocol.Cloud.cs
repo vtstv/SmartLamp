@@ -279,6 +279,26 @@ namespace SmartLampApp.Services
             return false;
         }
 
+        public static bool ParseDeviceDetailsOnline(string jsonStr)
+        {
+            if (string.IsNullOrWhiteSpace(jsonStr)) return false;
+            try
+            {
+                using var doc = JsonDocument.Parse(jsonStr);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("success", out var s) && s.GetBoolean())
+                {
+                    if (root.TryGetProperty("result", out var result) && result.TryGetProperty("online", out var onlineProp))
+                    {
+                        return onlineProp.ValueKind == JsonValueKind.True ||
+                               (onlineProp.ValueKind == JsonValueKind.String && bool.TryParse(onlineProp.GetString(), out bool b) && b);
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+
         private async Task<LampStatus> GetCloudStatusAsync(DeviceInfo? target = null)
         {
             var dev = target ?? _activeDevice;
@@ -287,6 +307,7 @@ namespace SmartLampApp.Services
             {
                 status.ErrorMessage = "Tuya Cloud credentials not set";
                 status.IsOnline = false;
+                status.IsPowerOn = false;
                 return status;
             }
 
@@ -299,10 +320,49 @@ namespace SmartLampApp.Services
                 if (!string.IsNullOrEmpty(token))
                 {
                     string baseUrl = GetTuyaBaseUrl(region);
-                    long t = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    string uri = $"/v1.0/iot-03/devices/{dev.DevId}/status";
                     string emptyHash = CalculateSha256Hex("");
 
+                    // Step 1: Call device details endpoint /v1.0/iot-03/devices/{dev.DevId} to check real online status
+                    long tDev = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    string devUri = $"/v1.0/iot-03/devices/{dev.DevId}";
+                    string stringToSignDev = _config.access_id + token + tDev + "GET\n" + emptyHash + "\n\n" + devUri;
+                    string signDev = CalculateHmacSha256Upper(plainKey, stringToSignDev);
+
+                    using var devReq = new HttpRequestMessage(HttpMethod.Get, baseUrl + devUri);
+                    devReq.Headers.Add("client_id", _config.access_id);
+                    devReq.Headers.Add("access_token", token);
+                    devReq.Headers.Add("sign", signDev);
+                    devReq.Headers.Add("t", tDev.ToString());
+                    devReq.Headers.Add("sign_method", "HMAC-SHA256");
+
+                    var devRes = await _httpClient.SendAsync(devReq);
+                    if (!devRes.IsSuccessStatusCode)
+                    {
+                        status.ErrorMessage = "Cloud device query failed";
+                        status.IsOnline = false;
+                        status.IsPowerOn = false;
+                        return status;
+                    }
+
+                    string devJsonStr = await devRes.Content.ReadAsStringAsync();
+                    if (!ParseDeviceDetailsOnline(devJsonStr))
+                    {
+                        if (devJsonStr.Contains("28841002") || devJsonStr.Contains("subscription has expired"))
+                        {
+                            _cloudSubscriptionExpired = true;
+                            _config.cloud_subscription_expired = true;
+                            _config.cloud_subscription_check_time = DateTime.UtcNow;
+                            ConfigManager.Save(_config);
+                        }
+                        status.ErrorMessage = "Device is offline";
+                        status.IsOnline = false;
+                        status.IsPowerOn = false;
+                        return status;
+                    }
+
+                    // Step 2: Device is verified online, query /status endpoint for DPS values
+                    long t = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    string uri = $"/v1.0/iot-03/devices/{dev.DevId}/status";
                     string stringToSign = _config.access_id + token + t + "GET\n" + emptyHash + "\n\n" + uri;
                     string sign = CalculateHmacSha256Upper(plainKey, stringToSign);
 
@@ -394,6 +454,7 @@ namespace SmartLampApp.Services
                             }
                             status.ErrorMessage = "Cloud status request failed";
                             status.IsOnline = false;
+                            status.IsPowerOn = false;
                             return status;
                         }
                     }
@@ -403,6 +464,7 @@ namespace SmartLampApp.Services
 
             status.ErrorMessage = "Cloud status request failed";
             status.IsOnline = false;
+            status.IsPowerOn = false;
             return status;
         }
     }

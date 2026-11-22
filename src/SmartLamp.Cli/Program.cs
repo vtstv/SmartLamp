@@ -205,7 +205,7 @@ namespace SmartLamp.Cli
                 {
                     Ip = ip,
                     DevId = id,
-                    LocalKey = key,
+                    LocalKey = SmartLampApp.Models.ConfigManager.DecryptSecret(key),
                     Version = ver ?? "3.5"
                 }, null);
             }
@@ -243,6 +243,8 @@ namespace SmartLamp.Cli
                     {
                         return (null, "Invalid device entry in configuration file.");
                     }
+
+                    devKey = SmartLampApp.Models.ConfigManager.DecryptSecret(devKey);
 
                     return (new SimpleDeviceConfig { Ip = devIp, DevId = devId, LocalKey = devKey, Version = devVer }, null);
                 }
