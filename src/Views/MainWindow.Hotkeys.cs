@@ -121,10 +121,11 @@ namespace SmartLampApp
 
         private async Task TogglePowerFromHotkeyAsync()
         {
-            _isPowerOn = !_isPowerOn;
-            UpdatePowerButtonUi();
-            await _protocol.SetPowerAsync(_isPowerOn);
-            ShowTrayNotification($"SmartLamp ({GetHotkeyDisplayText()})", _isPowerOn ? "⚡ Lamp Powered ON" : "⚡ Lamp Powered OFF");
+            bool success = await TogglePowerFromExternalTriggerAsync();
+            if (success)
+            {
+                ShowTrayNotification($"SmartLamp ({GetHotkeyDisplayText()})", _isPowerOn ? "⚡ Lamp Powered ON" : "⚡ Lamp Powered OFF");
+            }
         }
     }
 }

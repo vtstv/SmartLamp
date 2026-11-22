@@ -26,114 +26,123 @@ namespace SmartLampApp
 
         private async Task RefreshStatusAsync()
         {
-            if (_config.is_group_control_active)
+            if (_isRefreshingStatus) return;
+            _isRefreshingStatus = true;
+            try
             {
-                var grp = _protocol.GetActiveGroup();
-                if (grp != null)
+                if (_config.is_group_control_active)
                 {
-                    PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
-                    TxtStatus.Text = "👥 GROUP ACTIVE";
+                    var grp = _protocol.GetActiveGroup();
+                    if (grp != null)
+                    {
+                        PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                        TxtStatus.Text = "👥 GROUP ACTIVE";
+                        if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+                        if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
+                        if (TxtCompactDevice != null) TxtCompactDevice.Text = $"{grp.Icon} {grp.Name}";
+                        _isPowerOn = grp.MasterPowerOn;
+                        UpdatePowerButtonUi();
+                        return;
+                    }
+                }
+
+                if (!_protocol.IsConfigured)
+                {
+                    PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9100"));
+                    TxtStatus.Text = "⚠️ KEY REQUIRED";
                     if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
                     if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
-                    if (TxtCompactDevice != null) TxtCompactDevice.Text = $"{grp.Icon} {grp.Name}";
-                    _isPowerOn = grp.MasterPowerOn;
+                    _isPowerOn = false;
                     UpdatePowerButtonUi();
                     return;
                 }
-            }
 
-            if (!_protocol.IsConfigured)
-            {
-                PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9100"));
-                TxtStatus.Text = "⚠️ KEY REQUIRED";
+                PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
+                TxtStatus.Text = "⏳ CONNECTING...";
                 if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
                 if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
-                _isPowerOn = false;
-                UpdatePowerButtonUi();
-                return;
-            }
 
-            PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
-            TxtStatus.Text = "⏳ CONNECTING...";
-            if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
-            if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
+                var status = await Task.Run(() => _protocol.GetStatusAsync());
 
-            var status = await Task.Run(() => _protocol.GetStatusAsync());
+                if (!status.IsOnline)
+                {
+                    PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
+                    TxtStatus.Text = "❌ OFFLINE";
+                    if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
+                    if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
+                    _isPowerOn = false;
+                    UpdatePowerButtonUi();
+                    return;
+                }
 
-            if (!status.IsOnline)
-            {
-                PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF1744"));
-                TxtStatus.Text = "❌ OFFLINE";
+                PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                TxtStatus.Text = "🟢 ONLINE";
                 if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
                 if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
-                _isPowerOn = false;
+
+                var currentActive = _protocol.GetActiveDevice();
+                if (TxtCompactDevice != null && currentActive != null)
+                {
+                    TxtCompactDevice.Text = currentActive.Name;
+                }
+
+                bool isUserActive = (DateTime.UtcNow - _lastUserCommandTime).TotalSeconds < 4.0;
+                if (!isUserActive)
+                {
+                    _isPowerOn = status.IsPowerOn;
+                    if (!string.IsNullOrWhiteSpace(status.Mode))
+                    {
+                        _currentMode = status.Mode;
+                    }
+
+                    var active = _protocol.GetActiveDevice();
+                    if (active != null) active.last_power_on = status.IsPowerOn;
+                    if (status.Brightness > 0)
+                    {
+                        _isUpdatingUi = true;
+                        try
+                        {
+                            SliderBright.Value = status.Brightness;
+                            TxtBrightVal.Text = $"{status.Brightness}%";
+                            if (SliderCompactBright != null) SliderCompactBright.Value = status.Brightness;
+                            if (TxtCompactBrightVal != null) TxtCompactBrightVal.Text = $"{status.Brightness}%";
+                            if (active != null) active.last_brightness = status.Brightness;
+                            _config.last_brightness = status.Brightness;
+                        }
+                        finally
+                        {
+                            _isUpdatingUi = false;
+                        }
+                    }
+                    if (status.ColorTempK >= 2700)
+                    {
+                        _isUpdatingUi = true;
+                        try
+                        {
+                            SliderTemp.Value = status.ColorTempK;
+                            TxtTempVal.Text = $"{status.ColorTempK}K";
+                            if (SliderCompactTemp != null) SliderCompactTemp.Value = status.ColorTempK;
+                            if (TxtCompactTempVal != null) TxtCompactTempVal.Text = $"{status.ColorTempK}K";
+                            if (active != null) active.last_temp = status.ColorTempK;
+                            _config.last_temp = status.ColorTempK;
+                        }
+                        finally
+                        {
+                            _isUpdatingUi = false;
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(status.ColorHex) && status.Mode == "colour")
+                    {
+                        TxtHexCode.Text = status.ColorHex;
+                    }
+                    ConfigManager.Save(_config);
+                }
                 UpdatePowerButtonUi();
-                return;
             }
-
-            PillStatus.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
-            TxtStatus.Text = "🟢 ONLINE";
-            if (PillCompactStatus != null) PillCompactStatus.Background = PillStatus.Background;
-            if (TxtCompactStatus != null) TxtCompactStatus.Text = TxtStatus.Text;
-
-            var currentActive = _protocol.GetActiveDevice();
-            if (TxtCompactDevice != null && currentActive != null)
+            finally
             {
-                TxtCompactDevice.Text = currentActive.Name;
+                _isRefreshingStatus = false;
             }
-
-            bool isUserActive = (DateTime.UtcNow - _lastUserCommandTime).TotalSeconds < 4.0;
-            if (!isUserActive)
-            {
-                _isPowerOn = status.IsPowerOn;
-                if (!string.IsNullOrWhiteSpace(status.Mode))
-                {
-                    _currentMode = status.Mode;
-                }
-
-                var active = _protocol.GetActiveDevice();
-                if (active != null) active.last_power_on = status.IsPowerOn;
-                if (status.Brightness > 0)
-                {
-                    _isUpdatingUi = true;
-                    try
-                    {
-                        SliderBright.Value = status.Brightness;
-                        TxtBrightVal.Text = $"{status.Brightness}%";
-                        if (SliderCompactBright != null) SliderCompactBright.Value = status.Brightness;
-                        if (TxtCompactBrightVal != null) TxtCompactBrightVal.Text = $"{status.Brightness}%";
-                        if (active != null) active.last_brightness = status.Brightness;
-                        _config.last_brightness = status.Brightness;
-                    }
-                    finally
-                    {
-                        _isUpdatingUi = false;
-                    }
-                }
-                if (status.ColorTempK >= 2700)
-                {
-                    _isUpdatingUi = true;
-                    try
-                    {
-                        SliderTemp.Value = status.ColorTempK;
-                        TxtTempVal.Text = $"{status.ColorTempK}K";
-                        if (SliderCompactTemp != null) SliderCompactTemp.Value = status.ColorTempK;
-                        if (TxtCompactTempVal != null) TxtCompactTempVal.Text = $"{status.ColorTempK}K";
-                        if (active != null) active.last_temp = status.ColorTempK;
-                        _config.last_temp = status.ColorTempK;
-                    }
-                    finally
-                    {
-                        _isUpdatingUi = false;
-                    }
-                }
-                if (!string.IsNullOrWhiteSpace(status.ColorHex) && status.Mode == "colour")
-                {
-                    TxtHexCode.Text = status.ColorHex;
-                }
-                ConfigManager.Save(_config);
-            }
-            UpdatePowerButtonUi();
         }
 
         public static Color KelvinToColor(int kelvin)
@@ -226,6 +235,7 @@ namespace SmartLampApp
                 return false;
             }
 
+            bool prev = _isPowerOn;
             _isPowerOn = !_isPowerOn;
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
@@ -243,7 +253,23 @@ namespace SmartLampApp
                 }
             }
 
-            return await _protocol.SetPowerAsync(_isPowerOn);
+            bool success = false;
+            try
+            {
+                success = await _protocol.SetPowerAsync(_isPowerOn);
+            }
+            catch
+            {
+                success = false;
+            }
+
+            if (!success)
+            {
+                _isPowerOn = prev;
+                UpdatePowerButtonUi();
+            }
+
+            return success;
         }
 
         public async Task<bool> SetPowerFromExternalTriggerAsync(bool powerOn)
@@ -255,6 +281,7 @@ namespace SmartLampApp
                 return false;
             }
 
+            bool prev = _isPowerOn;
             _isPowerOn = powerOn;
             _lastUserCommandTime = DateTime.UtcNow;
             UpdatePowerButtonUi();
@@ -272,7 +299,23 @@ namespace SmartLampApp
                 }
             }
 
-            return await _protocol.SetPowerAsync(_isPowerOn);
+            bool success = false;
+            try
+            {
+                success = await _protocol.SetPowerAsync(_isPowerOn);
+            }
+            catch
+            {
+                success = false;
+            }
+
+            if (!success)
+            {
+                _isPowerOn = prev;
+                UpdatePowerButtonUi();
+            }
+
+            return success;
         }
 
         private async void BtnPower_Click(object sender, RoutedEventArgs e)
