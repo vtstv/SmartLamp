@@ -1,26 +1,22 @@
-## SmartLamp Studio v3.5.0
+## SmartLamp Studio v3.5.1
 
 ### 🚀 What's New & Highlights
 
-- **📲 Mobile QR Code Authorization (Smart Life / Tuya Smart)**:
-  - Add lamps directly by scanning a QR code with the Smart Life or Tuya Smart mobile app — no complex Tuya Developer Cloud account or OpenAPI keys needed!
-  - Implements Tuya's device-sharing auth flow with dynamic signature generation, encrypted payload exchange, and automatic device list retrieval.
+- **🎯 Accurate Power & Online Status Detection**:
+  - Fixed Tuya Cloud status fallback: now explicitly queries `/v1.0/iot-03/devices/{id}` and validates `result.online`. Unpowered/offline lamps are never falsely marked as `ONLINE` or `POWERED ON` from stale cloud data.
+  - Added full support for Tuya v3.5 asynchronous status frames wrapping DPS in `root.data.dps`.
+  - Implemented socket stream byte drainage in `TuyaSession` and secondary acknowledgement frame consumption in `TuyaDevice.SetDpsAsync`, preventing leftover TCP bytes from corrupting subsequent status queries.
 
-- **🌐 Auto-LAN Discovery & Smart IP Switcher**:
-  - Automatic LAN IP resolver (`⚡ Auto-LAN` / `Wi-Fi Scan`) that finds the exact local subnet address of lamps added via cloud.
-  - Local/External IP toggle (`LAN (Local IP)` vs `Cloud/WAN`) on each device card with instant failover, delivering ultra-low LAN response times (~25–35 ms).
+- **🔄 Background Status Polling & Window Activation Refresh**:
+  - Added background polling timer (5s when window is active, 15s when minimized/in tray) so external state changes (wall switches, Smart Life mobile app, Home Assistant) reflect automatically without manual refresh.
+  - Instantly refreshes status upon window restoration, activation, or opening from the system tray (`Activated` / `StateChanged`).
+  - Eliminated duplicate parallel startup status queries that previously caused single-socket contention on Tuya hardware.
 
-- **💾 Settings Backup & Restore**:
-  - One-click export and import of full configuration and device profiles to a portable JSON backup file.
+- **🛡️ Optimistic UI Rollback**:
+  - Safely rolls back the power button state if a network command fails, preventing the UI from showing `POWERED ON` when the physical lamp did not respond.
 
-- **🛠️ Refined Device Management UI**:
-  - Optimized layout for Russian, German, and English locales: separated Device ID and IP rows, eliminating button overlaps.
-  - Dedicated "New Lamp" drafting mode with an explicit Cancel (`✖️ Отмена`) button, preventing accidental deletion of configured devices.
+- **💻 CLI DPAPI Decryption Fix**:
+  - SmartLamp CLI now automatically decrypts protected DPAPI local keys, allowing `--status` and direct control to execute smoothly from terminal/scripts.
 
-- **🐛 Startup Power Sync & Illumination Fix**:
-  - Resolved an issue where launching the application could inadvertently send brightness/temperature packets and illuminate a powered-off lamp.
-  - Reentrant UI update lock depth counter guarantees that background sliders never dispatch socket commands while the lamp is powered off.
-
-- **⚡ Core & Architecture Improvements**:
-  - Upgraded standalone `TuyaNet.Native` protocol library to v1.0.2 with enhanced status parsing and 111 passing automated unit tests.
-  - Full compliance with strict modular architecture (< 500 lines per file).
+- **🧪 Expanded Test Suite**:
+  - Added comprehensive test coverage in `TuyaDeviceTests.cs`, bringing automated unit tests to 119 passing tests.
