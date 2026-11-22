@@ -58,7 +58,7 @@ namespace SmartLampApp.Services
             }
         }
 
-        private LampStatus ParseStatusJson(string output)
+        public static LampStatus ParseStatusJson(string output)
         {
             var status = new LampStatus();
             string lowerOutput = output != null ? output.ToLowerInvariant() : "";
@@ -77,7 +77,8 @@ namespace SmartLampApp.Services
                 using var doc = JsonDocument.Parse(output);
                 var root = doc.RootElement;
                 JsonElement dps;
-                if (root.TryGetProperty("status", out var stElement) && stElement.TryGetProperty("dps", out dps) ||
+                if ((root.TryGetProperty("data", out var dataElement) && dataElement.TryGetProperty("dps", out dps)) ||
+                    (root.TryGetProperty("status", out var stElement) && stElement.TryGetProperty("dps", out dps)) ||
                     root.TryGetProperty("dps", out dps))
                 {
                     string[] powerDpKeys = new[] { "20", "1", "101", "switch_led", "switch_1", "switch" };
