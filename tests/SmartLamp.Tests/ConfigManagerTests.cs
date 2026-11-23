@@ -20,7 +20,7 @@ namespace SmartLamp.Tests
             Assert.NotNull(config.groups);
             Assert.NotNull(config.custom_presets);
             Assert.Equal("auto", config.control_mode);
-            Assert.Equal("cloud_first", config.auto_priority);
+            Assert.Equal("local_first", config.auto_priority);
             Assert.Equal("en", config.language);
             Assert.False(config.compact_mode);
         }

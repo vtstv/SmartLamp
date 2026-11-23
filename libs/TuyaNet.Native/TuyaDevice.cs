@@ -58,6 +58,40 @@ namespace TuyaNet.Native
         public string DeviceId => _devId;
         public TuyaProtocolVersion Version => _version;
         public bool IsConnected => _session.IsConnected;
+        public DateTime LastPongTime => _session.LastPongTime;
+
+        /// <summary>
+        /// Fires when an asynchronous status frame (Cmd 0x08) is received from the device.
+        /// </summary>
+        public event Action<string>? OnStatusPushed
+        {
+            add => _session.OnStatusPushed += value;
+            remove => _session.OnStatusPushed -= value;
+        }
+
+        /// <summary>
+        /// Sends a keep-alive heartbeat frame (Cmd 0x09) with an empty payload.
+        /// </summary>
+        public Task SendHeartbeatAsync(CancellationToken cancellationToken = default)
+        {
+            return _session.SendHeartbeatAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Explicitly establishes connection and session handshake.
+        /// </summary>
+        public Task EnsureConnectedAsync(CancellationToken cancellationToken = default)
+        {
+            return _session.EnsureConnectedAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Gracefully disconnects the active TCP session and releases socket resources.
+        /// </summary>
+        public void Disconnect()
+        {
+            _session.Disconnect();
+        }
 
         #region Status Query
 
@@ -121,10 +155,6 @@ namespace TuyaNet.Native
                 Buffer.BlockCopy(jsonBytes, 0, fullPayload, TuyaHeader.Version35Header.Length, jsonBytes.Length);
 
                 var (respCmd, plaintext) = await _session.SendReceive6699Async(TuyaCommandType.ControlNew, fullPayload, cancellationToken).ConfigureAwait(false);
-
-                // Check if a second acknowledgement packet (such as 4 zero bytes 00 00 00 00) is arriving
-                // within a short timeout (~150-200ms) and drain it, keeping the socket buffer clean for subsequent GetStatusJsonAsync calls.
-                await _session.DrainSecondPacketAsync(200, cancellationToken).ConfigureAwait(false);
 
                 if (plaintext == null || plaintext.Length == 0)
                 {

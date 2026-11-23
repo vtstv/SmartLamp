@@ -122,5 +122,64 @@ namespace SmartLamp.Tests
                 await TuyaPacket.Read6699Async(ms, key, CancellationToken.None);
             });
         }
+
+        [Fact]
+        public async Task TuyaPacket_55AA_Heartbeat_PacketConstruction_AndReadRoundTrip()
+        {
+            uint seqNo = 5;
+            byte[] packet = TuyaPacket.Pack55AA(TuyaCommandType.Heartbeat, seqNo, Array.Empty<byte>());
+
+            Assert.NotNull(packet);
+            Assert.Equal(24, packet.Length); // 16 header + 0 body + 4 crc + 4 suffix
+
+            uint prefix = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(0, 4));
+            uint seq = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(4, 4));
+            uint cmd = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(8, 4));
+            uint length = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(12, 4));
+            uint suffix = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(20, 4));
+
+            Assert.Equal(TuyaHeader.Prefix55AA, prefix);
+            Assert.Equal(seqNo, seq);
+            Assert.Equal((uint)TuyaCommandType.Heartbeat, cmd);
+            Assert.Equal(8u, length);
+            Assert.Equal(TuyaHeader.SuffixAA55, suffix);
+
+            using var ms = new MemoryStream(packet);
+            var (readCmd, readSeq, readPayload) = await TuyaPacket.Read55AAAsync(ms, CancellationToken.None);
+
+            Assert.Equal(TuyaCommandType.Heartbeat, readCmd);
+            Assert.Equal(seqNo, readSeq);
+            Assert.Empty(readPayload);
+        }
+
+        [Fact]
+        public async Task TuyaPacket_6699_Heartbeat_PacketConstruction_AndReadRoundTrip()
+        {
+            uint seqNo = 9;
+            byte[] key = Encoding.UTF8.GetBytes("0123456789abcdef");
+            byte[] packet = TuyaPacket.Pack6699(TuyaCommandType.Heartbeat, seqNo, Array.Empty<byte>(), key);
+
+            Assert.NotNull(packet);
+            Assert.Equal(50, packet.Length); // 18 header + 12 iv + 0 cipher + 16 tag + 4 suffix
+
+            uint prefix = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(0, 4));
+            uint seq = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(6, 4));
+            uint cmd = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(10, 4));
+            uint length = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(14, 4));
+            uint suffix = BinaryPrimitives.ReadUInt32BigEndian(packet.AsSpan(packet.Length - 4, 4));
+
+            Assert.Equal(TuyaHeader.Prefix6699, prefix);
+            Assert.Equal(seqNo, seq);
+            Assert.Equal((uint)TuyaCommandType.Heartbeat, cmd);
+            Assert.Equal(28u, length);
+            Assert.Equal(TuyaHeader.Suffix9966, suffix);
+
+            using var ms = new MemoryStream(packet);
+            var (readCmd, readSeq, readPlaintext) = await TuyaPacket.Read6699Async(ms, key, CancellationToken.None);
+
+            Assert.Equal(TuyaCommandType.Heartbeat, readCmd);
+            Assert.Equal(seqNo, readSeq);
+            Assert.Empty(readPlaintext);
+        }
     }
 }

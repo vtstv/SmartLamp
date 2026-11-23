@@ -83,7 +83,7 @@ namespace SmartLampApp.Models
 
         // Control Mode & Priority ("auto", "local", "cloud"; "local_first", "cloud_first")
         public string control_mode { get; set; } = "auto";
-        public string auto_priority { get; set; } = "cloud_first";
+        public string auto_priority { get; set; } = "local_first";
 
         // Cloud subscription status
         public bool cloud_subscription_expired { get; set; } = false;
