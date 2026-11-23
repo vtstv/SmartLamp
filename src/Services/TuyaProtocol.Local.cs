@@ -21,7 +21,100 @@ namespace SmartLampApp.Services
         private TuyaDevice GetLocalDevice(DeviceInfo dev)
         {
             string key = $"{dev.DevId}_{dev.Ip}_{dev.LocalKey}_{dev.Version}";
-            return _localClients.GetOrAdd(key, _ => new TuyaDevice(dev.Ip, dev.DevId, dev.LocalKey, dev.Version));
+            return _localClients.GetOrAdd(key, _ =>
+            {
+                var device = new TuyaDevice(dev.Ip, dev.DevId, dev.LocalKey, dev.Version);
+                device.OnStatusPushed += (json) =>
+                {
+                    try
+                    {
+                        var status = ParseStatusJson(json);
+                        if (status.IsOnline)
+                        {
+                            dev.last_power_on = status.IsPowerOn;
+                        }
+                        OnStatusPushed?.Invoke(status);
+                    }
+                    catch { }
+                };
+                return device;
+            });
+        }
+
+        /// <summary>
+        /// Explicitly establishes local TCP connection and handshake for the active or target device.
+        /// </summary>
+        public async Task<bool> EnsureLocalSessionAsync(DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey) || string.IsNullOrWhiteSpace(dev.Ip))
+            {
+                return false;
+            }
+
+            try
+            {
+                var device = GetLocalDevice(dev);
+                using var cts = new CancellationTokenSource(4000);
+                await device.EnsureConnectedAsync(cts.Token).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Disconnects the local TCP session and releases socket resources so mobile apps or other clients can connect.
+        /// </summary>
+        public async Task DisconnectLocalAsync(DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev != null)
+            {
+                string key = $"{dev.DevId}_{dev.Ip}_{dev.LocalKey}_{dev.Version}";
+                if (_localClients.TryRemove(key, out var device))
+                {
+                    try { device.Disconnect(); } catch { }
+                    try { device.Dispose(); } catch { }
+                }
+            }
+
+            foreach (var kvp in _localClients)
+            {
+                if (_localClients.TryRemove(kvp.Key, out var device))
+                {
+                    try { device.Disconnect(); } catch { }
+                    try { device.Dispose(); } catch { }
+                }
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Sends a lightweight Tuya heartbeat frame (0x09) to keep the local session alive.
+        /// </summary>
+        public async Task<bool> SendHeartbeatAsync(DeviceInfo? target = null)
+        {
+            var dev = target ?? _activeDevice;
+            if (dev == null || string.IsNullOrWhiteSpace(dev.LocalKey) || string.IsNullOrWhiteSpace(dev.Ip))
+            {
+                return false;
+            }
+
+            try
+            {
+                var device = GetLocalDevice(dev);
+                using var cts = new CancellationTokenSource(3000);
+                await device.SendHeartbeatAsync(cts.Token).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private async Task<LampStatus> GetLocalStatusAsync(DeviceInfo? target = null)
@@ -45,7 +138,6 @@ namespace SmartLampApp.Services
                 if (result.IsOnline)
                 {
                     dev.last_power_on = result.IsPowerOn;
-                    ConfigManager.Save(_config);
                 }
                 return result;
             }

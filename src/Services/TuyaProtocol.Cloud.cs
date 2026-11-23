@@ -352,7 +352,6 @@ namespace SmartLampApp.Services
                             _cloudSubscriptionExpired = true;
                             _config.cloud_subscription_expired = true;
                             _config.cloud_subscription_check_time = DateTime.UtcNow;
-                            ConfigManager.Save(_config);
                         }
                         status.ErrorMessage = "Device is offline";
                         status.IsOnline = false;
@@ -385,7 +384,6 @@ namespace SmartLampApp.Services
                             {
                                 _cloudSubscriptionExpired = false;
                                 _config.cloud_subscription_expired = false;
-                                ConfigManager.Save(_config);
                             }
                             status.IsOnline = true;
                             if (root.TryGetProperty("result", out var resultArr) && resultArr.ValueKind == JsonValueKind.Array)
@@ -398,7 +396,6 @@ namespace SmartLampApp.Services
                                     {
                                         status.IsPowerOn = val.ValueKind == JsonValueKind.True || (val.ValueKind == JsonValueKind.Number && val.GetInt32() == 1);
                                         dev.last_power_on = status.IsPowerOn;
-                                        ConfigManager.Save(_config);
                                     }
                                     else if (code == "work_mode" || code == "21")
                                     {
@@ -450,7 +447,6 @@ namespace SmartLampApp.Services
                                 _cloudSubscriptionExpired = true;
                                 _config.cloud_subscription_expired = true;
                                 _config.cloud_subscription_check_time = DateTime.UtcNow;
-                                ConfigManager.Save(_config);
                             }
                             status.ErrorMessage = "Cloud status request failed";
                             status.IsOnline = false;

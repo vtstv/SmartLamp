@@ -45,8 +45,10 @@ namespace SmartLampApp
         // Feature 4: System Tray Icon
         private System.Windows.Forms.NotifyIcon? _notifyIcon;
 
-        // Status Polling Timer
+        // Window-Focused Session Timers
         private System.Windows.Threading.DispatcherTimer? _statusPollingTimer;
+        private System.Windows.Threading.DispatcherTimer? _heartbeatTimer;
+        private System.Windows.Threading.DispatcherTimer? _trayGraceTimer;
         private bool _isRefreshingStatus = false;
 
         private List<DiscoveredDevice> _discoveredList = new List<DiscoveredDevice>();
@@ -61,6 +63,7 @@ namespace SmartLampApp
 
             _config = ConfigManager.Load();
             _protocol = new TuyaProtocol(_config);
+            _protocol.OnStatusPushed += OnIncomingPushStatus;
 
             _googleHomeService = new GoogleHomeService(_protocol);
             _googleHomeService.OnLogMessage += GoogleHomeService_OnLogMessage;
@@ -101,64 +104,143 @@ namespace SmartLampApp
                 SetCompactMode(true);
             }
 
-            InitializeStatusPolling();
+            InitializeSessionLifecycle();
         }
 
-        private void InitializeStatusPolling()
+        private void InitializeSessionLifecycle()
         {
             this.StateChanged += MainWindow_StateChanged;
             this.Activated += MainWindow_Activated;
             this.IsVisibleChanged += MainWindow_IsVisibleChanged;
+
+            _heartbeatTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(15)
+            };
+            _heartbeatTimer.Tick += HeartbeatTimer_Tick;
+
+            _trayGraceTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(15)
+            };
+            _trayGraceTimer.Tick += TrayGraceTimer_Tick;
 
             _statusPollingTimer = new System.Windows.Threading.DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(5)
             };
             _statusPollingTimer.Tick += StatusPollingTimer_Tick;
-            _statusPollingTimer.Start();
+
+            if (this.IsVisible && this.WindowState != WindowState.Minimized)
+            {
+                OnWindowActivatedOrRestored();
+            }
         }
 
-        private void UpdateStatusPollingInterval()
+        private async void OnWindowActivatedOrRestored()
         {
-            if (_statusPollingTimer == null) return;
-            bool isBackground = !this.IsVisible || this.WindowState == WindowState.Minimized;
-            var targetInterval = isBackground ? TimeSpan.FromSeconds(15) : TimeSpan.FromSeconds(5);
-            if (_statusPollingTimer.Interval != targetInterval)
+            if (!this.IsVisible || this.WindowState == WindowState.Minimized) return;
+
+            _trayGraceTimer?.Stop();
+            _statusPollingTimer?.Stop();
+
+            bool ok = await _protocol.EnsureLocalSessionAsync();
+            if (ok)
             {
-                _statusPollingTimer.Interval = targetInterval;
+                if (_heartbeatTimer != null && !_heartbeatTimer.IsEnabled)
+                {
+                    _heartbeatTimer.Start();
+                }
+            }
+            else
+            {
+                if (_statusPollingTimer != null && !_statusPollingTimer.IsEnabled)
+                {
+                    _statusPollingTimer.Start();
+                }
+            }
+
+            _ = RefreshStatusAsync(showConnecting: false);
+        }
+
+        private async void OnWindowMinimizedOrHidden()
+        {
+            _heartbeatTimer?.Stop();
+            _statusPollingTimer?.Stop();
+            _trayGraceTimer?.Stop();
+
+            await _protocol.DisconnectLocalAsync();
+        }
+
+        private async void HeartbeatTimer_Tick(object? sender, EventArgs e)
+        {
+            if (!this.IsVisible || this.WindowState == WindowState.Minimized)
+            {
+                _heartbeatTimer?.Stop();
+                return;
+            }
+
+            bool ok = await _protocol.SendHeartbeatAsync();
+            if (!ok)
+            {
+                await _protocol.EnsureLocalSessionAsync();
+            }
+        }
+
+        public void StartTrayGraceTimer()
+        {
+            _trayGraceTimer?.Stop();
+            _trayGraceTimer?.Start();
+        }
+
+        private async void TrayGraceTimer_Tick(object? sender, EventArgs e)
+        {
+            _trayGraceTimer?.Stop();
+            if (!this.IsVisible || this.WindowState == WindowState.Minimized)
+            {
+                await _protocol.DisconnectLocalAsync();
             }
         }
 
         private void MainWindow_StateChanged(object? sender, EventArgs e)
         {
-            UpdateStatusPollingInterval();
-            if (this.WindowState != WindowState.Minimized && this.IsVisible)
+            if (this.WindowState == WindowState.Minimized)
             {
-                _ = RefreshStatusAsync();
+                OnWindowMinimizedOrHidden();
+            }
+            else if (this.IsVisible)
+            {
+                OnWindowActivatedOrRestored();
             }
         }
 
         private void MainWindow_Activated(object? sender, EventArgs e)
         {
-            UpdateStatusPollingInterval();
             if (this.WindowState != WindowState.Minimized && this.IsVisible)
             {
-                _ = RefreshStatusAsync();
+                OnWindowActivatedOrRestored();
             }
         }
 
         private void MainWindow_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            UpdateStatusPollingInterval();
-            if (this.WindowState != WindowState.Minimized && this.IsVisible)
+            if (this.IsVisible && this.WindowState != WindowState.Minimized)
             {
-                _ = RefreshStatusAsync();
+                OnWindowActivatedOrRestored();
+            }
+            else if (!this.IsVisible)
+            {
+                OnWindowMinimizedOrHidden();
             }
         }
 
         private async void StatusPollingTimer_Tick(object? sender, EventArgs e)
         {
-            UpdateStatusPollingInterval();
+            if (!this.IsVisible || this.WindowState == WindowState.Minimized)
+            {
+                _statusPollingTimer?.Stop();
+                return;
+            }
 
             if ((DateTime.UtcNow - _lastUserCommandTime).TotalSeconds < 5.0)
             {
@@ -170,7 +252,10 @@ namespace SmartLampApp
 
         protected override void OnClosed(EventArgs e)
         {
+            _heartbeatTimer?.Stop();
+            _trayGraceTimer?.Stop();
             _statusPollingTimer?.Stop();
+            _ = _protocol.DisconnectLocalAsync();
             base.OnClosed(e);
         }
 

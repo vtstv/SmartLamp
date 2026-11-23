@@ -1382,8 +1382,8 @@
                                 <TextBlock Text="💡" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="1" x:Name="TxtCompactDevice" Text="Smart Lamp 1" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
-                            <Border Grid.Column="2" x:Name="PillCompactStatus" Background="#10B981" CornerRadius="8" Padding="8,3" VerticalAlignment="Center">
-                                <TextBlock x:Name="TxtCompactStatus" Text="🟢 ONLINE" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                            <Border Grid.Column="2" x:Name="PillCompactStatus" Background="#0284C7" CornerRadius="8" Padding="8,3" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtCompactStatus" Text="⏳ CONNECTING..." FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
                             </Border>
                         </Grid>
                     </Border>
