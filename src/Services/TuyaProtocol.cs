@@ -36,6 +36,11 @@ namespace SmartLampApp.Services
         private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
         public static bool _cloudSubscriptionExpired = false;
 
+        /// <summary>
+        /// Fires when an asynchronous status update is pushed by the device.
+        /// </summary>
+        public event Action<LampStatus>? OnStatusPushed;
+
         public TuyaProtocol(LampConfig config)
         {
             _config = config;
@@ -110,7 +115,7 @@ namespace SmartLampApp.Services
         private async Task<bool> DispatchCommandAsync(Func<Task<bool>> localAction, Func<Task<bool>> cloudAction)
         {
             string mode = _config.control_mode ?? "auto";
-            string priority = _config.auto_priority ?? "cloud_first";
+            string priority = _config.auto_priority ?? "local_first";
 
             if (mode == "local") return await localAction();
             if (mode == "cloud") return await cloudAction();
@@ -151,7 +156,7 @@ namespace SmartLampApp.Services
         public async Task<LampStatus> GetStatusAsync(DeviceInfo? target = null)
         {
             string mode = _config.control_mode ?? "auto";
-            string priority = _config.auto_priority ?? "cloud_first";
+            string priority = _config.auto_priority ?? "local_first";
 
             if (mode == "cloud") return await GetCloudStatusAsync(target);
             if (mode == "local") return await GetLocalStatusAsync(target);

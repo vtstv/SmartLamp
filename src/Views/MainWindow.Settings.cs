@@ -353,7 +353,7 @@ namespace SmartLampApp
 
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            await RefreshStatusAsync();
+            await RefreshStatusAsync(showConnecting: true);
         }
 
         private void BtnAuthor_Click(object sender, RoutedEventArgs e)

@@ -126,6 +126,11 @@ namespace SmartLampApp
             {
                 ShowTrayNotification($"SmartLamp ({GetHotkeyDisplayText()})", _isPowerOn ? "⚡ Lamp Powered ON" : "⚡ Lamp Powered OFF");
             }
+
+            if (!this.IsVisible || this.WindowState == WindowState.Minimized)
+            {
+                StartTrayGraceTimer();
+            }
         }
     }
 }
